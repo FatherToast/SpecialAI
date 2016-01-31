@@ -1,0 +1,39 @@
+1.1.1
+    - Added the ability to add entire namespaces to block lists using an asterisk (e.g. minecraft:* - don't actually do this one!).
+    - Fixes any potential crashes related to EntityAIAvoid from within EntityAIThief.
+1.1.0
+    - The NBT update! Now loads most of its AI through the NBT tags on each mob.
+    - New village options to make villagers a bit less laissez-faire. Greedy little jerks...
+      - Improves village house mechanics.
+      - Villagers will defend their village from attacks and players breaking its blocks.
+      - You can gain reputation by killing monsters near the village and building houses.
+      - You can lose reputation by breaking blocks in the village and destroying houses.
+      - Fixes a vanilla bug where moving far from a village resets your reputation with it.
+    - Added passive griefing target blacklist.
+    - Added chance for depacified mobs to be aggressive instead of neutral.
+    - Added Thief "special" AI pattern.
+    - Mobs will now try to avoid explosions.
+    - Mobs can now be given more than one "special" AI pattern at once (some AIs work better together than others).
+    - Allows calling for help on a killing blow, so 1-shotting isn't 100% safe anymore.
+    - Increased damage dealt by the barrage AI.
+    - Mobs using charge, barrage, and leap AIs should now be a bit better at facing in the right direction.
+    - Fixed grief AI to actually drop items when it is enabled in the config.
+1.0.1
+    - Block metadata is now separated by a space from the block id - still no spaces allowed elsewhere.
+      - Fixes bug introduced in 1.7.10 that made mod blocks effectively impossible to mark as targets.
+    - Fixed bug introtuced in 1.7.10 that allowed you to make mobs attempt to break air blocks.
+      - Any invalid blocks on the target list will no longer count as air.
+1.0.0
+    - Initial release split off of Special Mobs 2.6.
+    - Carried over passive griefing.
+      - Now obeys line-of-sight.
+      - Targeted blocks and the mobs that get the AI can be configured.
+      - Creepers blow up instead of mining the blocks by default.
+    - Carried over "special" AI patterns:
+      - Charge, Jump, Leap, Ride (as a common AI), Shaman, Sprint, and Throw.
+    - Added Barrage, Spawner, and Throw Player "special" AI patterns.
+    - Improved "special" AI system to include tiered chances for specific mobs.
+    - Carried over "screamer" AI - instead just affects everything always.
+    - Carried over jockey system purely as AI.
+    - Added "neutral" AI (makes normally passive mobs fight back when damaged).
+    - Added "eat breeding items" AI.
