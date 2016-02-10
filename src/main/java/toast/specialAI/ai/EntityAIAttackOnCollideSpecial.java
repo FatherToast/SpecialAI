@@ -5,13 +5,10 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIAttackOnCollide;
 import net.minecraft.pathfinding.PathEntity;
 import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.world.World;
 
 public class EntityAIAttackOnCollideSpecial extends EntityAIAttackOnCollide {
     // The entity that owns this ai.
     private final EntityCreature attacker;
-    // The world the entity is in.
-    private final World worldObj;
     // The speed with which the mob will approach the target relative to its normal speed.
     private final double speedTowardsTarget;
     // When true, the mob will continue chasing its target, even if it can't find a path immediately.
@@ -35,7 +32,6 @@ public class EntityAIAttackOnCollideSpecial extends EntityAIAttackOnCollide {
     public EntityAIAttackOnCollideSpecial(EntityCreature entity, Class targetType, double speed, boolean mem) {
         super(entity, targetType, speed, mem);
         this.attacker = entity;
-        this.worldObj = entity.worldObj;
         this.speedTowardsTarget = speed;
         this.longMemory = mem;
         this.classTarget = targetType;

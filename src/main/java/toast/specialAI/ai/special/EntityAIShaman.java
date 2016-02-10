@@ -16,6 +16,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
     // The weight of this AI pattern.
@@ -39,7 +40,7 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
         this.theEntity = entity;
         this.healAmount = healAmount;
         this.potionEffects = effects;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns the string name of this AI for use in Properties.

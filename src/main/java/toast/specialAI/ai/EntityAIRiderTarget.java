@@ -12,7 +12,7 @@ public class EntityAIRiderTarget extends EntityAITarget {
 
     public EntityAIRiderTarget(EntityCreature entity, boolean hasAttack) {
         super(entity, false, false);
-        this.setMutexBits(1);
+        this.setMutexBits(AIHandler.TARGET_BIT);
         if (!hasAttack) {
             this.attackAI = new EntityAIAttackOnCollidePassive(entity, entity instanceof EntityChicken ? 1.6 : 1.4, false);
         }

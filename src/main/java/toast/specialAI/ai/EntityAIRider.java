@@ -22,7 +22,7 @@ public class EntityAIRider extends EntityAIBase {
     public EntityAIRider(EntityLiving entity, boolean small) {
         this.theEntity = entity;
         this.isSmall = small;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns whether the AI should begin execution.

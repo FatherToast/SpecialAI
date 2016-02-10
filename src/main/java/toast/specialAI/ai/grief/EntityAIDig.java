@@ -1,4 +1,4 @@
-package toast.specialAI.ai;
+package toast.specialAI.ai.grief;
 
 import java.util.ArrayList;
 import java.util.Random;

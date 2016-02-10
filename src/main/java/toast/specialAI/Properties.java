@@ -3,6 +3,8 @@ package toast.specialAI;
 import java.util.HashMap;
 import java.util.Random;
 
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import net.minecraftforge.common.config.Configuration;
 import toast.specialAI.ai.special.ISpecialAI;
 import toast.specialAI.ai.special.SpecialAIHandler;
@@ -22,6 +24,7 @@ public abstract class Properties {
     // Common category names.
     public static final String GENERAL = "_general";
     public static final String JOCKEYS = "jockeys";
+    public static final String FIDDLING = "passive_fiddling";
     public static final String GRIEFING = "passive_griefing";
     public static final String SPECIAL_AI = "special_ai";
     public static final String VILLAGES = "villages";
@@ -35,31 +38,47 @@ public abstract class Properties {
         Properties.add(config, Properties.GENERAL, "call_for_help", true, "(True/false) If true, all mobs will call for help from nearby mobs of the same type when struck. Default is true.");
         Properties.add(config, Properties.GENERAL, "call_for_help_on_death", 0.2, "(0.0-1.0) Chance for mobs to call for help from a killing blow. Default is 20% chance.");
         Properties.add(config, Properties.GENERAL, "depacify_aggressive_chance", 0.005, "(0.0-1.0) Chance for a depacify list to be aggressive, instead of just neutral. Default is 0.5% chance.");
-        Properties.add(config, Properties.GENERAL, "depacify_list", "Chicken,Cow,Pig,Sheep", "(Entity list) Comma-separated list of passive mobs (by entity id) that are made \"neutral\". You may put a tilde (~) in front of any entity id to make it specific. Specific entity ids will not count any entities extending (i.e., based on) the specified entity.\nMay or may not work on mod mobs. Defaults to any kind of chicken, cow, pig, and sheep.");
+        Properties.add(config, Properties.GENERAL, "depacify_list", "Chicken,Cow,Pig,Sheep",
+        		"(Entity list) Comma-separated list of passive mobs (by entity id) that are made \"neutral\".\n"
+        		+ "You may put a tilde (~) in front of any entity id to make it specific. Specific entity ids will not count any entities extending (i.e., based on) the specified entity.\n"
+        		+ "May or may not work on mod mobs. Defaults to any kind of chicken, cow, pig, and sheep.");
         Properties.add(config, Properties.GENERAL, "eat_breeding_items", true, "(True/false) If true, passive mobs will seek out and eat the items used to breed them laying on the floor. Default is true.");
         Properties.add(config, Properties.GENERAL, "eating_heals", true, "(True/false) If true, when mobs eat breeding items off the floor, they will regain health like wolves. Default is true.");
 
         Properties.add(config, Properties.JOCKEYS, "_rider_chance", 0.1, "(0.0-1.0) Chance for a valid rider mob to actually get the rider AI. Default is 10% chance.");
-        Properties.add(config, Properties.JOCKEYS, "mount_list", "Spider,Pig,Sheep,Cow", "(Entity list) List of mobs that can be ridden on by normal-sized riders (normally non-aggressive mobs must have pathfinding AI enabled). Defaults to any kind of spider, pig, sheep, or cow.");
-        Properties.add(config, Properties.JOCKEYS, "mount_list_small", "Chicken", "(Entity list) List of mobs that can be ridden on by small riders or normal-sized riders that are babies (normally non-aggressive mobs must have pathfinding AI enabled). Defaults to any kind of chicken.");
+        Properties.add(config, Properties.JOCKEYS, "mount_list", "Spider,Pig,Sheep,Cow",
+        		"(Entity list) List of mobs that can be ridden on by normal-sized riders (normally non-aggressive mobs must have pathfinding AI enabled). Defaults to any kind of spider, pig, sheep, or cow.");
+        Properties.add(config, Properties.JOCKEYS, "mount_list_small", "Chicken",
+        		"(Entity list) List of mobs that can be ridden on by small riders or normal-sized riders that are babies (normally non-aggressive mobs must have pathfinding AI enabled). Defaults to any kind of chicken.");
         Properties.add(config, Properties.JOCKEYS, "rider_list", "Zombie,Skeleton,Creeper", "(Entity list) List of mobs that can ride normal-sized mounts (note that the entity must have pathfinding AI enabled). Defaults to any kind of zombie, skeleton, or creeper.");
         Properties.add(config, Properties.JOCKEYS, "rider_list_small", "", "(Entity list) List of mobs that can only ride small mounts (note that the entity must have pathfinding AI enabled). Defaults to none.");
 
         Properties.add(config, Properties.GRIEFING, "_enabled", true, "(True/false) If true, mobs will passively grief you while not doing anything else. Default is true.");
+        Properties.add(config, Properties.GRIEFING, "_fiddling_enabled", true, "(True/false) If true, mobs will passively flip switches, press buttons, etc. while not doing anything else (uses the same range, reach, etc. as griefing, but has separate entity and block lists). Default is true.");
         Properties.add(config, Properties.GRIEFING, "break_lights", true, "(True/false) If true, block breaking AI will automatically target all light sources. Default is true.");
-        Properties.add(config, Properties.GRIEFING, "break_sound", true, "(True/false) If false, the lound snapping sound will not be played when greifing. Default is true.");
-        Properties.add(config, Properties.GRIEFING, "grief_delay", 20, "(Integer > 0) The lower this number is, the more frequently mobs will search for things to grief. Default is 1/20 chance per tick.");
+        Properties.add(config, Properties.GRIEFING, "break_sound", false, "(True/false) If true, a lound snapping sound will be played when greifing, which is audible regardless of distance. Default is false.");
         Properties.add(config, Properties.GRIEFING, "grief_range", 3.5, "(0.0-INFINITY) Mobs' reach (from eye height) when griefing blocks. Player reach is about 4.5. Default is 3.5.");
-        Properties.add(config, Properties.GRIEFING, "grief_scan_cap", 256, "(Integer > 0) The global maximum number of solid blocks to scan per tick when mobs search for a block to grief. Default is 256 blocks per tick.");
-        Properties.add(config, Properties.GRIEFING, "grief_scan_cap_info", false, "(True/false) If true, the mod will print a message to your console when more than \"grief_scan_max\" entities are searching for blocks to grief. Default is false.");
-        Properties.add(config, Properties.GRIEFING, "grief_scan_max", 256, "(Integer > 0) The global maximum number of entities allowed in the queue to scan. Default is 256 entities.");
-        Properties.add(config, Properties.GRIEFING, "grief_scan_range", 16, "(Integer >= 0) The range at which mobs will search for blocks to grief. Default is 16 blocks.");
+        Properties.add(config, Properties.GRIEFING, "grief_scan_range", 12, "(Integer >= 0) The range at which mobs will search for blocks to grief horizontally. Default is 12 blocks.");
+        Properties.add(config, Properties.GRIEFING, "grief_scan_range_vertical", 6, "(Integer >= 0) The range at which mobs will search for blocks to grief vertically. Default is 6 blocks.");
         Properties.add(config, Properties.GRIEFING, "leave_drops", true, "(True/false) If true, griefed blocks will leave item drops. Default is true.");
         Properties.add(config, Properties.GRIEFING, "mad_creepers", true, "(True/false) If true, creepers will be very mad about not having arms to break things with, and resort to what they know best... Default is true.");
         Properties.add(config, Properties.GRIEFING, "mob_list", "Zombie,Creeper", "(Entity list) List of mobs that gain passive griefing AI (note that the entity must have pathfinding AI enabled). Defaults to any kind of zombie or creeper.");
+        Properties.add(config, Properties.GRIEFING, "mob_list_fiddling", "Zombie,Skeleton", "(Entity list) List of mobs that gain passive fiddling AI (note that the entity must have pathfinding AI enabled). Defaults to any kind of zombie or skeleton.");
         Properties.add(config, Properties.GRIEFING, "requires_tools", false, "(True/false) If true, mobs will only target blocks they have the tools to harvest. Default is false.");
-        Properties.add(config, Properties.GRIEFING, "target_blacklist", "", "(Block list) Specific blocks that will NOT be targeted by mobs, only really useful if \"break_lights\" is enabled to create safe light sources or prevent mobs from breaking normal world gen that produces light. Defaults to none.");
-        Properties.add(config, Properties.GRIEFING, "target_blocks", "farmland,bed,crafting_table,wooden_door,trapdoor,fence_gate,ladder,cake", "(Block list) Specific blocks that will be targeted by mobs. Defaults to farmland, beds, crafting tables, wooden doors, wooden trapdoors, fence gates, ladders, and cakes.\nThis is a comma-separated list. You may specify metadata (0-15) with a space after the id, followed by the metadata. For example, \"cake\" will cause mobs to target all cakes, while \"cake 0\" will cause mobs to only target cakes that have not been partially eaten.");
+        Properties.add(config, Properties.GRIEFING, "scan_count", 24, "(Integer >= 1) The number of blocks mobs randomly search to grief/fiddle with each 3 ticks. Default is 24 blocks.");
+        Properties.add(config, Properties.GRIEFING, "scan_count_global", 0, "(Integer >= 0) The maximum number of blocks that can be searched in any given tick by all mobs. Default is 0 blocks (no limit).");
+        Properties.add(config, Properties.GRIEFING, "target_blacklist", "",
+        		"(Block list) Specific blocks that will NOT be griefed by mobs. Defaults to none.\n"
+        		+ "Only really useful if \"break_lights\" is enabled or when you whitelist an entire namespace (*) to create safe light sources, prevent mobs from breaking normal world gen that produces light, or for removing a few blocks from a namespace that you don\'t want mobs to break.");
+        Properties.add(config, Properties.GRIEFING, "target_blocks", Properties.string(Blocks.farmland) + "," + Properties.string(Blocks.bed) + "," + Properties.string(Blocks.crafting_table) + "," + Properties.string(Blocks.wooden_door) + "," + Properties.string(Blocks.trapdoor) + "," + Properties.string(Blocks.fence_gate) + "," + Properties.string(Blocks.ladder),
+        		"(Block list) Specific blocks that will be griefed by mobs. Defaults to farmland, beds, crafting tables, wooden doors, wooden trapdoors, fence gates, and ladders.\n"
+        		+ "This is a comma-separated list. You may specify metadata (0-15) with a space after the id, followed by the metadata. For example, \"cake\" will cause mobs to target all cakes, while \"cake 0\" will cause mobs to only target cakes that have not been partially eaten.\n"
+        		+ "You may whitelist an entire namespace (mod) by using the namespace followed by a *. For example, \"minecraft:*\" will whitelist every vanilla block. This does not work if you try to also specify metadata.");
+        Properties.add(config, Properties.GRIEFING, "target_fiddling_blacklist", "",
+        		"(Block list) Specific blocks that will NOT be fiddled with by mobs. Defaults to none.\n"
+        		+ "Only really useful if you whitelist an entire namespace (*) to prevent mobs from fiddling with a few blocks from that namespace.");
+        Properties.add(config, Properties.GRIEFING, "target_fiddling_blocks", Properties.string(Blocks.lever) + "," + Properties.string(Blocks.wooden_button) + "," + Properties.string(Blocks.stone_button) + "," + Properties.string(Blocks.unpowered_comparator) + "," + Properties.string(Blocks.powered_comparator) + "," + Properties.string(Blocks.unpowered_repeater) + "," + Properties.string(Blocks.powered_repeater) + "," + Properties.string(Blocks.cake),
+        		"(Block list) Specific blocks that will be fiddled with by mobs. Defaults to levers, wooden buttons, stone buttons, comparators (on/off), repeaters (on/off), and cakes.");
 
         Properties.add(config, Properties.SPECIAL_AI, "_chance_1", 0.05, "(0.0-1.0) Chance for a valid mob in mob_list_1 to get a special AI pattern. Default is 5% chance.");
         Properties.add(config, Properties.SPECIAL_AI, "_chance_2", 0.05, "(0.0-1.0) Same as _chance_1, but for for mob_list_2. Multiple AIs can be stacked. Default is 5% chance.");
@@ -98,6 +117,10 @@ public abstract class Properties {
         config.addCustomCategoryComment(Properties.VILLAGES, "Options to control village aggression and reputation.");
 
         config.save();
+    }
+
+    private static String string(Block block) {
+    	return Block.blockRegistry.getNameForObject(block);
     }
 
     // Gets the mod's random number generator.

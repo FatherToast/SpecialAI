@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.MobSpawnerBaseLogic;
 import net.minecraft.world.World;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
     // The default spawner tag.
@@ -40,7 +41,7 @@ public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
             EntityAISpawner.SPAWNER_TAG.setString("EntityId", EntityList.getEntityString(entity));
             this.mobSpawnerLogic.readFromNBT(EntityAISpawner.SPAWNER_TAG);
         }
-        this.setMutexBits(0);
+        this.setMutexBits(AIHandler.BIT_NONE);
     }
 
     // Returns the string name of this AI for use in Properties.

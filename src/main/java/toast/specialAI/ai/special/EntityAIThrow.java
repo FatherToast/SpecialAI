@@ -10,6 +10,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.nbt.NBTTagCompound;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
     // The weight of this AI pattern.
@@ -29,7 +30,7 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
 
     private EntityAIThrow(EntityLiving entity) {
         this.theEntity = entity;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns the string name of this AI for use in Properties.

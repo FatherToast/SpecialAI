@@ -12,13 +12,10 @@ import net.minecraft.pathfinding.PathEntity;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
 
 public class EntityAIAttackOnCollidePassive extends EntityAIAttackOnCollide {
     // The entity that owns this ai.
     private final EntityCreature attacker;
-    // The world the entity is in.
-    private final World worldObj;
     // The entity's normal avoid water status.
     private final boolean avoidsWater;
     // The speed with which the mob will approach the target relative to its normal speed.
@@ -44,7 +41,6 @@ public class EntityAIAttackOnCollidePassive extends EntityAIAttackOnCollide {
     public EntityAIAttackOnCollidePassive(EntityCreature entity, Class targetType, double speed, boolean mem) {
         super(entity, targetType, speed, mem);
         this.attacker = entity;
-        this.worldObj = entity.worldObj;
         this.avoidsWater = entity.getNavigator().getAvoidsWater();
         this.speedTowardsTarget = speed;
         this.longMemory = mem;

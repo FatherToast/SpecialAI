@@ -3,14 +3,8 @@ package toast.specialAI.ai.special;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.nbt.NBTTagCompound;
 
-public interface ISpecialAI {
-    /*
-     * Mutex Bits Guide:
-     *  0b001 = movement (1)
-     *  0b010 = facing   (2)
-     *  0b100 = swimming (4)
-     */
-
+public interface ISpecialAI
+{
     // Returns the string name of this AI for use in Properties.
     public String getName();
 

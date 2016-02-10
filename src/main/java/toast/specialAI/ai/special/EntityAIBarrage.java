@@ -11,6 +11,7 @@ import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIBarrage extends EntityAIBase implements ISpecialAI {
     // Possible states for this AI.
@@ -38,7 +39,7 @@ public class EntityAIBarrage extends EntityAIBase implements ISpecialAI {
     private EntityAIBarrage(EntityLiving entity, float arrowDamage) {
         this.theEntity = entity;
         this.arrowDamage = arrowDamage;
-        this.setMutexBits(7);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING | AIHandler.BIT_SWIMMING);
     }
 
     // Returns the string name of this AI for use in Properties.

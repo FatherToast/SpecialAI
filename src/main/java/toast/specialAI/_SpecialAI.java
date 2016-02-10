@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.config.Configuration;
 import toast.specialAI.ai.AIHandler;
-import toast.specialAI.ai.SearchHandler;
 import toast.specialAI.village.ReputationHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -16,13 +15,13 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 public class _SpecialAI {
     /* TO DO *\
     >> CURRENT
-        * "pack" ai
+        * Make AIs that change equipment of entities change that equipment outside of the AI tick
     \* ** ** */
 
     // This mod's id.
     public static final String MODID = "SpecialAI";
     // This mod's version.
-    public static final String VERSION = "1.1.1";
+    public static final String VERSION = "1.1.2";
 
     // If true, this mod starts up in debug mode.
     public static final boolean debug = true;
@@ -44,7 +43,6 @@ public class _SpecialAI {
     public void init(FMLInitializationEvent event) {
         new AIHandler();
         new ReputationHandler();
-        new SearchHandler();
     }
 
     // Returns this mod's compound tag for the entity.
@@ -58,20 +56,20 @@ public class _SpecialAI {
 
     // Prints the message to the console with this mod's name tag.
     public static void console(String message) {
-        System.out.println("[SpecialAI] " + message);
+        System.out.println("[" + _SpecialAI.MODID + "] " + message);
     }
 
     // Prints the message to the console with this mod's name tag if debugging is enabled.
     public static void debugConsole(String message) {
         if (_SpecialAI.debug) {
-            System.out.println("[SpecialAI] (debug) " + message);
+            System.out.println("[" + _SpecialAI.MODID + "] (debug) " + message);
         }
     }
 
     // Throws a runtime exception with a message and this mod's name tag if debugging is enabled. Otherwise, just prints a console error message.
     public static void debugException(String message) {
         if (_SpecialAI.debug)
-            throw new RuntimeException("[SpecialAI] " + message);
+            throw new RuntimeException("[" + _SpecialAI.MODID + "] " + message);
         _SpecialAI.console("[ERROR] " + message);
     }
 }

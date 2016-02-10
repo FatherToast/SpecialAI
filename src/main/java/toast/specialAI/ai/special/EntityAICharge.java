@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.util.DamageSource;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAICharge extends EntityAIBase implements ISpecialAI {
     // Possible states for this AI.
@@ -46,7 +47,7 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
         this.theEntity = entity;
         this.knockbackMult = knockbackMult;
         this.stepHeight = entity.stepHeight;
-        this.setMutexBits(7);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING | AIHandler.BIT_SWIMMING);
     }
 
     // Returns the string name of this AI for use in Properties.

@@ -1,6 +1,7 @@
 package toast.specialAI.ai;
 
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
@@ -16,6 +17,7 @@ import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityVillager;
@@ -27,13 +29,19 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import toast.specialAI.Properties;
 import toast.specialAI._SpecialAI;
+import toast.specialAI.ai.grief.EntityAIDig;
+import toast.specialAI.ai.grief.EntityAIEatBreedingItem;
+import toast.specialAI.ai.grief.EntityAIGriefBlocks;
 import toast.specialAI.ai.special.SpecialAIHandler;
 import toast.specialAI.util.EntitySet;
 import toast.specialAI.village.EntityAIVillagerDefendVillage;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
-public class AIHandler {
+public class AIHandler
+{
     // Useful properties for this class.
     private static final boolean AVOID_EXPLOSIONS = Properties.getBoolean(Properties.GENERAL, "avoid_explosions");
     private static final boolean CALL_FOR_HELP = Properties.getBoolean(Properties.GENERAL, "call_for_help");
@@ -42,8 +50,12 @@ public class AIHandler {
     private static final EntitySet DEPACIFY_SET = new EntitySet(Properties.getString(Properties.GENERAL, "depacify_list"));
     private static final double AGGRESSIVE_CHANCE = Properties.getDouble(Properties.GENERAL, "depacify_aggressive_chance");
 
+
     private static final boolean GRIEFING = Properties.getBoolean(Properties.GRIEFING, "_enabled");
+    private static final boolean FIDDLING = Properties.getBoolean(Properties.GRIEFING, "_fiddling_enabled");
     private static final EntitySet GRIEF_SET = new EntitySet(Properties.getString(Properties.GRIEFING, "mob_list"));
+    private static final EntitySet FIDDLE_SET = new EntitySet(Properties.getString(Properties.GRIEFING, "mob_list_fiddling"));
+    private static final int SCAN_COUNT_GLOBAL = Properties.getInt(Properties.GRIEFING, "scan_count_global");
 
     private static final double RIDER_CHANCE = Properties.getDouble(Properties.JOCKEYS, "_rider_chance");
     public static final EntitySet MOUNT_SET = new EntitySet(Properties.getString(Properties.JOCKEYS, "mount_list"));
@@ -65,11 +77,17 @@ public class AIHandler {
     private static final String DEFEND_VILLAGE_TAG = "DefendVillage";
     private static final String DEPACIFY_TAG = "Depacify";
 
-    private static final String GRIEF_TAG = "Griefing";
-    private static final String GRIEF_TOOL_TAG = "GriefNeedsTool";
-    private static final String GRIEF_LIGHT_TAG = "GriefLights";
-    private static final String GRIEF_BLOCK_TAG = "GriefBlocks";
-    private static final String GRIEF_EXCEPTION_TAG = "GriefBlacklist";
+    public static final String GRIEF_TAG = "Griefing";
+    public static final String GRIEF_RANGE_TAG = "GriefScanRange";
+    public static final String GRIEF_RANGE_VERTICAL_TAG = "GriefScanRangeVertical";
+    public static final String GRIEF_TOOL_TAG = "GriefNeedsTool";
+    public static final String GRIEF_LIGHT_TAG = "GriefLights";
+    public static final String GRIEF_BLOCK_TAG = "GriefBlocks";
+    public static final String GRIEF_EXCEPTION_TAG = "GriefBlacklist";
+
+    public static final String FIDDLE_TAG = "Fiddling";
+    public static final String FIDDLE_BLOCK_TAG = "FiddleBlocks";
+    public static final String FIDDLE_EXCEPTION_TAG = "FiddleBlacklist";
 
     private static final String RIDER_TAG = "Rider";
 
@@ -79,14 +97,35 @@ public class AIHandler {
     @Deprecated
     private static final String SPECIAL_TAG = "Special";
 
+    /* Mutex Bits:
+	 * AIs may only run concurrently if they share no "mutex bits".
+	 * Therefore, AIs with 0 for their "mutex" number may always run with any other AI.
+	 * Use plain addition or bitwise OR to combine multiple bits. */
+	public static final byte BIT_NONE = 0;
+	public static final byte BIT_MOVEMENT = 1 << 0; // 1
+	public static final byte BIT_FACING = 1 << 1; // 2
+	public static final byte BIT_SWIMMING = 1 << 2; // 4
+
+    /* The "mutex bit" used by all targeting tasks so that none of them run at the same time. */
+	public static final byte TARGET_BIT = 1;
+
+    private static int scansLeft = AIHandler.SCAN_COUNT_GLOBAL;
+
+    // Decrements the number of scans left and returns true if a scan can be made.
+    public static boolean canScan() {
+		return AIHandler.SCAN_COUNT_GLOBAL <= 0 || AIHandler.scansLeft-- > 0;
+    }
+
     // Clears the entity's AI tasks.
-    private static void clearAI(EntityLiving entity) {
+    @SuppressWarnings("unused")
+	private static void clearAI(EntityLiving entity) {
         for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.tasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
             entity.tasks.removeTask(entry.action);
         }
     }
 
     // Clears the entity's AI target tasks.
+    @SuppressWarnings("unused")
     private static void clearTargetAI(EntityLiving entity) {
         for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.targetTasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
             entity.targetTasks.removeTask(entry.action);
@@ -152,8 +191,8 @@ public class AIHandler {
     }
 
     // Adds the passive griefing AI to the same priority as the mob's wandering AI.
-    private static void addGriefAI(EntityLiving entity, byte tool, byte lights, String nbtTargetBlocks, String nbtBlacklist) {
-        entity.tasks.addTask(AIHandler.getPassivePriority(entity), new EntityAIGriefBlocks(entity, tool, lights, nbtTargetBlocks, nbtBlacklist));
+    private static void addGriefAI(EntityLiving entity, boolean griefing, boolean fiddling, NBTTagCompound tag) {
+        entity.tasks.addTask(AIHandler.getPassivePriority(entity), new EntityAIGriefBlocks(entity, griefing, fiddling, tag));
     }
 
     // Returns the priority to assign to an idle AI.
@@ -170,12 +209,69 @@ public class AIHandler {
     }
 
     // Gives the entity digging AI.
-    private static void addDigAI(EntityLiving entity) {
+	private static void addDigAI(EntityLiving entity) {
         entity.tasks.addTask(0, new EntityAIDig(entity));
     }
 
     public AIHandler() {
+        FMLCommonHandler.instance().bus().register(this);
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    /**
+     * Called each tick.
+     * TickEvent.Type type = the type of tick.
+     * Side side = the side this tick is on.
+     * TickEvent.Phase phase = the phase of this tick (START, END).
+     *
+     * @param event The event being triggered.
+     */
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+        	AIHandler.scansLeft = AIHandler.SCAN_COUNT_GLOBAL;
+        }
+    }
+
+    /**
+     * Called each tick for each world.
+     * TickEvent.Type type = the type of tick.
+     * Side side = the side this tick is on.
+     * TickEvent.Phase phase = the phase of this tick (START, END).
+     * World world = the world that is ticking.
+     *
+     * @param event The event being triggered.
+     */
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void onWorldTick(TickEvent.WorldTickEvent event) {
+        if (event.world != null && event.phase == TickEvent.Phase.END) {
+        	Object entity;
+        	for (int i = 0; i < event.world.loadedEntityList.size(); i++) {
+        		entity = event.world.loadedEntityList.get(i);
+        		if (entity instanceof EntityItem) {
+        			this.equipToThief((EntityItem) entity);
+        		}
+        	}
+        }
+    }
+
+    private void equipToThief(EntityItem item) {
+    	if (item.getEntityData().hasKey("ThiefUUIDMost")) {
+    		UUID thiefId = new UUID(item.getEntityData().getLong("ThiefUUIDMost"), item.getEntityData().getLong("ThiefUUIDLeast"));
+        	Object entity;
+        	for (int i = 0; i < item.worldObj.loadedEntityList.size(); i++) {
+        		entity = item.worldObj.loadedEntityList.get(i);
+        		if (entity instanceof EntityLiving && thiefId.equals(((EntityLiving) entity).getUniqueID())) {
+        			((EntityLiving) entity).setCurrentItemOrArmor(0, item.getEntityItem());
+        			((EntityLiving) entity).setEquipmentDropChance(0, 2.0F);
+        			((EntityLiving) entity).func_110163_bv(); // Marks the entity to never despawn.
+        			item.setDead();
+        			return;
+        		}
+        	}
+        	item.getEntityData().removeTag("ThiefUUIDMost");
+        	item.getEntityData().removeTag("ThiefUUIDLeast");
+    	}
     }
 
     /**
@@ -270,24 +366,13 @@ public class AIHandler {
         if (!tag.hasKey(AIHandler.GRIEF_TAG)) {
             tag.setBoolean(AIHandler.GRIEF_TAG, AIHandler.GRIEF_SET.contains(theEntity));
         }
-        if (AIHandler.GRIEFING && tag.getBoolean(AIHandler.GRIEF_TAG)) {
-            byte tool = -1;
-            byte lights = -1;
-            String nbtTargetBlocks = null;
-            String nbtBlacklist = null;
-            if (tag.hasKey(AIHandler.GRIEF_TOOL_TAG)) {
-                tool = tag.getByte(AIHandler.GRIEF_TOOL_TAG);
-            }
-            if (tag.hasKey(AIHandler.GRIEF_LIGHT_TAG)) {
-                lights = tag.getByte(AIHandler.GRIEF_LIGHT_TAG);
-            }
-            if (tag.hasKey(AIHandler.GRIEF_BLOCK_TAG)) {
-                nbtTargetBlocks = tag.getString(AIHandler.GRIEF_BLOCK_TAG);
-            }
-            if (tag.hasKey(AIHandler.GRIEF_EXCEPTION_TAG)) {
-                nbtBlacklist = tag.getString(AIHandler.GRIEF_EXCEPTION_TAG);
-            }
-            AIHandler.addGriefAI(theEntity, tool, lights, nbtTargetBlocks, nbtBlacklist);
+        if (!tag.hasKey(AIHandler.FIDDLE_TAG)) {
+            tag.setBoolean(AIHandler.FIDDLE_TAG, AIHandler.FIDDLE_SET.contains(theEntity));
+        }
+        boolean griefing = AIHandler.GRIEFING && tag.getBoolean(AIHandler.GRIEF_TAG);
+        boolean fiddling = AIHandler.FIDDLING && tag.getBoolean(AIHandler.FIDDLE_TAG);
+        if (griefing || fiddling) {
+            AIHandler.addGriefAI(theEntity, griefing, fiddling, tag);
         }
 
         /* WIP

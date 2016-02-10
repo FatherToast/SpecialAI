@@ -1,3 +1,9 @@
+1.1.2
+    - Overhauled passive griefing AI to be much simpler. I recommend deleting all of your passive griefing configs before updating.
+    - Added passive fiddling AI as a part of the griefing AI.
+    - Thief "special" AI no longer transfers the stolen item directly into the thief's hand - should prevent some crashes.
+    - Tweaked comments on config options to reflect changes in 1.1.1.
+    - Tweaked some default griefing configs.
 1.1.1
     - Added the ability to add entire namespaces to block lists using an asterisk (e.g. minecraft:* - don't actually do this one!).
     - Fixes any potential crashes related to EntityAIAvoid from within EntityAIThief.

@@ -28,7 +28,7 @@ public class EntityAIAvoidExplosions extends EntityAIBase {
 
     public EntityAIAvoidExplosions(EntityCreature entity) {
         this.theEntity = entity;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns whether the AI should begin execution.

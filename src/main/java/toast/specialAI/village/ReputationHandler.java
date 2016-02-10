@@ -24,7 +24,8 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
-public class ReputationHandler {
+public class ReputationHandler
+{
     // Useful properties for this class.
     private static final boolean HOUSE_REP = Properties.getBoolean(Properties.VILLAGES, "house_rep");
     private static final boolean REFRESH_HOUSES = Properties.getBoolean(Properties.VILLAGES, "refresh_houses");
@@ -108,23 +109,26 @@ public class ReputationHandler {
 
                         // Keep doors saved in the village until destroyed.
                         if (refreshDoors && ReputationHandler.REFRESH_HOUSES) {
-                            if (villageTicks < 0) {
-                                NBTTagCompound tag = new NBTTagCompound();
-                                village.writeVillageDataToNBT(tag);
-                                villageTicks = tag.getInteger("Tick");
-                            }
+                        	boolean shouldRefresh = true;
 
                             // Check if all villagers are dead and not merely unloaded
-                            if (village.getNumVillagers() == 0) {
+                            if (village.getNumVillagers() <= 0) {
                                 ChunkCoordinates coords = village.getCenter();
                                 EntityPlayer nearestPlayer = world.getClosestPlayer(coords.posX, coords.posY, coords.posZ, village.getVillageRadius() + 32.0);
                                 if (nearestPlayer != null) {
-                                    continue;
+                                    shouldRefresh = false;
                                 }
                             }
 
-                            for (VillageDoorInfo doorInfo : (List<VillageDoorInfo>) village.getVillageDoorInfoList()) {
-                                doorInfo.lastActivityTimestamp = villageTicks;
+                            if (shouldRefresh) {
+	                            if (villageTicks < 0) { // All villages in a village collection have the same tick counter
+	                                NBTTagCompound tag = new NBTTagCompound();
+	                                village.writeVillageDataToNBT(tag);
+	                                villageTicks = tag.getInteger("Tick");
+	                            }
+	                            for (VillageDoorInfo doorInfo : (List<VillageDoorInfo>) village.getVillageDoorInfoList()) {
+	                                doorInfo.lastActivityTimestamp = villageTicks;
+	                            }
                             }
                         }
                     }

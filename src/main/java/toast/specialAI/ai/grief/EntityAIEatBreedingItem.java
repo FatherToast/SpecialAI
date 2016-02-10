@@ -1,4 +1,4 @@
-package toast.specialAI.ai;
+package toast.specialAI.ai.grief;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +9,7 @@ import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import toast.specialAI.Properties;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIEatBreedingItem extends EntityAIBase {
     // Useful properties for this class.
@@ -26,7 +27,7 @@ public class EntityAIEatBreedingItem extends EntityAIBase {
 
     public EntityAIEatBreedingItem(EntityAnimal entity) {
         this.theEntity = entity;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns whether the EntityAIBase should begin execution.

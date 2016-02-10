@@ -8,6 +8,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import toast.specialAI.EffectHelper;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAISprint extends EntityAIBase implements ISpecialAI {
     // The weight of this AI pattern.
@@ -26,7 +27,7 @@ public class EntityAISprint extends EntityAIBase implements ISpecialAI {
     private EntityAISprint(EntityLiving entity, float speedMult) {
         this.theEntity = entity;
         this.speedMult = speedMult + 1.0F;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns the string name of this AI for use in Properties.

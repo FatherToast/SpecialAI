@@ -7,6 +7,7 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIJump extends EntityAIBase implements ISpecialAI {
     // The weight of this AI pattern.
@@ -19,7 +20,7 @@ public class EntityAIJump extends EntityAIBase implements ISpecialAI {
 
     private EntityAIJump(EntityLiving entity) {
         this.theEntity = entity;
-        this.setMutexBits(5);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_SWIMMING);
     }
 
     // Returns the string name of this AI for use in Properties.

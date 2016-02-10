@@ -9,6 +9,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -17,6 +18,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import toast.specialAI.EffectHelper;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     // The weight of this AI pattern.
@@ -35,7 +37,7 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
         if (entity instanceof EntityCreature) {
             this.aiAvoid = new EntityAIAvoidEntity((EntityCreature) entity, EntityPlayer.class, avoidRange, 1.0, 1.2);
         }
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns the string name of this AI for use in Properties.
@@ -91,16 +93,14 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     @Override
     public boolean shouldExecute() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
-        if (target == null || target instanceof EntityPlayer && target.getHealth() > target.getMaxHealth() / 2.0F) {
-            if (this.theEntity.getEquipmentInSlot(0) == null)
-                return target != null && this.hasItems((EntityPlayer) target);
-            if (this.aiAvoid != null) {
-                try {
-                    return this.aiAvoid.shouldExecute();
-                }
-                catch (Exception ex) {
-                    return false;
-                }
+        if (target instanceof EntityPlayer && this.theEntity.getEquipmentInSlot(0) == null)
+            return this.hasItems((EntityPlayer) target);
+        if (this.aiAvoid != null && (target == null || target.getHealth() > target.getMaxHealth() / 3.0F)) {
+            try {
+                return this.aiAvoid.shouldExecute();
+            }
+            catch (Exception ex) {
+                return false;
             }
         }
         return false;
@@ -109,8 +109,9 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     // Called once when the AI begins execution.
     @Override
     public void startExecuting() {
-        if (this.theEntity.getEquipmentInSlot(0) == null) {
-            this.theEntity.getNavigator().tryMoveToEntityLiving(this.theEntity.getAttackTarget(), 1.2);
+        EntityLivingBase target = this.theEntity.getAttackTarget();
+        if (target != null && this.theEntity.getEquipmentInSlot(0) == null) {
+            this.theEntity.getNavigator().tryMoveToEntityLiving(target, 1.2);
         }
         else if (this.aiAvoid != null) {
             try {
@@ -141,10 +142,15 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
             if (this.theEntity.getDistanceSq(target.posX, target.boundingBox.minY, target.posZ) <= range) {
                 target.attackEntityFrom(DamageSource.causeMobDamage(this.theEntity), 1.0F);
 				if (target instanceof EntityPlayer) {
-					this.theEntity.setCurrentItemOrArmor(0, this.removeRandomItem((EntityPlayer) target));
+					ItemStack stolen = this.removeRandomItem((EntityPlayer) target);
+					if (stolen != null) {
+						EntityItem drop = new EntityItem(this.theEntity.worldObj, this.theEntity.posX, this.theEntity.posY + 0.5, this.theEntity.posZ, stolen);
+						drop.delayBeforeCanPickup = 20;
+						drop.getEntityData().setLong("ThiefUUIDMost", this.theEntity.getUniqueID().getMostSignificantBits());
+						drop.getEntityData().setLong("ThiefUUIDLeast", this.theEntity.getUniqueID().getLeastSignificantBits());
+						this.theEntity.worldObj.spawnEntityInWorld(drop);
+					}
 				}
-                this.theEntity.setEquipmentDropChance(0, 2.0F);
-                this.theEntity.func_110163_bv(); // Marks the entity to never despawn.
                 this.theEntity.addPotionEffect(new PotionEffect(Potion.invisibility.id, 60, 0));
                 this.theEntity.getNavigator().clearPathEntity();
             }

@@ -7,6 +7,7 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
 import net.minecraft.village.Village;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIVillagerDefendVillage extends EntityAITarget {
     // The saved village object, occasionally updated.
@@ -20,7 +21,7 @@ public class EntityAIVillagerDefendVillage extends EntityAITarget {
 
     public EntityAIVillagerDefendVillage(EntityCreature entity) {
         super(entity, false, true);
-        this.setMutexBits(1);
+        this.setMutexBits(AIHandler.TARGET_BIT);
     }
 
     // Returns whether the EntityAIBase should begin execution.

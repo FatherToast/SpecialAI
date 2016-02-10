@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import toast.specialAI.EffectHelper;
+import toast.specialAI.ai.AIHandler;
 
 public class EntityAIThrowPlayer extends EntityAIBase implements ISpecialAI {
     // The weight of this AI pattern.
@@ -34,7 +35,7 @@ public class EntityAIThrowPlayer extends EntityAIBase implements ISpecialAI {
 
     private EntityAIThrowPlayer(EntityLiving entity) {
         this.theEntity = entity;
-        this.setMutexBits(3);
+        this.setMutexBits(AIHandler.BIT_MOVEMENT | AIHandler.BIT_FACING);
     }
 
     // Returns the string name of this AI for use in Properties.
