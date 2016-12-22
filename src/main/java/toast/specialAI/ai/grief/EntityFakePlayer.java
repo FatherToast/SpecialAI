@@ -2,22 +2,25 @@ package toast.specialAI.ai.grief;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
+import com.mojang.authlib.GameProfile;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EnumCreatureAttribute;
-import net.minecraft.entity.ai.attributes.BaseAttributeMap;
+import net.minecraft.entity.ai.attributes.AbstractAttributeMap;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.FoodStats;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
-
-import com.mojang.authlib.GameProfile;
 
 public class EntityFakePlayer extends FakePlayer
 {
@@ -32,7 +35,6 @@ public class EntityFakePlayer extends FakePlayer
 		this.wrappedEntity = entity;
 		this.foodStats = new FakeFoodStats(this);
 
-		this.getHeldItem();
 		this.copyLocationAndAnglesFrom(entity);
 		this.motionX = entity.motionX;
 		this.motionY = entity.motionY;
@@ -81,10 +83,6 @@ public class EntityFakePlayer extends FakePlayer
 		return this.wrappedEntity.getActivePotionEffects();
 	}
 	@Override
-	public boolean isPotionActive(int potionId) {
-		return this.wrappedEntity.isPotionActive(potionId);
-	}
-	@Override
 	public boolean isPotionActive(Potion potion) {
 		return this.wrappedEntity.isPotionActive(potion);
 	}
@@ -101,8 +99,8 @@ public class EntityFakePlayer extends FakePlayer
 		return this.wrappedEntity.isPotionApplicable(potionEffect);
 	}
 	@Override
-	public void removePotionEffect(int potionId) {
-		this.wrappedEntity.removePotionEffect(potionId);
+	public void removePotionEffect(Potion potion) {
+		this.wrappedEntity.removePotionEffect(potion);
 	}
 	@Override
 	public void curePotionEffects(ItemStack curativeItem) {
@@ -115,20 +113,24 @@ public class EntityFakePlayer extends FakePlayer
 	}
 
     @Override
-	public ItemStack getHeldItem() {
-        return this.getEquipmentInSlot(0);
+	public ItemStack getHeldItem(EnumHand hand) {
+        return this.wrappedEntity.getHeldItem(hand);
     }
     @Override
-	public ItemStack getEquipmentInSlot(int slot) {
-        return this.wrappedEntity.getEquipmentInSlot(slot);
+	public Iterable<ItemStack> getHeldEquipment() {
+        return this.wrappedEntity.getHeldEquipment();
     }
     @Override
-	public void setCurrentItemOrArmor(int slot, ItemStack itemStack) {
-    	this.wrappedEntity.setCurrentItemOrArmor(slot, itemStack);
+	public Iterable<ItemStack> getArmorInventoryList() {
+        return this.wrappedEntity.getArmorInventoryList();
     }
     @Override
-	public ItemStack[] getLastActiveItems() {
-        return this.wrappedEntity.getLastActiveItems();
+	public void setItemStackToSlot(EntityEquipmentSlot slot, @Nullable ItemStack itemStack) {
+    	this.wrappedEntity.setItemStackToSlot(slot, itemStack);
+    }
+    @Override @Nullable
+    public ItemStack getItemStackFromSlot(EntityEquipmentSlot slot) {
+        return this.wrappedEntity.getItemStackFromSlot(slot);
     }
 
 	@Override
@@ -136,21 +138,17 @@ public class EntityFakePlayer extends FakePlayer
 		return this.wrappedEntity != null ? this.wrappedEntity.getEntityAttribute(attribute) : super.getEntityAttribute(attribute);
 	}
 	@Override
-	public BaseAttributeMap getAttributeMap() {
+	public AbstractAttributeMap getAttributeMap() {
 		return this.wrappedEntity != null ? this.wrappedEntity.getAttributeMap() : super.getAttributeMap();
 	}
 
 	@Override
-	public ChunkCoordinates getPlayerCoordinates() {
-		return new ChunkCoordinates((int) Math.floor(this.posX), (int) Math.floor(this.posY + 0.5), (int) Math.floor(this.posZ));
+	public boolean isEntityInvulnerable(DamageSource source) {
+		return this.wrappedEntity.isEntityInvulnerable(source);
 	}
 	@Override
-	public boolean isEntityInvulnerable() {
-		return this.wrappedEntity.isEntityInvulnerable();
-	}
-	@Override
-	public void travelToDimension(int dim) {
-		this.wrappedEntity.travelToDimension(dim);
+	public Entity changeDimension(int dim) {
+		return this.wrappedEntity.changeDimension(dim);
 	}
 	@Override
 	public EnumCreatureAttribute getCreatureAttribute() {

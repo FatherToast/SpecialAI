@@ -5,8 +5,10 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITarget;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.MathHelper;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.Village;
+import toast.specialAI.Properties;
 import toast.specialAI.ai.AIHandler;
 
 public class EntityAIVillagerDefendVillage extends EntityAITarget {
@@ -30,10 +32,10 @@ public class EntityAIVillagerDefendVillage extends EntityAITarget {
         // Call implementation and play sound if this should execute
         if (this.shouldExecuteImpl()) {
             if (this.taskOwner instanceof EntityVillager) {
-                this.taskOwner.worldObj.playSoundAtEntity(this.taskOwner, "mob.villager.no", 1.0F, 1.0F / (this.taskOwner.getRNG().nextFloat() * 0.4F + 0.8F));
+                this.taskOwner.worldObj.playSound(null, new BlockPos(this.taskOwner), SoundEvents.ENTITY_VILLAGER_NO, this.taskOwner.getSoundCategory(), 1.0F, 1.0F / (this.taskOwner.getRNG().nextFloat() * 0.4F + 0.8F));
             }
             if (this.villageAggressor instanceof EntityPlayer) {
-                this.aggressorName = ((EntityPlayer) this.villageAggressor).getCommandSenderName();
+                this.aggressorName = ((EntityPlayer) this.villageAggressor).getName();
             }
             else {
                 this.aggressorName = null;
@@ -48,7 +50,7 @@ public class EntityAIVillagerDefendVillage extends EntityAITarget {
         // Update the saved village object if needed
         if (--this.refreshDelay <= 0) {
             this.refreshDelay = 70 + this.taskOwner.getRNG().nextInt(50);
-            this.village = this.taskOwner.worldObj.villageCollectionObj.findNearestVillage(MathHelper.floor_double(this.taskOwner.posX), MathHelper.floor_double(this.taskOwner.posY), MathHelper.floor_double(this.taskOwner.posZ), 32);
+            this.village = this.taskOwner.worldObj.villageCollectionObj.getNearestVillage(new BlockPos(this.taskOwner), 32);
         }
 
         // Check for aggressors in the village
@@ -57,7 +59,7 @@ public class EntityAIVillagerDefendVillage extends EntityAITarget {
         this.villageAggressor = this.village.findNearestVillageAggressor(this.taskOwner);
         if (!this.isSuitableTarget(this.villageAggressor, false)) {
             if (this.taskOwner.getRNG().nextInt(20) == 0) {
-                this.villageAggressor = this.village.func_82685_c(this.taskOwner);
+                this.villageAggressor = this.village.getNearestTargetPlayer(this.taskOwner);
                 return this.isSuitableTarget(this.villageAggressor, false);
             }
             return false;
@@ -77,8 +79,8 @@ public class EntityAIVillagerDefendVillage extends EntityAITarget {
     public boolean continueExecuting() {
         if (super.continueExecuting()) {
             if (this.aggressorName != null) {
-                int reputation = this.village.getReputationForPlayer(this.aggressorName);
-                if (reputation > ReputationHandler.getDefendLimit() || reputation > -15 && this.taskOwner.getRNG().nextFloat() < (reputation - ReputationHandler.getDefendLimit() + 10.0F) / 150.0F)
+                int reputation = this.village.getPlayerReputation(this.aggressorName);
+                if (reputation > Properties.get().VILLAGES.BLOCK_ATTACK_LIMIT || reputation > -15 && this.taskOwner.getRNG().nextFloat() < (reputation - Properties.get().VILLAGES.BLOCK_ATTACK_LIMIT + 10.0F) / 150.0F)
                     return false;
             }
             return true;

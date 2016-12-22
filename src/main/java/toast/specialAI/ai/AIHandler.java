@@ -8,8 +8,6 @@ import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIArrowAttack;
-import net.minecraft.entity.ai.EntityAIAttackOnCollide;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
@@ -22,67 +20,45 @@ import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import toast.specialAI.Properties;
-import toast.specialAI._SpecialAI;
-import toast.specialAI.ai.grief.EntityAIDig;
+import toast.specialAI.ModSpecialAI;
 import toast.specialAI.ai.grief.EntityAIEatBreedingItem;
 import toast.specialAI.ai.grief.EntityAIGriefBlocks;
+import toast.specialAI.ai.react.EntityAIAvoidExplosions;
+import toast.specialAI.ai.react.EntityAIDodgeArrows;
 import toast.specialAI.ai.special.SpecialAIHandler;
-import toast.specialAI.util.EntitySet;
 import toast.specialAI.village.EntityAIVillagerDefendVillage;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class AIHandler
 {
-    // Useful properties for this class.
-    private static final boolean AVOID_EXPLOSIONS = Properties.getBoolean(Properties.GENERAL, "avoid_explosions");
-    private static final boolean CALL_FOR_HELP = Properties.getBoolean(Properties.GENERAL, "call_for_help");
-    private static final double CALL_FOR_HELP_DEATH = Properties.getDouble(Properties.GENERAL, "call_for_help_on_death");
-    private static final boolean EAT_BREEDING_ITEMS = Properties.getBoolean(Properties.GENERAL, "eat_breeding_items");
-    private static final EntitySet DEPACIFY_SET = new EntitySet(Properties.getString(Properties.GENERAL, "depacify_list"));
-    private static final double AGGRESSIVE_CHANCE = Properties.getDouble(Properties.GENERAL, "depacify_aggressive_chance");
-
-
-    private static final boolean GRIEFING = Properties.getBoolean(Properties.GRIEFING, "_enabled");
-    private static final boolean FIDDLING = Properties.getBoolean(Properties.GRIEFING, "_fiddling_enabled");
-    private static final EntitySet GRIEF_SET = new EntitySet(Properties.getString(Properties.GRIEFING, "mob_list"));
-    private static final EntitySet FIDDLE_SET = new EntitySet(Properties.getString(Properties.GRIEFING, "mob_list_fiddling"));
-    private static final int SCAN_COUNT_GLOBAL = Properties.getInt(Properties.GRIEFING, "scan_count_global");
-
-    private static final double RIDER_CHANCE = Properties.getDouble(Properties.JOCKEYS, "_rider_chance");
-    public static final EntitySet MOUNT_SET = new EntitySet(Properties.getString(Properties.JOCKEYS, "mount_list"));
-    public static final EntitySet MOUNT_SET_SMALL = new EntitySet(Properties.getString(Properties.JOCKEYS, "mount_list_small"));
-    private static final EntitySet RIDER_SET = new EntitySet(Properties.getString(Properties.JOCKEYS, "rider_list"));
-    private static final EntitySet RIDER_SET_SMALL = new EntitySet(Properties.getString(Properties.JOCKEYS, "rider_list_small"));
-
-    private static final double SPECIAL_CHANCE_1 = Properties.getDouble(Properties.SPECIAL_AI, "_chance_1");
-    private static final EntitySet SPECIAL_SET_1 = new EntitySet(Properties.getString(Properties.SPECIAL_AI, "_mob_list_1"));
-    private static final double SPECIAL_CHANCE_2 = Properties.getDouble(Properties.SPECIAL_AI, "_chance_2");
-    private static final EntitySet SPECIAL_SET_2 = new EntitySet(Properties.getString(Properties.SPECIAL_AI, "_mob_list_2"));
-    private static final double SPECIAL_CHANCE_3 = Properties.getDouble(Properties.SPECIAL_AI, "_chance_3");
-    private static final EntitySet SPECIAL_SET_3 = new EntitySet(Properties.getString(Properties.SPECIAL_AI, "_mob_list_3"));
-
-    private static final boolean VILLAGERS_DEFEND = Properties.getBoolean(Properties.VILLAGES, "villagers_defend");
-
     // NBT tags used to store info about this mod's AI.
     private static final String AVOID_EXPLOSIONS_TAG = "AvoidExplosions";
+    private static final String DODGE_ARROWS_TAG = "DodgeArrows";
+    private static final String DODGE_ARROW_INIT_TAG = "SAIArrowDodgeCheck";
+
     private static final String DEFEND_VILLAGE_TAG = "DefendVillage";
     private static final String DEPACIFY_TAG = "Depacify";
 
+    public static final String IDLE_RANGE_XZ_TAG = "IdleScanRangeXZ";
+    public static final String IDLE_RANGE_Y_TAG = "IdleScanRangeY";
+
     public static final String GRIEF_TAG = "Griefing";
-    public static final String GRIEF_RANGE_TAG = "GriefScanRange";
-    public static final String GRIEF_RANGE_VERTICAL_TAG = "GriefScanRangeVertical";
+    public static final String GRIEF_BREAK_SPEED = "GriefBreakSpeed";
     public static final String GRIEF_TOOL_TAG = "GriefNeedsTool";
     public static final String GRIEF_LIGHT_TAG = "GriefLights";
     public static final String GRIEF_BLOCK_TAG = "GriefBlocks";
+    public static final String GRIEF_LOOTABLE_TAG = "GriefLootable";
     public static final String GRIEF_EXCEPTION_TAG = "GriefBlacklist";
 
     public static final String FIDDLE_TAG = "Fiddling";
@@ -101,33 +77,31 @@ public class AIHandler
 	 * AIs may only run concurrently if they share no "mutex bits".
 	 * Therefore, AIs with 0 for their "mutex" number may always run with any other AI.
 	 * Use plain addition or bitwise OR to combine multiple bits. */
-	public static final byte BIT_NONE = 0;
-	public static final byte BIT_MOVEMENT = 1 << 0; // 1
-	public static final byte BIT_FACING = 1 << 1; // 2
-	public static final byte BIT_SWIMMING = 1 << 2; // 4
+	public static final byte BIT_NONE = Byte.parseByte("000", 2);
+	public static final byte BIT_MOVEMENT = Byte.parseByte("001", 2);
+	public static final byte BIT_FACING = Byte.parseByte("010", 2);
+	public static final byte BIT_SWIMMING = Byte.parseByte("100", 2);
 
     /* The "mutex bit" used by all targeting tasks so that none of them run at the same time. */
 	public static final byte TARGET_BIT = 1;
 
-    private static int scansLeft = AIHandler.SCAN_COUNT_GLOBAL;
+    private static int scansLeft = Properties.get().IDLE_AI.SCAN_COUNT_GLOBAL;
 
     // Decrements the number of scans left and returns true if a scan can be made.
     public static boolean canScan() {
-		return AIHandler.SCAN_COUNT_GLOBAL <= 0 || AIHandler.scansLeft-- > 0;
+		return Properties.get().IDLE_AI.SCAN_COUNT_GLOBAL <= 0 || AIHandler.scansLeft-- > 0;
     }
 
     // Clears the entity's AI tasks.
-    @SuppressWarnings("unused")
 	private static void clearAI(EntityLiving entity) {
-        for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.tasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
+        for (EntityAITaskEntry entry : entity.tasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
             entity.tasks.removeTask(entry.action);
         }
     }
 
     // Clears the entity's AI target tasks.
-    @SuppressWarnings("unused")
     private static void clearTargetAI(EntityLiving entity) {
-        for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.targetTasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
+        for (EntityAITaskEntry entry : entity.targetTasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
             entity.targetTasks.removeTask(entry.action);
         }
     }
@@ -137,10 +111,15 @@ public class AIHandler
         entity.tasks.addTask(-1, new EntityAIAvoidExplosions(entity));
     }
 
+    // Adds avoid explosions AI to the entity.
+    private static void addDodgeArrowsAI(EntityCreature entity, float dodgeChance) {
+        entity.tasks.addTask(-1, new EntityAIDodgeArrows(entity, dodgeChance));
+    }
+
     // Adds defend village AI to the mob.
     private static void addDefendVillageAI(EntityCreature entity, boolean addedAttackAI) {
         if (!addedAttackAI) {
-            entity.tasks.addTask(0, new EntityAIAttackOnCollidePassive(entity, 0.7, false));
+            entity.tasks.addTask(0, new EntityAIAttackMeleePassive(entity, 0.7, false));
         }
         entity.targetTasks.addTask(0, new EntityAIVillagerDefendVillage(entity));
     }
@@ -148,36 +127,23 @@ public class AIHandler
     // Adds hurt by target AI to the mob.
     private static void addHurtByTargetAI(EntityCreature entity, byte depacify, boolean addedAttackAI) {
         if (!addedAttackAI) {
-            entity.tasks.addTask(0, new EntityAIAttackOnCollidePassive(entity, entity instanceof EntityChicken ? 1.8 : 1.4, false));
+            entity.tasks.addTask(0, new EntityAIAttackMeleePassive(entity, entity instanceof EntityChicken ? 1.8 : 1.4, false));
         }
-        entity.targetTasks.addTask(0, new EntityAIHurtByTarget(entity, AIHandler.CALL_FOR_HELP));
+        entity.targetTasks.addTask(0, new EntityAIHurtByTarget(entity, Properties.get().REACT_AI.CALL_HELP));
         if (depacify > 1) {
-            entity.targetTasks.addTask(1, new EntityAINearestAttackableTarget(entity, EntityPlayer.class, 0, true));
+            entity.targetTasks.addTask(1, new EntityAINearestAttackableTarget(entity, EntityPlayer.class, true));
         }
     }
 
     // Sets the entity's "call for help" to true.
     private static void setHelpAI(EntityCreature entity) {
-        for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.targetTasks.taskEntries.toArray(new EntityAITaskEntry[0]))
+        for (EntityAITaskEntry entry : entity.targetTasks.taskEntries.toArray(new EntityAITaskEntry[0]))
             if (entry.action.getClass() == EntityAIHurtByTarget.class) {
                 int priority = entry.priority;
                 entity.targetTasks.removeTask(entry.action);
                 entity.targetTasks.addTask(priority, new EntityAIHurtByTarget(entity, true));
                 return;
             }
-    }
-
-    // Gives the entity mount target AI.
-    private static void addMountAI(EntityCreature entity, boolean addedAttackAI) {
-        if (!addedAttackAI) {
-            for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.tasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
-                if (entry.action instanceof EntityAIAttackOnCollide || entry.action instanceof EntityAIArrowAttack) {
-                    addedAttackAI = true;
-                    break;
-                }
-            }
-        }
-        entity.targetTasks.addTask(-1, new EntityAIRiderTarget(entity, addedAttackAI));
     }
 
     // Gives the entity rider AI.
@@ -198,7 +164,7 @@ public class AIHandler
     // Returns the priority to assign to an idle AI.
     private static int getPassivePriority(EntityLiving entity) {
         int highest = Integer.MIN_VALUE;
-        for (EntityAITaskEntry entry : (EntityAITaskEntry[]) entity.tasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
+        for (EntityAITaskEntry entry : entity.tasks.taskEntries.toArray(new EntityAITaskEntry[0])) {
             if (entry.action instanceof EntityAIWander || entry.action instanceof EntityAIWatchClosest || entry.action instanceof EntityAILookIdle)
                 return entry.priority;
             if (highest < entry.priority) {
@@ -210,7 +176,7 @@ public class AIHandler
 
     // Gives the entity digging AI.
 	private static void addDigAI(EntityLiving entity) {
-        entity.tasks.addTask(0, new EntityAIDig(entity));
+        //entity.tasks.addTask(0, new EntityAIDig(entity));
     }
 
     public AIHandler() {
@@ -229,7 +195,7 @@ public class AIHandler
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-        	AIHandler.scansLeft = AIHandler.SCAN_COUNT_GLOBAL;
+        	AIHandler.scansLeft = Properties.get().IDLE_AI.SCAN_COUNT_GLOBAL;
         }
     }
 
@@ -256,21 +222,21 @@ public class AIHandler
     }
 
     private void equipToThief(EntityItem item) {
-    	if (item.getEntityData().hasKey("ThiefUUIDMost")) {
-    		UUID thiefId = new UUID(item.getEntityData().getLong("ThiefUUIDMost"), item.getEntityData().getLong("ThiefUUIDLeast"));
+    	if (item.getEntityData().hasUniqueId("ThiefUUID")) {
+    		UUID thiefId = item.getEntityData().getUniqueId("ThiefUUID");
         	Object entity;
         	for (int i = 0; i < item.worldObj.loadedEntityList.size(); i++) {
         		entity = item.worldObj.loadedEntityList.get(i);
         		if (entity instanceof EntityLiving && thiefId.equals(((EntityLiving) entity).getUniqueID())) {
-        			((EntityLiving) entity).setCurrentItemOrArmor(0, item.getEntityItem());
-        			((EntityLiving) entity).setEquipmentDropChance(0, 2.0F);
-        			((EntityLiving) entity).func_110163_bv(); // Marks the entity to never despawn.
+        			((EntityLiving) entity).setItemStackToSlot(EntityEquipmentSlot.MAINHAND, item.getEntityItem());
+        			((EntityLiving) entity).setDropChance(EntityEquipmentSlot.MAINHAND, 2.0F);
+        			((EntityLiving) entity).enablePersistence();
         			item.setDead();
         			return;
         		}
         	}
-        	item.getEntityData().removeTag("ThiefUUIDMost");
-        	item.getEntityData().removeTag("ThiefUUIDLeast");
+        	item.getEntityData().removeTag("ThiefUUID" + "Most");
+        	item.getEntityData().removeTag("ThiefUUID" + "Least");
     	}
     }
 
@@ -283,11 +249,20 @@ public class AIHandler
      */
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onEntityJoinWorld(EntityJoinWorldEvent event) {
-        if (event.world.isRemote || ! (event.entity instanceof EntityLiving))
+        if (event.getWorld().isRemote)
             return;
 
-        EntityLiving theEntity = (EntityLiving) event.entity;
-        NBTTagCompound tag = _SpecialAI.getTag(theEntity);
+        if (event.getEntity() instanceof EntityArrow && !event.getEntity().getEntityData().getBoolean(AIHandler.DODGE_ARROW_INIT_TAG)) {
+        	event.getEntity().getEntityData().setBoolean(AIHandler.DODGE_ARROW_INIT_TAG, true);
+        	EntityAIDodgeArrows.doDodgeCheckForArrow(event.getEntity());
+        }
+
+        if (!(event.getEntity() instanceof EntityLiving))
+        	return;
+
+        EntityLiving theEntity = (EntityLiving) event.getEntity();
+        NBTTagCompound tag = ModSpecialAI.getTag(theEntity);
+    	float[] chances;
 
         if (theEntity instanceof EntityCreature) {
             // So we don't add multiple attack AIs
@@ -295,15 +270,23 @@ public class AIHandler
 
             // Avoid explosions
             if (!tag.hasKey(AIHandler.AVOID_EXPLOSIONS_TAG)) {
-                tag.setBoolean(AIHandler.AVOID_EXPLOSIONS_TAG, AIHandler.AVOID_EXPLOSIONS);
+                tag.setBoolean(AIHandler.AVOID_EXPLOSIONS_TAG, Properties.get().REACT_AI.AVOID_EXPLOSIONS);
             }
             if (tag.getBoolean(AIHandler.AVOID_EXPLOSIONS_TAG)) {
                 AIHandler.addAvoidExplosionsAI((EntityCreature) theEntity);
             }
 
+            // Dodge arrows
+            if (!tag.hasKey(AIHandler.DODGE_ARROWS_TAG)) {
+                tag.setFloat(AIHandler.DODGE_ARROWS_TAG, (float) Properties.get().REACT_AI.DODGE_ARROWS);
+            }
+            if (tag.getFloat(AIHandler.DODGE_ARROWS_TAG) > 0.0F) {
+                AIHandler.addDodgeArrowsAI((EntityCreature) theEntity, tag.getFloat(AIHandler.DODGE_ARROWS_TAG));
+            }
+
             // Defend village
             if (!tag.hasKey(AIHandler.DEFEND_VILLAGE_TAG)) {
-                tag.setBoolean(AIHandler.DEFEND_VILLAGE_TAG, AIHandler.VILLAGERS_DEFEND && theEntity instanceof EntityVillager);
+                tag.setBoolean(AIHandler.DEFEND_VILLAGE_TAG, Properties.get().VILLAGES.VILLAGERS_DEFEND && theEntity instanceof EntityVillager);
             }
             if (tag.getBoolean(AIHandler.DEFEND_VILLAGE_TAG)) {
                 AIHandler.addDefendVillageAI((EntityCreature) theEntity, addedAttackAI);
@@ -316,8 +299,9 @@ public class AIHandler
                 depacify = tag.getByte(AIHandler.DEPACIFY_TAG);
             }
             else {
-                if (AIHandler.DEPACIFY_SET.contains(theEntity)) {
-                    if (theEntity.getRNG().nextDouble() < AIHandler.AGGRESSIVE_CHANCE) {
+            	chances = Properties.get().GENERAL.DEPACIFY_LIST.getChances(theEntity);
+                if (chances != null && chances.length > 0 && theEntity.getRNG().nextFloat() < chances[0]) {
+                    if (theEntity.getRNG().nextDouble() < Properties.get().GENERAL.AGGRESSIVE_CHANCE) {
                         depacify = 2;
                     }
                     else {
@@ -333,44 +317,46 @@ public class AIHandler
                 addedAttackAI = true;
             }
             // Call for help (already covered if depacified)
-            else if (AIHandler.CALL_FOR_HELP) {
+            else if (Properties.get().REACT_AI.CALL_HELP) {
                 AIHandler.setHelpAI((EntityCreature) theEntity);
-            }
-
-            // Mount
-            if (AIHandler.MOUNT_SET.contains(theEntity) || AIHandler.MOUNT_SET_SMALL.contains(theEntity)) {
-                AIHandler.addMountAI((EntityCreature) theEntity, addedAttackAI);
             }
         }
 
         // Rider
-        if (!tag.hasKey(AIHandler.RIDER_TAG) && AIHandler.RIDER_CHANCE > 0.0) {
-            boolean small = AIHandler.RIDER_SET_SMALL.contains(theEntity);
-            if ((small || AIHandler.RIDER_SET.contains(theEntity)) && theEntity.getRNG().nextDouble() < AIHandler.RIDER_CHANCE) {
-                tag.setBoolean(AIHandler.RIDER_TAG, true);
+        boolean small = Properties.get().JOCKEYS.RIDER_LIST_SMALL.contains(theEntity);
+        if (!tag.hasKey(AIHandler.RIDER_TAG)) {
+            if (small) {
+            	chances = Properties.get().JOCKEYS.RIDER_LIST_SMALL.getChances(theEntity);
             }
             else {
-                tag.setBoolean(AIHandler.RIDER_TAG, false);
+            	chances = Properties.get().JOCKEYS.RIDER_LIST.getChances(theEntity);
             }
+
+            if (chances != null && chances.length > 0 && theEntity.getRNG().nextFloat() < chances[0]) {
+                tag.setBoolean(AIHandler.RIDER_TAG, true);
+            }
+            else tag.setBoolean(AIHandler.RIDER_TAG, false);
         }
         if (tag.getBoolean(AIHandler.RIDER_TAG)) {
-            AIHandler.addRiderAI(theEntity, AIHandler.RIDER_SET_SMALL.contains(theEntity));
+            AIHandler.addRiderAI(theEntity, small);
         }
 
         // Eat breeding items
-        if (AIHandler.EAT_BREEDING_ITEMS && theEntity instanceof EntityAnimal) {
+        if (Properties.get().GENERAL.EAT_BREEDING_ITEMS && theEntity instanceof EntityAnimal) {
             AIHandler.addEatingAI((EntityAnimal) theEntity);
         }
 
         // Passive griefing
         if (!tag.hasKey(AIHandler.GRIEF_TAG)) {
-            tag.setBoolean(AIHandler.GRIEF_TAG, AIHandler.GRIEF_SET.contains(theEntity));
+        	chances = Properties.get().GRIEFING.MOB_LIST.getChances(theEntity);
+            tag.setBoolean(AIHandler.GRIEF_TAG, chances != null && chances.length > 0 && theEntity.getRNG().nextFloat() < chances[0]);
         }
         if (!tag.hasKey(AIHandler.FIDDLE_TAG)) {
-            tag.setBoolean(AIHandler.FIDDLE_TAG, AIHandler.FIDDLE_SET.contains(theEntity));
+        	chances = Properties.get().FIDDLING.MOB_LIST.getChances(theEntity);
+            tag.setBoolean(AIHandler.FIDDLE_TAG, chances != null && chances.length > 0 && theEntity.getRNG().nextFloat() < chances[0]);
         }
-        boolean griefing = AIHandler.GRIEFING && tag.getBoolean(AIHandler.GRIEF_TAG);
-        boolean fiddling = AIHandler.FIDDLING && tag.getBoolean(AIHandler.FIDDLE_TAG);
+        boolean griefing = Properties.get().GRIEFING.ENABLED && tag.getBoolean(AIHandler.GRIEF_TAG);
+        boolean fiddling = Properties.get().FIDDLING.ENABLED && tag.getBoolean(AIHandler.FIDDLE_TAG);
         if (griefing || fiddling) {
             AIHandler.addGriefAI(theEntity, griefing, fiddling, tag);
         }
@@ -387,6 +373,7 @@ public class AIHandler
         if (!tag.hasKey(AIHandler.UAI_TAG)) {
             aiTag = new NBTTagCompound();
             tag.setTag(AIHandler.UAI_TAG, aiTag);
+
             // Compatibility
             if (tag.hasKey(AIHandler.SPECIAL_TAG)) {
                 byte aiCode = tag.getByte(AIHandler.SPECIAL_TAG);
@@ -395,15 +382,11 @@ public class AIHandler
                 }
             }
 
-            // Apply a new AI, if needed
-            if (AIHandler.SPECIAL_CHANCE_1 > 0.0 && AIHandler.SPECIAL_SET_1.contains(theEntity) && theEntity.getRNG().nextDouble() < AIHandler.SPECIAL_CHANCE_1) {
-                SpecialAIHandler.saveSpecialAI(theEntity, aiTag);
-            }
-            if (AIHandler.SPECIAL_CHANCE_2 > 0.0 && AIHandler.SPECIAL_SET_2.contains(theEntity) && theEntity.getRNG().nextDouble() < AIHandler.SPECIAL_CHANCE_2) {
-                SpecialAIHandler.saveSpecialAI(theEntity, aiTag);
-            }
-            if (AIHandler.SPECIAL_CHANCE_3 > 0.0 && AIHandler.SPECIAL_SET_3.contains(theEntity) && theEntity.getRNG().nextDouble() < AIHandler.SPECIAL_CHANCE_3) {
-                SpecialAIHandler.saveSpecialAI(theEntity, aiTag);
+            // Apply new AI(s), if needed
+            chances = Properties.get().SPECIAL_AI.MOB_LIST.getChances(theEntity);
+            if (chances != null) for (float chance : chances) {
+            	if (chance > 0.0F && theEntity.getRNG().nextFloat() < chance)
+            		SpecialAIHandler.saveSpecialAI(theEntity, aiTag);
             }
 
             // Mark this entity to init, if not already forced
@@ -428,18 +411,18 @@ public class AIHandler
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void onLivingDeath(LivingDeathEvent event) {
         // Call for help on death
-        if (AIHandler.CALL_FOR_HELP_DEATH > 0.0 && event.entityLiving instanceof EntityLiving && event.entityLiving.getRNG().nextDouble() < AIHandler.CALL_FOR_HELP_DEATH) {
-            EntityLiving theEntity = (EntityLiving) event.entityLiving;
-            Entity target = event.source.getEntity();
+        if (Properties.get().REACT_AI.CALL_HELP_ON_DEATH > 0.0 && event.getEntityLiving() instanceof EntityLiving && event.getEntityLiving().getRNG().nextDouble() < Properties.get().REACT_AI.CALL_HELP_ON_DEATH) {
+            EntityLiving theEntity = (EntityLiving) event.getEntityLiving();
+            Entity target = event.getSource().getEntity();
             if (target instanceof EntityLivingBase) {
-                IAttributeInstance attribute = theEntity.getEntityAttribute(SharedMonsterAttributes.followRange);
+                IAttributeInstance attribute = theEntity.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE);
                 double range = attribute == null ? 16.0 : attribute.getAttributeValue();
 
-                List entities = theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(theEntity, AxisAlignedBB.getBoundingBox(theEntity.posX, theEntity.posY, theEntity.posZ, theEntity.posX + 1.0, theEntity.posY + 1.0, theEntity.posZ + 1.0).expand(range, 10.0, range));
+                List entities = theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(theEntity, new AxisAlignedBB(theEntity.posX, theEntity.posY, theEntity.posZ, theEntity.posX + 1.0, theEntity.posY + 1.0, theEntity.posZ + 1.0).expand(range, 10.0, range));
                 for (Object entity : entities) {
                     if (entity instanceof EntityLiving && (entity.getClass().isAssignableFrom(theEntity.getClass()) || theEntity.getClass().isAssignableFrom(entity.getClass()))) {
                         EntityLiving alliedEntity = (EntityLiving) entity;
-                        if (alliedEntity.getAttackTarget() == null && !alliedEntity.isOnSameTeam((EntityLivingBase) target)) {
+                        if (alliedEntity.getAttackTarget() == null && !alliedEntity.isOnSameTeam(target)) {
                             alliedEntity.setAttackTarget((EntityLivingBase) target);
                         }
                     }

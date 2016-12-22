@@ -11,6 +11,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import toast.specialAI.ai.AIHandler;
 
 public class EntityAILeap extends EntityAIBase implements ISpecialAI {
@@ -20,7 +21,7 @@ public class EntityAILeap extends EntityAIBase implements ISpecialAI {
     // The owner of this AI.
     protected EntityLiving theEntity;
 
-    public EntityAILeap() {}
+    public EntityAILeap() { }
 
     private EntityAILeap(EntityLiving entity) {
         this.theEntity = entity;
@@ -65,18 +66,18 @@ public class EntityAILeap extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        ItemStack held = entity.getEquipmentInSlot(0);
+        ItemStack held = entity.getHeldItemMainhand();
         if (held != null && held.getItem() instanceof ItemBow) {
-            entity.setCurrentItemOrArmor(0, new ItemStack(Items.golden_sword));
+            entity.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(Items.GOLDEN_SWORD));
         }
 
-        entity.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(new AttributeModifier(UUID.randomUUID(), "Leaper speed boost", 0.2, 1));
+        entity.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(new AttributeModifier(UUID.randomUUID(), "Leaper speed boost", 0.2, 1));
     }
 
     // Returns whether the AI should begin execution.
     @Override
     public boolean shouldExecute() {
-        if (!this.theEntity.onGround || this.theEntity.ridingEntity != null || this.theEntity.getRNG().nextInt(5) != 0)
+        if (!this.theEntity.onGround || this.theEntity.isRiding() || this.theEntity.getRNG().nextInt(5) != 0)
             return false;
         EntityLivingBase target = this.theEntity.getAttackTarget();
         if (target != null) {

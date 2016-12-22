@@ -11,11 +11,13 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.init.MobEffects;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.math.BlockPos;
 import toast.specialAI.ai.AIHandler;
 
 public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
@@ -34,7 +36,7 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
     // Ticks until next attack.
     private int healTime;
 
-    public EntityAIShaman() {}
+    public EntityAIShaman() { }
 
     private EntityAIShaman(EntityLiving entity, float healAmount, NBTTagList effects) {
         this.theEntity = entity;
@@ -88,11 +90,10 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        entity.setCurrentItemOrArmor(0, new ItemStack(Items.bone));
-        entity.setCurrentItemOrArmor(4, new ItemStack(Blocks.lit_pumpkin));
+        entity.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(Items.BONE));
+        entity.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Blocks.LIT_PUMPKIN));
 
-        entity.getEntityAttribute(SharedMonsterAttributes.maxHealth).applyModifier(new AttributeModifier(UUID.randomUUID(), "Shaman health boost", 20.0, 0));
-        entity.setHealth(entity.getHealth() + 20.0F);
+        entity.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).applyModifier(new AttributeModifier(UUID.randomUUID(), "Shaman health boost", 10.0, 0));
     }
 
     // Returns whether the AI should begin execution.
@@ -130,7 +131,7 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
         this.healTime--;
         if (this.healTime <= 0) {
             this.healTime = 20;
-            List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(16.0, 8.0, 16.0));
+            List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(16.0, 8.0, 16.0));
             Collections.shuffle(list);
             EntityLiving healTarget;
             for (Object entity : list) {
@@ -140,9 +141,9 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
                         healTarget.heal(this.healAmount);
                         healTarget.extinguish();
                         if (this.potionEffects == null) {
-                            healTarget.addPotionEffect(new PotionEffect(Potion.damageBoost.id, 31, 0));
-                            healTarget.addPotionEffect(new PotionEffect(Potion.resistance.id, 31, 1));
-                            healTarget.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 31, 1));
+                            healTarget.addPotionEffect(new PotionEffect(MobEffects.STRENGTH, 31, 0));
+                            healTarget.addPotionEffect(new PotionEffect(MobEffects.RESISTANCE, 31, 1));
+                            healTarget.addPotionEffect(new PotionEffect(MobEffects.SPEED, 31, 1));
                         }
                         else {
                             int length = this.potionEffects.tagCount();
@@ -154,7 +155,7 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
                                 }
                             }
                         }
-                        this.theEntity.worldObj.playAuxSFX(2005, (int) Math.floor(healTarget.posX), (int) Math.floor(healTarget.posY + healTarget.getEyeHeight()), (int) Math.floor(healTarget.posZ), 0);
+                        this.theEntity.worldObj.playEvent(2005, new BlockPos(healTarget), 0);
                     }
                 }
             }
@@ -165,7 +166,7 @@ public class EntityAIShaman extends EntityAIBase implements ISpecialAI {
     private boolean findFollowTarget() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
         if (target != null) {
-            List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(16.0, 8.0, 16.0));
+            List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(16.0, 8.0, 16.0));
             Collections.shuffle(list);
             for (Object entity : list) {
                 if (entity instanceof EntityLiving && target == ((EntityLiving) entity).getAttackTarget()) {

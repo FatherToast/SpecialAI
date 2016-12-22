@@ -11,14 +11,18 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 
 public abstract class EffectHelper {
+
+	public static final byte NBT_COMPOUND = new NBTTagCompound().getId();
+	public static final byte NBT_LIST = new NBTTagList().getId();
+
     // Applies the potion's effect on the entity. If the potion is already active, its duration is increased up to the given duration and its amplifier is increased by the given amplifier + 1.
     public static void stackEffect(EntityLivingBase entity, Potion potion, int duration, int amplifier) {
         if (entity.isPotionActive(potion)) {
             PotionEffect potionEffect = entity.getActivePotionEffect(potion);
-            entity.addPotionEffect(new PotionEffect(potion.id, Math.max(duration, potionEffect.getDuration()), potionEffect.getAmplifier() + amplifier + 1));
+            entity.addPotionEffect(new PotionEffect(potion, Math.max(duration, potionEffect.getDuration()), potionEffect.getAmplifier() + amplifier + 1));
         }
         else {
-            entity.addPotionEffect(new PotionEffect(potion.id, duration, amplifier));
+            entity.addPotionEffect(new PotionEffect(potion, duration, amplifier));
         }
     }
 
@@ -30,30 +34,30 @@ public abstract class EffectHelper {
         }
         if (entity.isPotionActive(potion)) {
             PotionEffect potionEffect = entity.getActivePotionEffect(potion);
-            entity.addPotionEffect(new PotionEffect(potion.id, Math.max(duration, potionEffect.getDuration()), Math.min(amplifierMax, potionEffect.getAmplifier() + amplifier + 1)));
+            entity.addPotionEffect(new PotionEffect(potion, Math.max(duration, potionEffect.getDuration()), Math.min(amplifierMax, potionEffect.getAmplifier() + amplifier + 1)));
         }
         else if (amplifier >= 0) {
-            entity.addPotionEffect(new PotionEffect(potion.id, duration, Math.min(amplifier, amplifierMax)));
+            entity.addPotionEffect(new PotionEffect(potion, duration, Math.min(amplifier, amplifierMax)));
         }
     }
 
     // Adds a custom attribute modifier to the item stack.
     // Operations: 0 = add, 1 = percent (additive), 2 = percent (multiplicative)
     public static void addModifier(ItemStack itemStack, IAttribute attribute, double value, int operation) {
-        if (itemStack.stackTagCompound == null) {
-            itemStack.stackTagCompound = new NBTTagCompound();
+    	String tagName = "AttributeModifiers";
+        if (!itemStack.hasTagCompound()) {
+            itemStack.setTagCompound(new NBTTagCompound());
         }
-        if (!itemStack.stackTagCompound.hasKey("AttributeModifiers")) {
-            itemStack.stackTagCompound.setTag("AttributeModifiers", new NBTTagList());
+        if (!itemStack.getTagCompound().hasKey(tagName, EffectHelper.NBT_LIST)) {
+            itemStack.getTagCompound().setTag(tagName, new NBTTagList());
         }
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("AttributeName", attribute.getAttributeUnlocalizedName());
-        tag.setString("Name", _SpecialAI.BASE_TAG + "|" + Integer.toString(_SpecialAI.random.nextInt(), Character.MAX_RADIX));
+        tag.setString("Name", ModSpecialAI.BASE_TAG + "|" + Integer.toString(ModSpecialAI.random.nextInt(), Character.MAX_RADIX));
         tag.setDouble("Amount", value);
         tag.setInteger("Operation", operation);
-        UUID id = UUID.randomUUID();
-        tag.setLong("UUIDMost", id.getMostSignificantBits());
-        tag.setLong("UUIDLeast", id.getLeastSignificantBits());
-        itemStack.stackTagCompound.getTagList("AttributeModifiers", tag.getId()).appendTag(tag);
+        tag.setUniqueId("UUID", UUID.randomUUID());
+        itemStack.getTagCompound().getTagList(tagName, EffectHelper.NBT_COMPOUND).appendTag(tag);
     }
+
 }

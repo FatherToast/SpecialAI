@@ -29,13 +29,15 @@ public class SpecialAIHandler {
 
     // Adds any special AI contained within the tag.
     public static void addSpecialAI(EntityLiving entity, NBTTagCompound tag, boolean init) {
+        float healthDiff = init ? entity.getMaxHealth() - entity.getHealth() : Float.NaN;
+
         for (ISpecialAI ai : SpecialAIHandler.SPECIAL_AI_LIST) {
             if (ai.isSaved(tag)) {
                 ai.addTo(entity, tag);
-                if (init) {
-                    ai.initialize(entity);
-                }
+                if (init) ai.initialize(entity);
             }
         }
+
+        if (init) entity.setHealth(entity.getMaxHealth() - healthDiff);
     }
 }

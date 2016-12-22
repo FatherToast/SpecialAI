@@ -11,13 +11,16 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.S12PacketEntityVelocity;
+import net.minecraft.network.play.server.SPacketEntityVelocity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import toast.specialAI.ai.AIHandler;
 
-public class EntityAICharge extends EntityAIBase implements ISpecialAI {
+public class EntityAICharge extends EntityAIBase implements ISpecialAI
+{
     // Possible states for this AI.
     private static final byte STATE_END = 0;
     private static final byte STATE_START = 1;
@@ -41,7 +44,7 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
     // The host's step height.
     private float stepHeight;
 
-    public EntityAICharge() {}
+    public EntityAICharge() { }
 
     private EntityAICharge(EntityLiving entity, float knockbackMult) {
         this.theEntity = entity;
@@ -88,21 +91,20 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        ItemStack helmet = new ItemStack(Items.leather_helmet);
-        EnchantmentHelper.addRandomEnchantment(entity.getRNG(), helmet, 30);
+        ItemStack helmet = new ItemStack(Items.LEATHER_HELMET);
+        EnchantmentHelper.addRandomEnchantment(entity.getRNG(), helmet, 30, true);
         helmet.setStackDisplayName("Charger's Helmet");
-        Items.leather_helmet.func_82813_b(helmet, 0xffff00); // Dyes the armor if it is leather.
-        entity.setCurrentItemOrArmor(4, helmet);
+        Items.LEATHER_HELMET.setColor(helmet, 0xffff00);
+        entity.setItemStackToSlot(EntityEquipmentSlot.HEAD, helmet);
 
-        entity.getEntityAttribute(SharedMonsterAttributes.knockbackResistance).applyModifier(new AttributeModifier(UUID.randomUUID(), "Charger knockback resistance", 1.0, 0));
-        entity.getEntityAttribute(SharedMonsterAttributes.maxHealth).applyModifier(new AttributeModifier(UUID.randomUUID(), "Charger health boost", 20.0, 0));
-        entity.setHealth(entity.getHealth() + 20.0F);
+        entity.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).applyModifier(new AttributeModifier(UUID.randomUUID(), "Charger knockback resistance", 1.0, 0));
+        entity.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).applyModifier(new AttributeModifier(UUID.randomUUID(), "Charger health boost", 20.0, 0));
     }
 
     // Returns whether the AI should begin execution.
     @Override
     public boolean shouldExecute() {
-        if (!this.theEntity.onGround || this.theEntity.ridingEntity != null || this.attackTime-- > 0 || this.theEntity.getRNG().nextInt(10) != 0)
+        if (!this.theEntity.onGround || this.theEntity.isRiding() || this.attackTime-- > 0 || this.theEntity.getRNG().nextInt(10) != 0)
             return false;
         EntityLivingBase target = this.theEntity.getAttackTarget();
         if (target != null) {
@@ -131,7 +133,8 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
         this.attackTime = 30;
         this.state = EntityAICharge.STATE_START;
         this.theEntity.motionY = 0.3;
-        this.theEntity.swingItem();
+        this.theEntity.swingArm(EnumHand.MAIN_HAND);
+        this.theEntity.swingArm(EnumHand.OFF_HAND);
     }
 
     // Called every tick while this AI is executing.
@@ -165,7 +168,7 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
             this.theEntity.motionZ = this.z;
             boolean hit = false;
             if (target != null) {
-                List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(0.2, 0.2, 0.2));
+                List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(0.2, 0.2, 0.2));
                 for (int i = 0; i < list.size(); i++) {
                     if (target.equals(list.get(i))) {
                         hit = true;
@@ -175,7 +178,8 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
             }
             if (hit && target != null) {
                 this.theEntity.attackEntityAsMob(target);
-                this.theEntity.swingItem();
+                this.theEntity.swingArm(EnumHand.MAIN_HAND);
+                this.theEntity.swingArm(EnumHand.OFF_HAND);
                 this.theEntity.motionX *= -0.8;
                 this.theEntity.motionY = 0.4;
                 this.theEntity.motionZ *= -0.8;
@@ -184,7 +188,7 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
                 target.motionZ += this.z * this.knockbackMult;
                 if (target instanceof EntityPlayerMP) {
                     try {
-                        ((EntityPlayerMP) target).playerNetServerHandler.sendPacket(new S12PacketEntityVelocity(target));
+                        ((EntityPlayerMP) target).connection.sendPacket(new SPacketEntityVelocity(target));
                     }
                     catch (Exception ex) {
                         ex.printStackTrace();
@@ -202,13 +206,17 @@ public class EntityAICharge extends EntityAIBase implements ISpecialAI {
                 this.attackTime = 80;
                 this.state = EntityAICharge.STATE_STUN;
             }
-            else if (this.attackTime <= 0 || this.theEntity.handleWaterMovement() || this.theEntity.handleLavaMovement()) {
+            else if (this.attackTime <= 0 || this.theEntity.isInWater() || this.theEntity.isInLava()) {
                 this.attackTime = 40;
                 this.state = EntityAICharge.STATE_END;
             }
         }
         else if (this.state == EntityAICharge.STATE_STUN) {
-            this.theEntity.swingItem();
+        	if (this.attackTime % 2 == 0)
+        		this.theEntity.swingArm(EnumHand.MAIN_HAND);
+        	else
+        		this.theEntity.swingArm(EnumHand.OFF_HAND);
+
             if (this.attackTime <= 0) {
                 this.state = EntityAICharge.STATE_END;
             }

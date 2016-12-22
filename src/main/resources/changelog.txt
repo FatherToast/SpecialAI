@@ -1,3 +1,15 @@
+1.1.3
+    - Config file rebuilt, now allows separate chances per entity type.
+    - Village modifications overhauled. Should reduce server overhead and greatly increase village stability.
+    - Added /villageinfo command to make villages and the features added by this mod more understandable.
+    - New dodge arrows AI.
+    - New griefing target category, will not target loot containers until they have generated loot (i.e., until interacted with).
+    - Spawner AI now causes the mobs it spawns to target the entity being targeted by the spawner mob, if possible.
+    - Throw player AI now enters cooldown when the grab is escaped.
+      - You need to get out of the grip multiple times to fully "escape".
+    - Fiddling AI now ignites TNT.
+    - Passive griefing break speed now defined by "GriefBreakSpeed" nbt tag.
+    - Griefing range nbt tags renamed to "IdleScanRangeXZ" and "IdleScanRangeY".
 1.1.2
     - Overhauled passive griefing AI to be much simpler. I recommend deleting all of your passive griefing configs before updating.
     - Added passive fiddling AI as a part of the griefing AI.

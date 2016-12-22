@@ -2,39 +2,32 @@ package toast.specialAI.ai;
 
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.ai.EntityAIAttackOnCollide;
-import net.minecraft.pathfinding.PathEntity;
+import net.minecraft.entity.ai.EntityAIAttackMelee;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
 
-public class EntityAIAttackOnCollideSpecial extends EntityAIAttackOnCollide {
+public class EntityAIAttackOnCollideSpecial extends EntityAIAttackMelee {
     // The entity that owns this ai.
     private final EntityCreature attacker;
     // The speed with which the mob will approach the target relative to its normal speed.
     private final double speedTowardsTarget;
     // When true, the mob will continue chasing its target, even if it can't find a path immediately.
     private final boolean longMemory;
-    // The specific class to target, or null if any.
-    private final Class classTarget;
 
     // Ticks until the entity can attack.
     private int attackTick;
     // The attacker's current path.
-    private PathEntity entityPath;
+    private Path entityPath;
     // Ticks until the entity can look for a new path.
     private int pathDelay;
     // Increases with each failed pathing attempt, determines pathDelay.
     private int failedPathPenalty;
 
     public EntityAIAttackOnCollideSpecial(EntityCreature entity, double speed, boolean mem) {
-        this(entity, (Class) null, speed, mem);
-    }
-
-    public EntityAIAttackOnCollideSpecial(EntityCreature entity, Class targetType, double speed, boolean mem) {
-        super(entity, targetType, speed, mem);
+        super(entity, speed, mem);
         this.attacker = entity;
         this.speedTowardsTarget = speed;
         this.longMemory = mem;
-        this.classTarget = targetType;
     }
 
     // Returns whether the EntityAIBase should begin execution.
@@ -44,8 +37,6 @@ public class EntityAIAttackOnCollideSpecial extends EntityAIAttackOnCollide {
         if (target == null)
             return false;
         else if (!target.isEntityAlive())
-            return false;
-        else if (this.classTarget != null && !this.classTarget.isAssignableFrom(target.getClass()))
             return false;
         else {
             if (--this.pathDelay <= 0) {
@@ -90,7 +81,7 @@ public class EntityAIAttackOnCollideSpecial extends EntityAIAttackOnCollide {
 
         this.attackTick = Math.max(this.attackTick - 1, 0);
         double range = this.attacker.width * 2.0F * this.attacker.width * 2.0F + target.width;
-        if (this.attacker.getDistanceSq(target.posX, target.boundingBox.minY, target.posZ) <= range) {
+        if (this.attacker.getDistanceSq(target.posX, target.getEntityBoundingBox().minY, target.posZ) <= range) {
             if (this.attackTick <= 0) {
                 this.attackTick = 20;
                 this.attacker.attackEntityAsMob(target);

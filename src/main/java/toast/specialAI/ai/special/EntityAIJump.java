@@ -1,10 +1,11 @@
 package toast.specialAI.ai.special;
 
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.init.Enchantments;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import toast.specialAI.ai.AIHandler;
@@ -16,7 +17,7 @@ public class EntityAIJump extends EntityAIBase implements ISpecialAI {
     // The owner of this AI.
     protected EntityLiving theEntity;
 
-    public EntityAIJump() {}
+    public EntityAIJump() { }
 
     private EntityAIJump(EntityLiving entity) {
         this.theEntity = entity;
@@ -61,17 +62,17 @@ public class EntityAIJump extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        ItemStack boots = new ItemStack(Items.leather_boots);
-        boots.addEnchantment(Enchantment.featherFalling, Enchantment.featherFalling.getMaxLevel());
+        ItemStack boots = new ItemStack(Items.LEATHER_BOOTS);
+        boots.addEnchantment(Enchantments.FEATHER_FALLING, Enchantments.FEATHER_FALLING.getMaxLevel());
         boots.setStackDisplayName("Feather Boots");
-        Items.leather_boots.func_82813_b(boots, 0x9664b4); /// Dyes the armor if it is leather.
-        entity.setCurrentItemOrArmor(1, boots);
+        Items.LEATHER_BOOTS.setColor(boots, 0x9664b4);
+        entity.setItemStackToSlot(EntityEquipmentSlot.FEET, boots);
     }
 
     // Returns whether the AI should begin execution.
     @Override
     public boolean shouldExecute() {
-        if (!this.theEntity.onGround || this.theEntity.ridingEntity != null || this.theEntity.getRNG().nextInt(10) != 0)
+        if (!this.theEntity.onGround || this.theEntity.isRiding() || this.theEntity.getRNG().nextInt(10) != 0)
             return false;
         EntityLivingBase target = this.theEntity.getAttackTarget();
         if (target != null) {
@@ -102,6 +103,6 @@ public class EntityAIJump extends EntityAIBase implements ISpecialAI {
     // Returns whether an in-progress EntityAIBase should continue executing
     @Override
     public boolean continueExecuting() {
-        return !this.theEntity.onGround && !this.theEntity.handleWaterMovement() && !this.theEntity.handleLavaMovement();
+        return !this.theEntity.onGround && !this.theEntity.isInWater() && !this.theEntity.isInLava();
     }
 }

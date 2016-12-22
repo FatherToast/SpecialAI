@@ -5,6 +5,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import toast.specialAI.EffectHelper;
@@ -22,7 +23,7 @@ public class EntityAISprint extends EntityAIBase implements ISpecialAI {
     // Ticks until the entity gives up.
     private int giveUpDelay;
 
-    public EntityAISprint() {}
+    public EntityAISprint() { }
 
     private EntityAISprint(EntityLiving entity, float speedMult) {
         this.theEntity = entity;
@@ -68,18 +69,18 @@ public class EntityAISprint extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        ItemStack boots = new ItemStack(Items.leather_boots);
+        ItemStack boots = new ItemStack(Items.LEATHER_BOOTS);
         boots.setStackDisplayName("Running Boots");
-        EffectHelper.addModifier(boots, SharedMonsterAttributes.movementSpeed, 0.1, 1);
-        Items.leather_boots.func_82813_b(boots, 0xff0000); /// Dyes the armor if it is leather.
-        entity.setCurrentItemOrArmor(1, boots);
+        EffectHelper.addModifier(boots, SharedMonsterAttributes.MOVEMENT_SPEED, 0.1, 1);
+        Items.LEATHER_BOOTS.setColor(boots, 0xff0000);
+        entity.setItemStackToSlot(EntityEquipmentSlot.FEET, boots);
     }
 
     // Returns whether the AI should begin execution.
     @Override
     public boolean shouldExecute() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
-        if (target == null || this.theEntity.ridingEntity != null || !target.isSprinting() && this.theEntity.getRNG().nextInt(20) != 0)
+        if (target == null || this.theEntity.isRiding() || !target.isSprinting() && this.theEntity.getRNG().nextInt(20) != 0)
             return false;
         return this.theEntity.getDistanceSqToEntity(target) > 144.0;
     }
@@ -88,7 +89,7 @@ public class EntityAISprint extends EntityAIBase implements ISpecialAI {
     @Override
     public boolean continueExecuting() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
-        if (!this.theEntity.getNavigator().noPath() && target != null && this.theEntity.ridingEntity == null) {
+        if (!this.theEntity.getNavigator().noPath() && target != null && !this.theEntity.isRiding()) {
             double distance = this.theEntity.getDistanceSqToEntity(target);
             return distance > 36.0 || distance > 9.0 && this.theEntity.getRNG().nextInt(10) != 0;
         }

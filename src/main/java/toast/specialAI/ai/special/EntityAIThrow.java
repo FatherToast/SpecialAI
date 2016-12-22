@@ -10,9 +10,11 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import toast.specialAI.ai.AIHandler;
 
-public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
+public class EntityAIThrow extends EntityAIBase implements ISpecialAI
+{
     // The weight of this AI pattern.
     private int WEIGHT;
 
@@ -22,11 +24,11 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
     // The mob the host wants to throw.
     private EntityLiving throwTarget;
     // Ticks until next attack.
-    private byte attackTime;
+    private int attackTime;
     // Ticks until the entity gives up.
     private int giveUpDelay;
 
-    public EntityAIThrow() {}
+    public EntityAIThrow() { }
 
     private EntityAIThrow(EntityLiving entity) {
         this.theEntity = entity;
@@ -71,18 +73,17 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        entity.getEntityAttribute(SharedMonsterAttributes.knockbackResistance).applyModifier(new AttributeModifier(UUID.randomUUID(), "Thrower knockback resistance", 1.0, 0));
-        entity.getEntityAttribute(SharedMonsterAttributes.maxHealth).applyModifier(new AttributeModifier(UUID.randomUUID(), "Thrower health boost", 10.0, 0));
-        entity.setHealth(entity.getHealth() + 10.0F);
+        entity.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).applyModifier(new AttributeModifier(UUID.randomUUID(), "Thrower knockback resistance", 1.0, 0));
+        entity.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).applyModifier(new AttributeModifier(UUID.randomUUID(), "Thrower health boost", 10.0, 0));
     }
 
     // Returns whether the AI should begin execution.
     @Override
     public boolean shouldExecute() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
-        if (target == null || this.theEntity.ridingEntity != null)
+        if (this.attackTime-- > 0 || target == null || this.theEntity.isRiding())
             return false;
-        if (this.theEntity.riddenByEntity != null)
+        if (this.theEntity.isBeingRidden())
             return true;
         if (this.theEntity.getRNG().nextInt(20) == 0)
             return this.findThrowTarget();
@@ -103,7 +104,7 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
     // Returns whether an in-progress EntityAIBase should continue executing
     @Override
     public boolean continueExecuting() {
-        return this.theEntity.getAttackTarget() != null && this.theEntity.ridingEntity == null && (this.throwTarget != null && this.throwTarget.isEntityAlive() || this.theEntity.riddenByEntity != null);
+        return this.theEntity.getAttackTarget() != null && !this.theEntity.isRiding() && (this.throwTarget != null && this.throwTarget.isEntityAlive() || this.theEntity.isBeingRidden());
     }
 
     // Determine if this AI task is interruptible by a higher priority task.
@@ -120,12 +121,13 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
             this.theEntity.getLookHelper().setLookPositionWithEntity(this.throwTarget, 30.0F, 30.0F);
 
             double range = this.theEntity.width * 2.0F * this.theEntity.width * 2.0F + this.throwTarget.width;
-            if (this.theEntity.getDistanceSq(this.throwTarget.posX, this.throwTarget.boundingBox.minY, this.throwTarget.posZ) <= range) {
-                this.throwTarget.mountEntity(this.theEntity);
+            if (this.theEntity.getDistanceSq(this.throwTarget.posX, this.throwTarget.getEntityBoundingBox().minY, this.throwTarget.posZ) <= range) {
+                this.throwTarget.startRiding(this.theEntity, true);
                 this.throwTarget = null;
                 this.theEntity.getNavigator().tryMoveToEntityLiving(target, 1.2);
-                this.theEntity.swingItem();
-                this.attackTime = 10;
+                this.theEntity.swingArm(EnumHand.MAIN_HAND);
+                this.theEntity.swingArm(EnumHand.OFF_HAND);
+                this.attackTime = 20;
             }
             else {
                 if (this.theEntity.getNavigator().noPath()) {
@@ -133,23 +135,24 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
                 }
             }
         }
-        if (this.theEntity.riddenByEntity != null) {
+        if (this.theEntity.isBeingRidden()) {
             this.theEntity.getLookHelper().setLookPositionWithEntity(target, 30.0F, 30.0F);
-            this.attackTime--;
 
-            if (this.attackTime <= 0 && this.theEntity.getRNG().nextInt(10) == 0 && this.theEntity.getDistanceSqToEntity(target) <= 100.0) {
+            if (this.attackTime-- <= 0 && this.theEntity.getRNG().nextInt(10) == 0 && this.theEntity.getDistanceSqToEntity(target) <= 100.0) {
                 double dX = target.posX - this.theEntity.posX;
                 double dZ = target.posZ - this.theEntity.posZ;
                 double dH = Math.sqrt(dX * dX + dZ * dZ);
-                Entity entity = this.theEntity.riddenByEntity;
-                entity.mountEntity((Entity) null);
+                Entity entity = this.theEntity.getPassengers().get(0);
+                entity.dismountRidingEntity();
                 entity.motionX = dX / dH + this.theEntity.motionX * 0.2;
                 entity.motionZ = dZ / dH + this.theEntity.motionZ * 0.2;
                 entity.motionY = 0.4;
                 entity.onGround = false;
                 entity.fallDistance = 0.0F;
                 this.theEntity.getNavigator().clearPathEntity();
-                this.theEntity.swingItem();
+                this.theEntity.swingArm(EnumHand.MAIN_HAND);
+                this.theEntity.swingArm(EnumHand.OFF_HAND);
+                this.attackTime = 40 + this.theEntity.getRNG().nextInt(41);
             }
             else {
                 if (this.theEntity.getNavigator().noPath()) {
@@ -166,8 +169,8 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
     // Resets the task.
     @Override
     public void resetTask() {
-        if (this.theEntity.riddenByEntity != null) {
-            this.theEntity.riddenByEntity.mountEntity((Entity) null);
+        if (this.theEntity.isBeingRidden()) {
+            this.theEntity.getPassengers().get(0).dismountRidingEntity();
         }
         this.theEntity.getNavigator().clearPathEntity();
         this.giveUpDelay = 0;
@@ -181,13 +184,13 @@ public class EntityAIThrow extends EntityAIBase implements ISpecialAI {
         if (distance < 9.0)
             return false;
 
-        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(16.0, 8.0, 16.0));
+        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(16.0, 8.0, 16.0));
         EntityLiving entity;
         double dist;
         for (Object obj : list) {
             if (obj instanceof EntityLiving) {
                 entity = (EntityLiving) obj;
-                if (!entity.onGround || entity.ridingEntity != null || target != entity.getAttackTarget() || entity.getDistanceSqToEntity(target) <= 36.0) {
+                if (!entity.onGround || entity.isRiding() || target != entity.getAttackTarget() || entity.getDistanceSqToEntity(target) <= 36.0) {
                     continue;
                 }
                 dist = this.theEntity.getDistanceSqToEntity(entity);

@@ -10,13 +10,16 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.MobSpawnerBaseLogic;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import toast.specialAI.ai.AIHandler;
 
-public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
+public class EntityAISpawner extends EntityAIBase implements ISpecialAI
+{
     // The default spawner tag.
     private static final NBTTagCompound SPAWNER_TAG = new NBTTagCompound();
 
@@ -29,7 +32,7 @@ public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
     // The mob spawner logic for this AI.
     private MobSpawnerBaseLogic mobSpawnerLogic;
 
-    public EntityAISpawner() {}
+    public EntityAISpawner() { }
 
     private EntityAISpawner(EntityLiving entity, NBTTagCompound spawnerTag) {
         this.theEntity = entity;
@@ -38,8 +41,8 @@ public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
             this.mobSpawnerLogic.readFromNBT(spawnerTag);
         }
         else {
-            EntityAISpawner.SPAWNER_TAG.setString("EntityId", EntityList.getEntityString(entity));
             this.mobSpawnerLogic.readFromNBT(EntityAISpawner.SPAWNER_TAG);
+            this.mobSpawnerLogic.setEntityName(EntityList.getEntityString(entity));
         }
         this.setMutexBits(AIHandler.BIT_NONE);
     }
@@ -89,12 +92,11 @@ public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        entity.setCurrentItemOrArmor(4, new ItemStack(Blocks.mob_spawner, 1, EntityList.getEntityID(entity)));
-        entity.setEquipmentDropChance(4, 0.0F);
+        entity.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Blocks.MOB_SPAWNER));
+        entity.setDropChance(EntityEquipmentSlot.HEAD, 0.0F);
 
-        entity.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(new AttributeModifier(UUID.randomUUID(), "Spawner speed penalty", -0.2, 1));
-        entity.getEntityAttribute(SharedMonsterAttributes.maxHealth).applyModifier(new AttributeModifier(UUID.randomUUID(), "Spawner health boost", 80.0, 0));
-        entity.setHealth(entity.getHealth() + 80.0F);
+        entity.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(new AttributeModifier(UUID.randomUUID(), "Spawner speed penalty", -0.2, 1));
+        entity.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).applyModifier(new AttributeModifier(UUID.randomUUID(), "Spawner health boost", 40.0, 0));
     }
 
     // Returns whether the AI should begin execution.
@@ -118,7 +120,10 @@ public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
 
     static {
         // Initialize the default spawner tag.
-        EntityAISpawner.SPAWNER_TAG.setString("EntityId", ""); // This is always set before use
+    	MobSpawnerAILogic spawnLogic = new MobSpawnerAILogic(null);
+    	spawnLogic.setEntityName("Pig");
+    	spawnLogic.writeToNBT(EntityAISpawner.SPAWNER_TAG);
+        EntityAISpawner.SPAWNER_TAG.removeTag("SpawnPotentials");
         EntityAISpawner.SPAWNER_TAG.setShort("Delay", (short) 20);
         EntityAISpawner.SPAWNER_TAG.setShort("MinSpawnDelay", (short) 150);
         EntityAISpawner.SPAWNER_TAG.setShort("MaxSpawnDelay", (short) 600);
@@ -130,52 +135,43 @@ public class EntityAISpawner extends EntityAIBase implements ISpecialAI {
 
     // The version of mob spawner base logic used by this AI.
     private static class MobSpawnerAILogic extends MobSpawnerBaseLogic {
-        // Marker to adjust spawner height for the particle effects.
-        private boolean justSpawned;
+
         // Reference to the entity host.
         private EntityLiving theEntity;
+
+		protected short aiSpawnRange;
 
         public MobSpawnerAILogic(EntityLiving entity) {
             this.theEntity = entity;
         }
 
-        // Called to initialize the entity.
-        @Override
-        public Entity func_98265_a(Entity entity) {
-            entity = super.func_98265_a(entity);
-            this.justSpawned = true;
-            return entity;
-        }
-
-        // Tells the client to reset the spinning speed.
-        @Override
-        public void func_98267_a(int p_98267_1_) {
-            // Do nothing
-        }
-
-        // The world this spawner is in.
         @Override
         public World getSpawnerWorld() {
             return this.theEntity.worldObj;
         }
+		@Override
+		public BlockPos getSpawnerPosition() {
+			return new BlockPos(this.theEntity.posX, this.theEntity.posY + this.theEntity.getEyeHeight(), this.theEntity.posZ);
+		}
 
-        // Returns the x, y, z coords for this spawner.
-        @Override
-        public int getSpawnerX() {
-            return (int) Math.floor(this.theEntity.posX);
-        }
-        @Override
-        public int getSpawnerY() {
-            if (this.justSpawned) {
-                this.justSpawned = false;
-                return (int) Math.floor(this.theEntity.posY + this.theEntity.getEyeHeight());
-            }
-            return (int) Math.floor(this.theEntity.posY);
-        }
-        @Override
-        public int getSpawnerZ() {
-            return (int) Math.floor(this.theEntity.posZ);
-        }
+		@Override
+		public void broadcastEvent(int id) {
+			if (id == 1) { // Timer reset event
+				for (Entity entity : this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(this.aiSpawnRange + 4.0, 2.0, this.aiSpawnRange + 4.0))) {
+					if (entity.ticksExisted == 0 && entity instanceof EntityLiving) {
+						((EntityLiving) entity).setAttackTarget(this.theEntity.getAttackTarget());
+						((EntityLiving) entity).setRevengeTarget(this.theEntity.getAttackTarget());
+					}
+				}
+			}
+		}
+
+	    @Override
+		public void readFromNBT(NBTTagCompound tag) {
+	    	super.readFromNBT(tag);
+
+            this.aiSpawnRange = tag.getShort("SpawnRange");
+	    }
     }
 
 }

@@ -5,6 +5,8 @@ import java.util.List;
 
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.monster.EntitySlime;
+import toast.specialAI.Properties;
 
 public class EntityAIRider extends EntityAIBase {
     // The owner of this AI.
@@ -28,7 +30,7 @@ public class EntityAIRider extends EntityAIBase {
     // Returns whether the AI should begin execution.
     @Override
     public boolean shouldExecute() {
-        if (this.theEntity.ridingEntity == null && ++this.checkTime > 50) {
+        if (!this.theEntity.isRiding() && ++this.checkTime > 50) {
             this.checkTime = 0;
             return this.findNearbyMount();
         }
@@ -38,7 +40,7 @@ public class EntityAIRider extends EntityAIBase {
     // Returns whether an in-progress EntityAIBase should continue executing
     @Override
     public boolean continueExecuting() {
-        return this.theEntity.ridingEntity == null && this.target != null && this.target.riddenByEntity == null && this.target.isEntityAlive() && !this.theEntity.getNavigator().noPath();
+        return !this.theEntity.isRiding() && this.target != null && !this.target.isBeingRidden() && this.target.isEntityAlive() && !this.theEntity.getNavigator().noPath();
     }
 
     // Determine if this AI task is interruptible by a higher priority task.
@@ -59,8 +61,8 @@ public class EntityAIRider extends EntityAIBase {
         this.theEntity.getLookHelper().setLookPositionWithEntity(this.target, 30.0F, 30.0F);
 
         double range = this.theEntity.width * 2.0F * this.theEntity.width * 2.0F + this.target.width;
-        if (this.theEntity.getDistanceSq(this.target.posX, this.target.boundingBox.minY, this.target.posZ) <= range) {
-            this.theEntity.mountEntity(this.target);
+        if (!this.target.isBeingRidden() && this.theEntity.getDistanceSq(this.target.posX, this.target.getEntityBoundingBox().minY, this.target.posZ) <= range) {
+            this.theEntity.startRiding(this.target, true);
             this.target = null;
         }
         else if (++this.giveUpDelay > 400) {
@@ -83,7 +85,7 @@ public class EntityAIRider extends EntityAIBase {
 
     // Searches for a nearby mount and targets it. Returns true if one is found.
     private boolean findNearbyMount() {
-        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(16.0, 8.0, 16.0));
+        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(16.0, 8.0, 16.0));
         Collections.shuffle(list);
         for (Object entity : list) {
             if (entity instanceof EntityLiving && this.isValidTarget((EntityLiving) entity)) {
@@ -96,8 +98,8 @@ public class EntityAIRider extends EntityAIBase {
 
     // Returns true if the entity can be mounted by the host.
     private boolean isValidTarget(EntityLiving entity) {
-        if (this.isSmall || this.theEntity.isChild())
-            return AIHandler.MOUNT_SET_SMALL.contains(entity) || entity.isChild() && AIHandler.MOUNT_SET.contains(entity);
-        return !entity.isChild() && AIHandler.MOUNT_SET.contains(entity);
+        if (this.isSmall || this.theEntity.isChild() || this.theEntity instanceof EntitySlime && ((EntitySlime) this.theEntity).isSmallSlime())
+            return Properties.get().JOCKEYS.MOUNT_LIST_SMALL.contains(entity) || entity.isChild() && Properties.get().JOCKEYS.MOUNT_LIST.contains(entity);
+        return !entity.isChild() && Properties.get().JOCKEYS.MOUNT_LIST.contains(entity);
     }
 }

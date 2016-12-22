@@ -6,14 +6,14 @@ import java.util.List;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import toast.specialAI.Properties;
 import toast.specialAI.ai.AIHandler;
 
 public class EntityAIEatBreedingItem extends EntityAIBase {
-    // Useful properties for this class.
-    public static final boolean EATING_HEALS = Properties.getBoolean(Properties.GENERAL, "eating_heals");
 
     // The owner of this AI.
     protected EntityAnimal theEntity;
@@ -33,7 +33,7 @@ public class EntityAIEatBreedingItem extends EntityAIBase {
     // Returns whether the EntityAIBase should begin execution.
     @Override
     public boolean shouldExecute() {
-        if (this.theEntity.ridingEntity == null && this.theEntity.worldObj.getGameRules().getGameRuleBooleanValue("mobGriefing") && ++this.checkTime > 30) {
+        if (!this.theEntity.isRiding() && this.theEntity.worldObj.getGameRules().getBoolean("mobGriefing") && ++this.checkTime > 30) {
             this.checkTime = 0;
             return this.findNearbyFood();
         }
@@ -43,7 +43,7 @@ public class EntityAIEatBreedingItem extends EntityAIBase {
     // Returns whether an in-progress EntityAIBase should continue executing.
     @Override
     public boolean continueExecuting() {
-        return this.theEntity.ridingEntity == null && this.giveUpDelay < 400 && this.target != null && this.target.isEntityAlive() && this.theEntity.isBreedingItem(this.target.getEntityItem()) && !this.theEntity.getNavigator().noPath();
+        return !this.theEntity.isRiding() && this.giveUpDelay < 400 && this.target != null && this.target.isEntityAlive() && this.theEntity.isBreedingItem(this.target.getEntityItem()) && !this.theEntity.getNavigator().noPath();
     }
 
     // Execute a one shot task or start executing a continuous task.
@@ -57,17 +57,17 @@ public class EntityAIEatBreedingItem extends EntityAIBase {
     public void updateTask() {
         this.theEntity.getLookHelper().setLookPositionWithEntity(this.target, 30.0F, 30.0F);
 
-        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(0.2, 0.0, 0.2));
+        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(0.2, 0.0, 0.2));
         if (list.contains(this.target)) {
-            if (EntityAIEatBreedingItem.EATING_HEALS) {
+            if (Properties.get().GENERAL.EATING_HEALS) {
                 ItemStack itemStack = this.target.getEntityItem();
                 float healAmount = itemStack.stackSize;
                 if (itemStack.getItem() instanceof ItemFood) {
-                    healAmount *= ((ItemFood) itemStack.getItem()).func_150905_g(itemStack);
+                    healAmount *= ((ItemFood) itemStack.getItem()).getHealAmount(itemStack);
                 }
                 this.theEntity.heal(healAmount);
             }
-            this.theEntity.worldObj.playSoundAtEntity(this.theEntity, "random.burp", 0.5F, this.theEntity.getRNG().nextFloat() * 0.1F + 0.9F);
+            this.theEntity.worldObj.playSound(null, new BlockPos(this.theEntity), SoundEvents.ENTITY_PLAYER_BURP, this.theEntity.getSoundCategory(), 0.5F, this.theEntity.getRNG().nextFloat() * 0.1F + 0.9F);
             this.theEntity.getNavigator().clearPathEntity();
             this.target.setDead();
         }
@@ -91,7 +91,7 @@ public class EntityAIEatBreedingItem extends EntityAIBase {
 
     // Searches for a nearby food item and targets it. Returns true if one is found.
     private boolean findNearbyFood() {
-        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.boundingBox.expand(16.0, 8.0, 16.0));
+        List list = this.theEntity.worldObj.getEntitiesWithinAABBExcludingEntity(this.theEntity, this.theEntity.getEntityBoundingBox().expand(16.0, 8.0, 16.0));
         Collections.shuffle(list);
         for (Object entity : list) {
             if (entity instanceof EntityItem && this.theEntity.isBreedingItem( ((EntityItem) entity).getEntityItem())) {

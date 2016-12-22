@@ -12,9 +12,10 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.init.MobEffects;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import toast.specialAI.EffectHelper;
@@ -30,7 +31,7 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     // The avoidance AI to be used after an item was stolen.
     private EntityAIAvoidEntity aiAvoid;
 
-    public EntityAIThief() {}
+    public EntityAIThief() { }
 
     private EntityAIThief(EntityLiving entity, float avoidRange) {
         this.theEntity = entity;
@@ -78,14 +79,14 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     // Initializes any one-time effects on the entity.
     @Override
     public void initialize(EntityLiving entity) {
-        entity.setCurrentItemOrArmor(0, (ItemStack) null);
-        ItemStack helmet = new ItemStack(Items.leather_helmet);
+        entity.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, null);
+        ItemStack helmet = new ItemStack(Items.LEATHER_HELMET);
         helmet.setStackDisplayName("Thief's Cap");
-        EffectHelper.addModifier(helmet, SharedMonsterAttributes.movementSpeed, 0.1, 1);
-        Items.leather_helmet.func_82813_b(helmet, 0x102024); // Dyes the armor if it is leather.
-        entity.setCurrentItemOrArmor(4, helmet);
+        EffectHelper.addModifier(helmet, SharedMonsterAttributes.MOVEMENT_SPEED, 0.1, 1);
+        Items.LEATHER_HELMET.setColor(helmet, 0x102024);
+        entity.setItemStackToSlot(EntityEquipmentSlot.HEAD, helmet);
 
-        entity.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(new AttributeModifier(UUID.randomUUID(), "Thief speed boost", 0.2, 1));
+        entity.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(new AttributeModifier(UUID.randomUUID(), "Thief speed boost", 0.2, 1));
         entity.setCanPickUpLoot(false);
     }
 
@@ -93,7 +94,7 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     @Override
     public boolean shouldExecute() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
-        if (target instanceof EntityPlayer && this.theEntity.getEquipmentInSlot(0) == null)
+        if (target instanceof EntityPlayer && this.theEntity.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND) == null)
             return this.hasItems((EntityPlayer) target);
         if (this.aiAvoid != null && (target == null || target.getHealth() > target.getMaxHealth() / 3.0F)) {
             try {
@@ -110,7 +111,7 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     @Override
     public void startExecuting() {
         EntityLivingBase target = this.theEntity.getAttackTarget();
-        if (target != null && this.theEntity.getEquipmentInSlot(0) == null) {
+        if (target != null && this.theEntity.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND) == null) {
             this.theEntity.getNavigator().tryMoveToEntityLiving(target, 1.2);
         }
         else if (this.aiAvoid != null) {
@@ -132,26 +133,25 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
     // Called every tick while this AI is executing.
     @Override
     public void updateTask() {
-        if (this.theEntity.getEquipmentInSlot(0) == null) {
+        if (this.theEntity.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND) == null) {
             EntityLivingBase target = this.theEntity.getAttackTarget();
             if (target == null)
                 return;
             this.theEntity.getLookHelper().setLookPositionWithEntity(target, 30.0F, 30.0F);
 
             double range = this.theEntity.width * 2.0F * this.theEntity.width * 2.0F + target.width;
-            if (this.theEntity.getDistanceSq(target.posX, target.boundingBox.minY, target.posZ) <= range) {
+            if (this.theEntity.getDistanceSq(target.posX, target.getEntityBoundingBox().minY, target.posZ) <= range) {
                 target.attackEntityFrom(DamageSource.causeMobDamage(this.theEntity), 1.0F);
 				if (target instanceof EntityPlayer) {
 					ItemStack stolen = this.removeRandomItem((EntityPlayer) target);
 					if (stolen != null) {
 						EntityItem drop = new EntityItem(this.theEntity.worldObj, this.theEntity.posX, this.theEntity.posY + 0.5, this.theEntity.posZ, stolen);
-						drop.delayBeforeCanPickup = 20;
-						drop.getEntityData().setLong("ThiefUUIDMost", this.theEntity.getUniqueID().getMostSignificantBits());
-						drop.getEntityData().setLong("ThiefUUIDLeast", this.theEntity.getUniqueID().getLeastSignificantBits());
+						drop.setPickupDelay(20);
+						drop.getEntityData().setUniqueId("ThiefUUID", this.theEntity.getUniqueID());
 						this.theEntity.worldObj.spawnEntityInWorld(drop);
 					}
 				}
-                this.theEntity.addPotionEffect(new PotionEffect(Potion.invisibility.id, 60, 0));
+                this.theEntity.addPotionEffect(new PotionEffect(MobEffects.INVISIBILITY, 60, 0));
                 this.theEntity.getNavigator().clearPathEntity();
             }
             else {
@@ -206,7 +206,7 @@ public class EntityAIThief extends EntityAIBase implements ISpecialAI {
             for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
                 item = player.inventory.getStackInSlot(i);
                 if (item != null && --count < 0) {
-                    player.inventory.setInventorySlotContents(i, (ItemStack) null);
+                    player.inventory.setInventorySlotContents(i, null);
                     return item;
                 }
             }

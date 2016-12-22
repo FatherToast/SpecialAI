@@ -1,72 +1,137 @@
 package toast.specialAI.village;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
 
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.Village;
-import net.minecraft.village.VillageDoorInfo;
-import net.minecraft.world.WorldServer;
+import net.minecraft.village.VillageCollection;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import toast.specialAI.Properties;
-import toast.specialAI.util.BlockHelper;
 import toast.specialAI.util.TargetBlock;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class ReputationHandler
 {
-    // Useful properties for this class.
-    private static final boolean HOUSE_REP = Properties.getBoolean(Properties.VILLAGES, "house_rep");
-    private static final boolean REFRESH_HOUSES = Properties.getBoolean(Properties.VILLAGES, "refresh_houses");
-
-    private static final double BLOCK_REP_CHANCE = Properties.getDouble(Properties.VILLAGES, "block_rep_loss_chance");
-    private static final int BLOCK_REP_LIMIT = Properties.getInt(Properties.VILLAGES, "block_rep_loss_limit");
-    private static final double BLOCK_DEFEND_CHANCE = Properties.getDouble(Properties.VILLAGES, "block_aggression_chance");
-    private static final int BLOCK_DEFEND_LIMIT = Properties.getInt(Properties.VILLAGES, "block_aggression_limit");
-    private static final HashSet<TargetBlock> BLOCK_BLACKLIST = BlockHelper.newBlockSet(Properties.getString(Properties.VILLAGES, "block_blacklist"));
-    private static final HashSet<TargetBlock> BLOCK_WHITELIST = BlockHelper.newBlockSet(Properties.getString(Properties.VILLAGES, "block_whitelist"));
-
-    private static final double SPECIAL_REP_CHANCE = Properties.getDouble(Properties.VILLAGES, "block_special_rep_loss_chance");
-    private static final double SPECIAL_DEFEND_CHANCE = Properties.getDouble(Properties.VILLAGES, "block_special_aggression_chance");
-    private static final HashSet<TargetBlock> SPECIAL_LIST = BlockHelper.newBlockSet(Properties.getString(Properties.VILLAGES, "block_special_list"));
-
-    private static final double HELP_REP_CHANCE = Properties.getDouble(Properties.VILLAGES, "help_rep_chance");
-
-    // Returns the block aggression limit.
-    public static int getDefendLimit() {
-        return ReputationHandler.BLOCK_DEFEND_LIMIT;
-    }
-
     // Counter to periodically refresh village doors and alter reputation for new/destroyed doors.
-    private int updateTicks = 0;
-
-    // Last saved door count for each village.
-    private final HashMap<Village, Integer> doorCountCache = new HashMap<Village, Integer>();
+    private int updateTicks = 1;
 
     public ReputationHandler() {
-        FMLCommonHandler.instance().bus().register(this);
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    /**
-     * Called each tick.
-     * TickEvent.Type type = the type of tick.
-     * Side side = the side this tick is on.
-     * TickEvent.Phase phase = the phase of this tick (START, END).
-     *
-     * @param event The event being triggered.
-     */
+    public static void addReputation(EntityPlayer player, Village village, int rep) {
+    	village.modifyPlayerReputation(player.getName(), rep);
+    }
+    public static void addReputationToAll(World world, double radius, Village village, int rep) {
+    	// Add 0 to nearby players' rep to ensure they are known to the village
+        double maxDistSq = village.getVillageRadius() + radius;
+        maxDistSq = maxDistSq * maxDistSq;
+        BlockPos coords = village.getCenter();
+        for (EntityPlayer player : world.playerEntities) {
+            if (player.getDistanceSq(coords) <= maxDistSq)
+                village.modifyPlayerReputation(player.getName(), 0);
+        }
+
+        // Add to all known players' rep
+        village.setDefaultPlayerReputation(rep);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void onWorldLoad(WorldEvent.Load event) {
+    	if (event.getWorld().villageCollectionObj != null && !VillageCollectionSafe.class.equals(event.getWorld().villageCollectionObj.getClass())) {
+    		// Load our own village collection class and overwrite the old one
+            String dataIdentifier = VillageCollection.fileNameForProvider(event.getWorld().provider);
+            VillageCollection newVillageCollectionObj = null;
+            try {
+                File villagesdat = event.getWorld().getSaveHandler().getMapFileFromName(dataIdentifier);
+                if (villagesdat != null && villagesdat.exists()) {
+                	newVillageCollectionObj = new VillageCollectionSafe(dataIdentifier);
+
+                	// Set world before loading; fixes player reputation data corrupting village objects
+                	newVillageCollectionObj.setWorldsForAll(event.getWorld());
+
+                    FileInputStream in = new FileInputStream(villagesdat);
+                    NBTTagCompound tag = CompressedStreamTools.readCompressed(in);
+                    in.close();
+                    newVillageCollectionObj.readFromNBT(tag.getCompoundTag("data"));
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            if (newVillageCollectionObj == null)
+            	newVillageCollectionObj = new VillageCollectionSafe(event.getWorld());
+
+        	event.getWorld().villageCollectionObj = newVillageCollectionObj;
+        	event.getWorld().getPerWorldStorage().setData(dataIdentifier, event.getWorld().villageCollectionObj);
+    	}
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void onLivingDeath(LivingDeathEvent event) {
+        // Give good reputation for defending village
+        if (Properties.get().VILLAGES.HELP_REP_CHANCE > 0.0 && event.getEntityLiving() instanceof IMob && event.getSource().getEntity() instanceof EntityPlayer && event.getEntityLiving().getRNG().nextDouble() < Properties.get().VILLAGES.HELP_REP_CHANCE) {
+            Village village = event.getEntityLiving().worldObj.villageCollectionObj.getNearestVillage(new BlockPos(event.getEntityLiving()), 32);
+            if (village != null) {
+                ReputationHandler.addReputation((EntityPlayer) event.getSource().getEntity(), village, 1);
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void onBlockBreak(BlockEvent.HarvestDropsEvent event) {
+        if (event.getHarvester() == null)
+            return;
+        if (Properties.get().VILLAGES.BLOCK_WHITELIST.size() > 0 && !Properties.get().VILLAGES.BLOCK_WHITELIST.contains(new TargetBlock(event.getState())))
+            return;
+        if (Properties.get().VILLAGES.BLOCK_BLACKLIST.contains(new TargetBlock(event.getState())))
+            return;
+        Village village = event.getWorld().villageCollectionObj.getNearestVillage(event.getPos(), 8);
+        if (village == null)
+            return;
+        boolean special = Properties.get().VILLAGES.SP_BLOCK_LIST.contains(new TargetBlock(event.getState()));
+        int playerRep = village.getPlayerReputation(event.getHarvester().getName());
+        boolean trigger;
+
+        // Reduce reputation for players that destroy the village
+        if (playerRep <= Properties.get().VILLAGES.BLOCK_REP_LIMIT) {
+            if (special)
+                trigger = Properties.get().VILLAGES.SP_BLOCK_REP_CHANCE > 0.0 && event.getWorld().rand.nextDouble() < Properties.get().VILLAGES.SP_BLOCK_REP_CHANCE;
+            else
+                trigger = Properties.get().VILLAGES.BLOCK_REP_CHANCE > 0.0 && event.getWorld().rand.nextDouble() < Properties.get().VILLAGES.BLOCK_REP_CHANCE;
+
+            if (trigger) {
+                ReputationHandler.addReputation(event.getHarvester(), village, -1);
+                event.getWorld().playEvent(event.getHarvester(), 2004, event.getPos(), 0);
+            }
+        }
+
+        // Attack players that destroy the village
+        if (playerRep <= Properties.get().VILLAGES.BLOCK_ATTACK_LIMIT) {
+            if (special) {
+                trigger = Properties.get().VILLAGES.SP_BLOCK_ATTACK_CHANCE > 0.0 && event.getWorld().rand.nextDouble() < Properties.get().VILLAGES.SP_BLOCK_ATTACK_CHANCE;
+            }
+            else {
+                trigger = Properties.get().VILLAGES.BLOCK_ATTACK_CHANCE > 0.0 && event.getWorld().rand.nextDouble() < Properties.get().VILLAGES.BLOCK_ATTACK_CHANCE;
+            }
+            if (trigger) {
+                village.addOrRenewAgressor(event.getHarvester());
+            }
+        }
+    }
+
+    /*
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
@@ -79,10 +144,11 @@ public class ReputationHandler
 
                 int villageTicks;
                 for (WorldServer world : FMLCommonHandler.instance().getMinecraftServerInstance().worldServers) {
-                    villageTicks = -1;
-                    for (Village village : (List<Village>) world.villageCollectionObj.getVillageList()) {
+                    villageTicks = -1; // Each world may have a different tick counter for its villages
+                    for (Village village : world.villageCollectionObj.getVillageList()) {
+
                         // Add/remove reputation for adding/removing houses.
-                        if (ReputationHandler.HOUSE_REP) {
+                        if (Properties.get().VILLAGES.HOUSE_REP) {
                             if (!this.doorCountCache.containsKey(village)) {
                                 this.doorCountCache.put(village, Integer.valueOf(village.getNumVillageDoors()));
                             }
@@ -91,44 +157,46 @@ public class ReputationHandler
                                 if (difference != 0) {
                                     this.doorCountCache.put(village, Integer.valueOf(village.getNumVillageDoors()));
 
+                                    // Add 0 to nearby players' rep to ensure they are known to the village
                                     double maxDistSq = village.getVillageRadius() + 32.0;
                                     maxDistSq = maxDistSq * maxDistSq;
-                                    ChunkCoordinates coords = village.getCenter();
-                                    ArrayList<EntityPlayer> nearbyPlayers = new ArrayList<EntityPlayer>();
+                                    BlockPos coords = village.getCenter();
                                     for (Object player : world.playerEntities) {
-                                        if (player instanceof EntityPlayer && ((EntityPlayer) player).getDistanceSq(coords.posX, coords.posY, coords.posZ) <= maxDistSq) {
-                                            nearbyPlayers.add((EntityPlayer) player);
+                                        if (player instanceof EntityPlayer && ((EntityPlayer) player).getDistanceSq(coords) <= maxDistSq) {
+                                            village.modifyPlayerReputation(((EntityPlayer) player).getName(), 0);
                                         }
                                     }
-                                    for (EntityPlayer player : nearbyPlayers) {
-                                        village.setReputationForPlayer(player.getCommandSenderName(), difference);
-                                    }
+
+                                    // Add the difference to all known players' rep
+                                    village.setDefaultPlayerReputation(difference);
                                 }
                             }
                         }
 
                         // Keep doors saved in the village until destroyed.
-                        if (refreshDoors && ReputationHandler.REFRESH_HOUSES) {
-                        	boolean shouldRefresh = true;
-
-                            // Check if all villagers are dead and not merely unloaded
-                            if (village.getNumVillagers() <= 0) {
-                                ChunkCoordinates coords = village.getCenter();
-                                EntityPlayer nearestPlayer = world.getClosestPlayer(coords.posX, coords.posY, coords.posZ, village.getVillageRadius() + 32.0);
-                                if (nearestPlayer != null) {
-                                    shouldRefresh = false;
-                                }
+                        if (refreshDoors && Properties.get().VILLAGES.REFRESH_HOUSES) {
+                            if (villageTicks < 0) {
+                            	// All villages in a village collection have the same tick counter
+                                NBTTagCompound tag = new NBTTagCompound();
+                                village.writeVillageDataToNBT(tag);
+                                villageTicks = tag.getInteger("Tick");
                             }
 
-                            if (shouldRefresh) {
-	                            if (villageTicks < 0) { // All villages in a village collection have the same tick counter
-	                                NBTTagCompound tag = new NBTTagCompound();
-	                                village.writeVillageDataToNBT(tag);
-	                                villageTicks = tag.getInteger("Tick");
-	                            }
-	                            for (VillageDoorInfo doorInfo : (List<VillageDoorInfo>) village.getVillageDoorInfoList()) {
-	                                doorInfo.lastActivityTimestamp = villageTicks;
-	                            }
+                            BlockPos doorPos;
+                            int chunkX, chunkZ;
+                            for (VillageDoorInfo doorInfo : village.getVillageDoorInfoList()) {
+                        		// Refresh the door if any chunks in a 3x3 area are unloaded
+                            	doorPos = doorInfo.getDoorBlockPos();
+                            	chunkX = doorPos.getX();
+                            	chunkZ = doorPos.getZ();
+                            	for (int x = -1; x <= 1; x++) {
+	                            	for (int z = -1; z <= 1; z++) {
+		                            	if (!world.getChunkProvider().chunkExists(chunkX + x, chunkZ + z)) {
+		                            		doorInfo.setLastActivityTimestamp(villageTicks);
+		                            		break;
+		                            	}
+	                            	}
+                            	}
                             }
                         }
                     }
@@ -136,79 +204,5 @@ public class ReputationHandler
             }
         }
     }
-
-    /**
-     * Called by EntityLivingBase.onDeath().
-     * EntityLivingBase entityLiving = the entity dying.
-     * DamageSource source = the damage source that killed the entity.
-     *
-     * @param event The event being triggered.
-     */
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onLivingDeath(LivingDeathEvent event) {
-        // Give good reputation for defending village
-        if (ReputationHandler.HELP_REP_CHANCE > 0.0 && event.entityLiving instanceof IMob && event.source.getEntity() instanceof EntityPlayer && event.entityLiving.getRNG().nextDouble() < ReputationHandler.HELP_REP_CHANCE) {
-            Village village = event.entityLiving.worldObj.villageCollectionObj.findNearestVillage(MathHelper.floor_double(event.entityLiving.posX), MathHelper.floor_double(event.entityLiving.posY), MathHelper.floor_double(event.entityLiving.posZ), 32);
-            if (village != null) {
-                village.setReputationForPlayer(((EntityPlayer) event.source.getEntity()).getCommandSenderName(), 1);
-            }
-        }
-    }
-
-    /**
-     * Called by Block.dropBlockAsItemWithChance().
-     * World world = the world the event is in.
-     * Block block = the block being broken.
-     * int blockMetadata = the metadata of the block being broken.
-     * int x, y, z = the coordinates of the block.
-     * int fortuneLevel = the harvester's fortune level.
-     * ArrayList<ItemStack> drops = the items being dropped.
-     * boolean isSilkTouching = true if silk touch is being used.
-     * float dropChance = the chance for each item in the list to be dropped, not always used.
-     * EntityPlayer harvester = the player harvesting the block, may be null.
-     *
-     * @param event The event being triggered.
-     */
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onBlockBreak(BlockEvent.HarvestDropsEvent event) {
-        if (event.harvester == null)
-            return;
-        if (ReputationHandler.BLOCK_WHITELIST.size() > 0 && !ReputationHandler.BLOCK_WHITELIST.contains(new TargetBlock(event.block, event.blockMetadata)))
-            return;
-        if (ReputationHandler.BLOCK_BLACKLIST.contains(new TargetBlock(event.block, event.blockMetadata)))
-            return;
-        Village village = event.world.villageCollectionObj.findNearestVillage(event.x, event.y, event.z, 8);
-        if (village == null)
-            return;
-        boolean special = ReputationHandler.SPECIAL_LIST.contains(new TargetBlock(event.block, event.blockMetadata));
-        int playerRep = village.getReputationForPlayer(event.harvester.getCommandSenderName());
-        boolean trigger;
-
-        // Reduce reputation for players that destroy the village
-        if (playerRep <= ReputationHandler.BLOCK_REP_LIMIT) {
-            if (special) {
-                trigger = ReputationHandler.SPECIAL_REP_CHANCE > 0.0 && event.world.rand.nextDouble() < ReputationHandler.SPECIAL_REP_CHANCE;
-            }
-            else {
-                trigger = ReputationHandler.BLOCK_REP_CHANCE > 0.0 && event.world.rand.nextDouble() < ReputationHandler.BLOCK_REP_CHANCE;
-            }
-            if (trigger) {
-                village.setReputationForPlayer(event.harvester.getCommandSenderName(), -1);
-                event.world.playAuxSFX(2004, event.x, event.y, event.z, 0);
-            }
-        }
-
-        // Attack players that destroy the village
-        if (playerRep <= ReputationHandler.BLOCK_DEFEND_LIMIT) {
-            if (special) {
-                trigger = ReputationHandler.SPECIAL_DEFEND_CHANCE > 0.0 && event.world.rand.nextDouble() < ReputationHandler.SPECIAL_DEFEND_CHANCE;
-            }
-            else {
-                trigger = ReputationHandler.BLOCK_DEFEND_CHANCE > 0.0 && event.world.rand.nextDouble() < ReputationHandler.BLOCK_DEFEND_CHANCE;
-            }
-            if (trigger) {
-                village.addOrRenewAgressor(event.harvester);
-            }
-        }
-    }
+    */
 }
