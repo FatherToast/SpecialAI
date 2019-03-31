@@ -1,0 +1,295 @@
+    /// Combines two String arrays into one.
+    public static String[] combine(String[] first, String[] second) {
+        if (first == null || second == null) {
+            if (first != null)
+                return first;
+            if (second != null)
+                return second;
+            return new String[0];
+        }
+        if (first.length == 0 || second.length == 0) {
+            if (first.length > 0)
+                return first;
+            if (second.length > 0)
+                return second;
+            return new String[0];
+        }
+        String[] newArray = new String[first.length + second.length];
+        System.arraycopy(first, 0, newArray, 0, first.length);
+        System.arraycopy(second, 0, newArray, first.length, second.length);
+        return newArray;
+    }
+    
+    // ADD IN: real names from Deadly World name gen, plus Pumpernickelbottom.
+    /// Produces a random name for the entity.
+    public static String getRandomEntityName(Random random, EntityLiving entity) {
+        if (!Properties.getBoolean(Properties.GENERAL, "mob_name_chance", random))
+            return "";
+        if (entity == null)
+            return _SpecialMobs.debug ? "@Debug: random naming error (null)!" : "";
+        String name = "";
+        String[] wordPool = new String[0];
+        if (random.nextFloat() < 0.2F) {
+            wordPool = new String[] { "Sir", "Mister", "Madam", "Doctor", "Father", "Mother" };
+            name += wordPool[random.nextInt(wordPool.length)] + " ";
+        }
+        wordPool = new String[] { "Grab", "Thar", "Ger", "Ald", "Mas", "On", "O", "Din", "Thor", "Jon", "Ath", "Burb", "En", "A", "E", "I", "U", "Hab", "Bloo", "Ena", "Dit", "Aph", "Ern", "Bor", "Dav", "Id", "Toast", "Son", "Dottir", "For", "Wen", "Lob", "Ed", "Die", "Van", "Y", "Zap", "Ear", "Ben", "Don", "Bran", "Gro", "Jen", "Bob", "Ette", "Ere", "Man", "Qua", "Bro", "Cree", "Per", "Skel", "Ton", "Zom", "Bie", "Wolf", "End", "Er", "Pig", "Sil", "Ver", "Fish", "Cow", "Chic", "Ken", "Sheep", "Squid", "Hell" };
+        if (entity instanceof EntityZombie)
+            wordPool = combine(wordPool, new String[] { "Bla", "Grah", "Rargh", "Hee", "Gle", "Roo", "Bra", "Goo", "Frag", "Food", "Rag", "Bag", "Duh", "Doo", "Dorg", "Bah" });
+        if (entity instanceof EntitySkeleton)
+            wordPool = combine(wordPool, new String[] { "Bon", "Pow", "Helm", "Arr", "Ow", "Boat", "Vik", "Ing", "Jack", "Hood", "Rob", "Hum", "Cage", "Bone", "Skull" });
+        if (entity instanceof EntityEnderman)
+            wordPool = combine(wordPool, new String[] { "War", "Slen", "Der", "Erb", "Fen", "Ee", "Larp", "Sen", "Quig", "Zee", "Ven", "Vin" });
+        name += wordPool[random.nextInt(wordPool.length)] + wordPool[random.nextInt(wordPool.length)].toLowerCase();
+        if (random.nextInt(2) == 0)
+            name += wordPool[random.nextInt(wordPool.length)].toLowerCase();
+        if (random.nextInt(4) == 0)
+            name += wordPool[random.nextInt(wordPool.length)].toLowerCase();
+        if (random.nextInt(2) == 0) {
+            name += " ";
+            if (random.nextFloat() < 0.1F) {
+                if (random.nextInt(2) == 0)
+                    name += "Mac";
+                else
+                    name += "Mc";
+            }
+            name += wordPool[random.nextInt(wordPool.length)] + wordPool[random.nextInt(wordPool.length)].toLowerCase() + wordPool[random.nextInt(wordPool.length)].toLowerCase();
+            if (random.nextInt(2) == 0)
+                name += wordPool[random.nextInt(wordPool.length)].toLowerCase();
+            if (random.nextInt(4) == 0)
+                name += wordPool[random.nextInt(wordPool.length)].toLowerCase();
+        }
+        else {
+            wordPool = new String[] { "Mighty", "Supreme", "Superior", "Ultimate", "Lame", "Wimpy", "Curious", "Sneaky", "Pathetic", "Crying", "Eagle", "Errant", "Unholy", "Questionable", "Mean", "Hungry", "Thirsty", "Feeble", "Wise", "Sage", "Magical", "Mythical", "Legendary", "Not Very Nice", "Jerk", "Doctor", "Misunderstood", "Angry", "Knight", "Bishop", "Godly", "Special", "Toasty", "Shiny", "Shimmering", "Light", "Dark", "Odd-Smelling", "Funky", "Rock Smasher", "Son of Herobrine", "Cracked", "Sticky", "\u00a7kAlien", "Baby", "Manly", "Rough", "Scary", "Undoubtable", "Honest", "Non-Suspicious", "Boring", "Odd", "Lazy", "Super", "Nifty", "Ogre Slayer", "Pig Thief", "Dirt Digger", "Really Cool", "Doominator", "... Something" };
+            if (entity instanceof EntityZombie)
+                wordPool = combine(wordPool, new String[] { "Zombie", "Brain Eater", "Rotten", "Tainted", "Mindless", "Dumb", "Ugly", "Nearly Headless", "Drooling", "Green", "Bloody" });
+            if (entity instanceof EntitySkeleton)
+                wordPool = combine(wordPool, new String[] { "Skeleton", "Bone-Headed", "Flinger of Sharp Things", "Bony", "Skullhunter", "Skeleton King", "Thin" });
+            if (entity instanceof EntityEnderman)
+                wordPool = combine(wordPool, new String[] { "Enderman", "Warped", "Shifty", "Creepy", "Long", "Tall", "Endwalker" });
+            name += " the " + wordPool[random.nextInt(wordPool.length)];
+        }
+        return name;
+    }
+    
+    /// Produces a random name for the itemStack.
+    public static String getRandomItemName(Random random, ItemStack itemStack, String override) {
+        if (itemStack == null)
+            return _SpecialMobs.debug ? "@Debug: random naming error (null)!" : "";
+        String name = "";
+        String[] wordPool = new String[0];
+        boolean prefixed = false;
+        if (random.nextFloat() < 0.1F)
+            name += "The ";
+        if (random.nextInt(2) == 0) {
+            prefixed = true;
+            wordPool = new String[] { "Mighty", "Supreme", "Superior", "Ultimate", "Shoddy", "Flimsy", "Curious", "Secret", "Pathetic", "Crying", "Eagle's", "Errant", "Unholy", "Questionable", "Mean", "Hungry", "Thirsty", "Feeble", "Wise", "Sage's", "Magical", "Mythical", "Legendary", "Not Very Nice", "Jerk's", "Doctor's", "Misunderstood", "Angry", "Knight's", "Bishop's", "Godly", "Special", "Toasty", "Shiny", "Shimmering", "Light", "Dark", "Odd-Smelling", "Funky", "Slightly Overdone", "Half-Baked", "Cracked", "Sticky", "\u00a7kAlien", "Baby", "Manly", "Rough", "Scary", "Undoubtable", "Honest", "Non-Suspicious", "Boring", "Odd", "Lazy", "Super", "Nifty", "Ogre-Slaying" };
+            Map enchantMap = EnchantmentHelper.getEnchantments(itemStack);
+            if (!enchantMap.isEmpty()) {
+                if (enchantMap.containsKey(Enchantment.protection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Protective", "Shielding", "Fortified", "Tough", "Sturdy", "Defensive" });
+                if (enchantMap.containsKey(Enchantment.fireProtection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Flame-Resistant", "Flameproof", "Fire-Resistant", "Fireproof", "Cold", "Frigid" });
+                if (enchantMap.containsKey(Enchantment.featherFalling.effectId))
+                    wordPool = combine(wordPool, new String[] { "Feather", "Feathered", "Mercury", "Hermes", "Winged", "Lightweight", "Soft", "Cushioned" });
+                if (enchantMap.containsKey(Enchantment.blastProtection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Blast-Resistant", "Creeperproof", "Anti-Creeper", "Bomb", "Explosion-Damping", "Bombproof" });
+                if (enchantMap.containsKey(Enchantment.projectileProtection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Arrow-Blocking", "Skeletonproof", "Anti-Skeleton", "Arrow-Breaking", "Arrowproof" });
+                if (enchantMap.containsKey(Enchantment.respiration.effectId))
+                    wordPool = combine(wordPool, new String[] { "Waterbreathing", "Dive", "Diving", "Water", "Scuba", "Fishy", "Underwater", "Deep-sea" });
+                if (enchantMap.containsKey(Enchantment.aquaAffinity.effectId))
+                    wordPool = combine(wordPool, new String[] { "Underwater Mining", "Underwater Excavation", "Deep-Sea Mining", "Deep-Sea Excavation", "Fish Miner's" });
+                
+                if (enchantMap.containsKey(Enchantment.sharpness.effectId))
+                    wordPool = combine(wordPool, new String[] { "Sharp", "Razor Sharp", "Pointy", "Razor-Edged", "Serrated", "Painful", "Smart" });
+                if (enchantMap.containsKey(Enchantment.smite.effectId))
+                    wordPool = combine(wordPool, new String[] { "Smiting", "Holy", "Banishing", "Burying", "Purging", "Cleansing", "Wrathful", "Zombie-Slaying", "Skeleton-Slaying" });
+                if (enchantMap.containsKey(Enchantment.baneOfArthropods.effectId))
+                    wordPool = combine(wordPool, new String[] { "Spider-Slaying", "Bug-Crushing", "Flyswatting", "Bugbane", "Arachnophobic", "Spiderbane" });
+                if (enchantMap.containsKey(Enchantment.knockback.effectId))
+                    wordPool = combine(wordPool, new String[] { "Forceful", "Heavy", "Dull", "Powerful", "Pushing", "Launching", "Furious", "Charging", "Ram's" });
+                if (enchantMap.containsKey(Enchantment.fireAspect.effectId) || enchantMap.containsKey(Enchantment.flame.effectId))
+                    wordPool = combine(wordPool, new String[] { "Fiery", "Fiery Dragon", "Fire", "Burning", "Hot", "Volcanic", "Lava", "Dragon" });
+                if (enchantMap.containsKey(Enchantment.looting.effectId))
+                    wordPool = combine(wordPool, new String[] { "Thief's", "Looting", "Looter's", "Lucky", "Fortunate", "Greedy", "Grubby", "Thievish", "Thieving" });
+                
+                if (enchantMap.containsKey(Enchantment.efficiency.effectId))
+                    wordPool = combine(wordPool, new String[] { "Efficient", "Quick", "Fast", "Speedy", "Quick-Mining", "Rushing" });
+                if (enchantMap.containsKey(Enchantment.silkTouch.effectId))
+                    wordPool = combine(wordPool, new String[] { "Careful", "Delicate", "Gentle", "Courteous", "Polite", "Ice-Harvesting", "Glass-Removing" });
+                if (enchantMap.containsKey(Enchantment.unbreaking.effectId))
+                    wordPool = combine(wordPool, new String[] { "Unbreaking", "Reliable", "Trusty", "Flexible", "Unbreakable", "Timeless", "Quality", "Made-Like-They-Used-To-Make-Them" });
+                if (enchantMap.containsKey(Enchantment.fortune.effectId))
+                    wordPool = combine(wordPool, new String[] { "Fortunate", "Lucky", "Greedy", "Effective", "Collector's", "Flint-Finding", "Resourceful" });
+                
+                if (enchantMap.containsKey(Enchantment.power.effectId))
+                    wordPool = combine(wordPool, new String[] { "Powerful", "Heart-Seeking", "Head-Seeking", "Killer's", "Sniper's", "Efficient", "Arrow-Saving" });
+                if (enchantMap.containsKey(Enchantment.punch.effectId))
+                    wordPool = combine(wordPool, new String[] { "Forceful", "Heavy", "Self-Defense", "Really-Hard-To-Draw-Back" });
+                if (enchantMap.containsKey(Enchantment.infinity.effectId))
+                    wordPool = combine(wordPool, new String[] { "Efficient", "Infinite", "Arrow-Making", "Arrow-Saving", "Boomerang", "Magic Arrow" });
+            }
+            name += wordPool[random.nextInt(wordPool.length)] + " ";
+            wordPool = new String[0];
+        }
+        naming: {
+            if (itemStack.getItem() instanceof ItemSword || itemStack.getItem() instanceof ItemTool) {
+                if (override == null) {
+                    String[][] materials = {
+                        { "Wooden", "Wood", "Hardwood", "Balsa", "Mahogany" },
+                        { "Stone", "Rock", "Marble", "Cobblestone", },
+                        { "Iron", "Steel", "Ferrous", "Rusty", "Wrought Iron" },
+                        { "Diamond", "Zircon", "Gemstone", "Jewel" },
+                        { "Golden", "Gold", "Gilt", "Auric", "Ornate" }
+                    };
+                    String materialName;
+                    if (itemStack.getItem() instanceof ItemSword)
+                        materialName = ((ItemSword)itemStack.getItem()).getToolMaterialName();
+                    else
+                        materialName = ((ItemTool)itemStack.getItem()).getToolMaterialName();
+                    int index;
+                    if (materialName.equals(EnumToolMaterial.WOOD.toString()))
+                        index = 0;
+                    else if (materialName.equals(EnumToolMaterial.STONE.toString()))
+                        index = 1;
+                    else if (materialName.equals(EnumToolMaterial.IRON.toString()))
+                        index = 2;
+                    else if (materialName.equals(EnumToolMaterial.EMERALD.toString()))
+                        index = 3;
+                    else if (materialName.equals(EnumToolMaterial.GOLD.toString()))
+                        index = 4;
+                    else {
+                        name += itemStack.getItem().getItemDisplayName(itemStack);
+                        break naming;
+                    }
+                    name += materials[index][random.nextInt(materials[index].length)] + " ";
+                }
+                else
+                    name += override + " ";
+                String[] type = { "TOOL" };
+                if (itemStack.getItem() instanceof ItemSword)
+                    type = new String[] { "Sword", "Cutter", "Slicer", "Dicer", "Knife", "Blade", "Machete", "Brand", "Claymore", "Cutlass", "Foil", "Dagger", "Glaive", "Rapier", "Saber", "Scimitar", "Shortsword", "Longsword", "Broadsword", "Calibur" };
+                else if (itemStack.getItem() instanceof ItemAxe)
+                    type = new String[] { "Axe", "Chopper", "Hatchet", "Tomahawk", "Cleaver", "Hacker", "Tree-Cutter", "Truncator" };
+                else if (itemStack.getItem() instanceof ItemPickaxe)
+                    type = new String[] { "Pickaxe", "Pick", "Mattock", "Rock-Smasher", "Miner" };
+                else if (itemStack.getItem() instanceof ItemSpade)
+                    type = new String[] { "Shovel", "Spade", "Digger", "Excavator", "Trowel", "Scoop" };
+                name += type[random.nextInt(type.length)];
+            }
+            else if (itemStack.getItem() instanceof ItemBow) {
+                if (override != null)
+                    name += override + " ";
+                String[] type = { "Bow", "Shortbow", "Longbow", "Flatbow", "Recurve Bow", "Reflex Bow", "Self Bow", "Composite Bow", "Arrow-Flinger" };
+                name += type[random.nextInt(type.length)];
+            }
+            else if (itemStack.getItem() instanceof ItemArmor) {
+                if (override == null) {
+                    String[][] materials = {
+                        { "Leather", "Rawhide", "Lamellar" },
+                        { "Chainmail", "Chain", "Chain Link", "Scale" },
+                        { "Iron", "Steel", "Ferrous", "Rusty", "Wrought Iron" },
+                        { "Diamond", "Zircon", "Gemstone", "Jewel" },
+                        { "Golden", "Gold", "Gilt", "Auric", "Ornate" }
+                    };
+                    int index;
+                    switch (((ItemArmor)itemStack.getItem()).getArmorMaterial()) {
+                        case CLOTH:
+                            index = 0;
+                            break;
+                        case CHAIN:
+                            index = 1;
+                            break;
+                        case IRON:
+                            index = 2;
+                            break;
+                        case DIAMOND:
+                            index = 3;
+                            break;
+                        case GOLD:
+                            index = 4;
+                            break;
+                        default:
+                            name += itemStack.getItem().getItemDisplayName(itemStack);
+                            break naming;
+                    }
+                    name += materials[index][random.nextInt(materials[index].length)] + " ";
+                }
+                else
+                    name += override + " ";
+                String[] type = { "ARMOR" };
+                switch (((ItemArmor)itemStack.getItem()).armorType) {
+                    case 0:
+                        type = new String[] { "Helmet", "Cap", "Crown", "Great Helm", "Bassinet", "Sallet", "Close Helm", "Barbute" };
+                        break;
+                    case 1:
+                        type = new String[] { "Chestplate", "Tunic", "Brigandine", "Hauberk", "Cuirass" };
+                        break;
+                    case 2:
+                        type = new String[] { "Leggings", "Pants", "Tassets", "Cuisses", "Schynbalds" };
+                        break;
+                    case 3:
+                        type = new String[] { "Boots", "Shoes", "Greaves", "Sabatons", "Sollerets" };
+                        break;
+                }
+                name += type[random.nextInt(type.length)];
+            }
+            else {
+                if (override != null)
+                    name += override + " ";
+                name += itemStack.getItem().getItemDisplayName(itemStack);
+            }
+        }
+        if (!prefixed) {
+            wordPool = new String[] { "Mightiness", "Supremity", "Superiority", "Flimsiness", "Curiousity", "Secrets", "Patheticness", "Crying", "The Eagles", "Unholiness", "Questionable Integrity", "Meanness", "Hunger", "Thirst", "Wisdom", "The Sages", "Magic", "Myths", "Legends", "The Jerks", "The Doctor", "Misunderstanding", "Anger", "The Gods", "Toast", "Shininess", "Shimmering", "The Light", "Darkness", "Strange Odors", "Funk", "Slight Abnormality", "Baking", "Breaking", "Stickiness", "Babies", "Manliness", "Roughness", "Scary Stuff", "Doubt", "Honesty", "Nothing", "Boringness", "Oddness", "Laziness", "Super Something", "Nifty Things", "Ogre-Slaying" };
+            Map enchantMap = EnchantmentHelper.getEnchantments(itemStack);
+            if (!enchantMap.isEmpty()) {
+                if (enchantMap.containsKey(Enchantment.protection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Resistance", "Protection", "Shielding", "Fortitude", "Toughness", "Sturdiness", "Defense" });
+                if (enchantMap.containsKey(Enchantment.fireProtection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Flame Resistance", "Flame", "Fire Resistance", "Fire", "Coldness", "Ice" });
+                if (enchantMap.containsKey(Enchantment.featherFalling.effectId))
+                    wordPool = combine(wordPool, new String[] { "Feather Falling", "Feathers", "Mercury", "Hermes", "Wings", "Gravity", "Softness", "Cushioning" });
+                if (enchantMap.containsKey(Enchantment.blastProtection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Blast Resistance", "Creeper Hugging", "Creeper Slaying", "Bomb Repelling", "Explosion Damping", "Bomb Resistance" });
+                if (enchantMap.containsKey(Enchantment.projectileProtection.effectId))
+                    wordPool = combine(wordPool, new String[] { "Arrow Blocking", "Skeleton Hugging", "Skeleton Slaying", "Arrow Resistance", "Arrow Defense" });
+                if (enchantMap.containsKey(Enchantment.respiration.effectId))
+                    wordPool = combine(wordPool, new String[] { "Waterbreathing", "Diving", "Deep-Sea Diving", "Water", "Swimming", "Fishiness", "Underwater Exploration", "Deep-sea Exploration" });
+                if (enchantMap.containsKey(Enchantment.aquaAffinity.effectId))
+                    wordPool = combine(wordPool, new String[] { "Underwater Mining", "Underwater Excavation", "Deep-Sea Mining", "Deep-Sea Excavation", "The Fish Miner" });
+                
+                if (enchantMap.containsKey(Enchantment.sharpness.effectId))
+                    wordPool = combine(wordPool, new String[] { "Sharpness", "Razor Sharpness", "Pointiness", "Pain", "Smarting" });
+                if (enchantMap.containsKey(Enchantment.smite.effectId))
+                    wordPool = combine(wordPool, new String[] { "Smiting", "Holiness", "Banishing", "Burying", "Purging", "Cleansing", "Wrath", "Zombie Slaying", "Skeleton Slaying" });
+                if (enchantMap.containsKey(Enchantment.baneOfArthropods.effectId))
+                    wordPool = combine(wordPool, new String[] { "Spider Slaying", "Bug Crushing", "Flyswatting", "Bugbane", "Arachnophobia", "Spiderbane" });
+                if (enchantMap.containsKey(Enchantment.knockback.effectId))
+                    wordPool = combine(wordPool, new String[] { "Forcefulness", "Knockback", "Dullness", "Power", "Pushing", "Launching", "Fury", "Charging", "The Ram" });
+                if (enchantMap.containsKey(Enchantment.fireAspect.effectId) || enchantMap.containsKey(Enchantment.flame.effectId))
+                    wordPool = combine(wordPool, new String[] { "Fire", "The Fire Dragon", "Flame", "Burning", "Heat", "Volcanoes", "Lava", "The Dragon" });
+                if (enchantMap.containsKey(Enchantment.looting.effectId))
+                    wordPool = combine(wordPool, new String[] { "The Thief", "Looting", "The Looter", "Luck", "Fortune", "Greed", "Grubbiness", "Thievishness", "Thieving" });
+                
+                if (enchantMap.containsKey(Enchantment.efficiency.effectId))
+                    wordPool = combine(wordPool, new String[] { "Efficiency", "Quickness", "Fastness", "Speed", "Quick-Mining", "Rushing" });
+                if (enchantMap.containsKey(Enchantment.silkTouch.effectId))
+                    wordPool = combine(wordPool, new String[] { "Carefulness", "Delicate Mining", "Gentleness", "Courtesy", "Politeness", "Ice Harvesting", "Glass Removing" });
+                if (enchantMap.containsKey(Enchantment.unbreaking.effectId))
+                    wordPool = combine(wordPool, new String[] { "Unbreaking", "Reliabitlity", "Trustiness", "Flexibility", "Unbreakability", "Timelessness", "Quality" });
+                if (enchantMap.containsKey(Enchantment.fortune.effectId))
+                    wordPool = combine(wordPool, new String[] { "Fortune", "Luck", "Greed", "Effectiveness", "Collecting", "Flint Finding", "Resourcefulness" });
+                
+                if (enchantMap.containsKey(Enchantment.power.effectId))
+                    wordPool = combine(wordPool, new String[] { "Power", "Heart Seeking", "Head Seeking", "Killing", "Sniping", "Efficiency", "Arrow Saving" });
+                if (enchantMap.containsKey(Enchantment.punch.effectId))
+                    wordPool = combine(wordPool, new String[] { "Force", "Heavy Arrows", "Self-Defense" });
+                if (enchantMap.containsKey(Enchantment.infinity.effectId))
+                    wordPool = combine(wordPool, new String[] { "Efficiency", "Infinity", "Arrow Making", "Arrow Saving", "Boomerang Arrows", "Magic Arrow Creation" });
+            }
+            name += " of " + wordPool[random.nextInt(wordPool.length)];
+        }
+        return name;
+    }
