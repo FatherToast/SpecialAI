@@ -1,9 +1,11 @@
 package fathertoast.specialai;
 
 
-import fathertoast.specialai.config.Config;
+import fathertoast.specialai.ai.AIManager;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,16 +17,17 @@ import net.minecraftforge.fml.common.Mod;
  */
 @SuppressWarnings( "unused" )
 @Mod.EventBusSubscriber( modid = ModCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE )
-public class GameEventHandler {
+public final class GameEventHandler {
     /**
-     * Called for each world at the start and end of each tick.
+     * Called for the server at the start and end of each tick.
      * <p>
-     * It is usually wise to check the phase (start/end) and world side (server/client) before doing anything.
+     * It is usually wise to check the phase (start/end) before doing anything.
      *
      * @param event The event data.
      */
     @SubscribeEvent( priority = EventPriority.NORMAL )
-    public static void onWorldTick( TickEvent.WorldTickEvent event ) {
+    public static void onServerTick( TickEvent.ServerTickEvent event ) {
+        AIManager.onServerTick( event );
     }
     
     /**
@@ -32,16 +35,18 @@ public class GameEventHandler {
      *
      * @param event The event data.
      */
-    @SubscribeEvent( priority = EventPriority.NORMAL )
+    @SubscribeEvent( priority = EventPriority.LOW )
     public static void onJoinWorld( EntityJoinWorldEvent event ) {
+        AIManager.onJoinWorld( event );
     }
     
     /**
-     * Called when a living entity is damaged - before armor, potions, and enchantments reduce damage.
+     * Called when a living entity dies for any reason.
      *
      * @param event The event data.
      */
-    @SubscribeEvent( priority = EventPriority.LOWEST )
-    public void onLivingHurt( LivingHurtEvent event ) {
+    @SubscribeEvent( priority = EventPriority.NORMAL )
+    public void onLivingDeath( LivingDeathEvent event ) {
+        AIManager.onLivingDeath( event );
     }
 }

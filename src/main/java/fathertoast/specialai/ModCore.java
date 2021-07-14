@@ -1,47 +1,28 @@
 package fathertoast.specialai;
 
-import fathertoast.specialai.config.Config;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nullable;
 
 /**
  * The core of the mod. Contains basic info about the mod, initializes configs, and hooks into FML.
  */
 @Mod( ModCore.MOD_ID )
 public class ModCore {
-    /** The mod id and namespace used by this mod. */
-    public static final String MOD_ID = "specialai";
-    /** The base lang key for translating text from this mod. */
-    public static final String LANG_KEY = ModCore.MOD_ID + ".";
-    
-    /** The logger used by this mod. */
-    public static final Logger LOG = LogManager.getLogger();
-    
     /* TODO LIST:
      *  - Re-implement features:
-     *      + Depacify/aggressive
-     *      + Eat dropped items
-     *      + Door breaking
-     *      + Idle griefing/fiddling
-     *      + Reactions
-     *          - Avoid explosions
-     *          - Call for help (on death)
-     *          - Dodge arrows (plus NEW - better reaction to sniping)
-     *      + Jockeys
      *      + Villages
-     *      + Elite AI
-     *          - Shaman
-     *          - Jump/Leap
-     *          - Sprint
-     *          - Barrage
-     *          - Charge
-     *          - Thief
-     *          - Spawner
-     *          - Throw allies/enemies
-     *  - Improve ai application configs, such as blacklist for elite ai
      *
      * Primary features:
+     *  - Reactions:
+     *      + better response to being sniped
+     *  - Door Breaking:
+     *      + fix pathfinding to path through valid doors - is this possible without a mixin on WalkNodeProcessor?
+     *  - Use Item Attack: Replace mob attack AI with "item use", which simulates item use for its "attack"
      *  - Dig: break down walls when unable to path to target
      *  - Stalk: try to hide behind blocks when target is looking in their general direction
      *  - Portals: walk into nearby portals (part of idle fiddling?)
@@ -56,17 +37,34 @@ public class ModCore {
      *      + Uses a "unique" item that is a guaranteed drop
      *      + Unique item is enchanted and has a special enchantment/modifier
      *      + The special modifier is more powerful than otherwise obtainable, but may come with a drawback
-     *      + Unique item is named based on its special (prefixed by "<bossname>'s")
+     *      + Unique item is named based on its special (prefixed by "<boss_name>'s")
      *      + Uses the counter-potion system
      *	? Flock: hunt together
      *  ? Spread fire: ignite flammable blocks when on fire and chasing a target
      *
      * Utility features:
+     *  - Fix squid not pathing at all and fish moving super slowly in xz-plane
      *  - More editing for AI, particularly for editing pre-existing AI
      *  - More effective configs, more per-entity-id options
      */
     
-    public ModCore() {
-        Config.initialize();
-    }
+    /** The mod id and namespace used by this mod. */
+    public static final String MOD_ID = "specialai";
+    
+    /** The base lang key for translating text from this mod. */
+    public static final String LANG_KEY = ModCore.MOD_ID + ".";
+    
+    /** The less than or equal to symbol (<=). */
+    public static final String LESS_OR_EQUAL = "\u2264";
+    /** The greater than or equal to symbol (>=). */
+    public static final String GREATER_OR_EQUAL = "\u2265";
+    
+    /** The logger used by this mod. */
+    public static final Logger LOG = LogManager.getLogger();
+    
+    /** @return Returns a Forge registry entry as a string, or "null" if it is null. */
+    public static String toString( @Nullable ForgeRegistryEntry<?> regEntry ) { return regEntry == null ? "null" : toString( regEntry.getRegistryName() ); }
+    
+    /** @return Returns the resource location as a string, or "null" if it is null. */
+    public static String toString( @Nullable ResourceLocation res ) { return res == null ? "null" : res.toString(); }
 }

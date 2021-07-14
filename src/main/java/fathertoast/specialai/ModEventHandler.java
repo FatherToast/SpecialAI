@@ -1,5 +1,6 @@
 package fathertoast.specialai;
 
+import fathertoast.specialai.config.Config;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -11,7 +12,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
  */
 @SuppressWarnings( "unused" )
 @Mod.EventBusSubscriber( modid = ModCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD )
-public class ModEventHandler {
+public final class ModEventHandler {
     /**
      * Called after registry events, but before the client- and server-specific setup events.
      *
@@ -19,6 +20,6 @@ public class ModEventHandler {
      */
     @SubscribeEvent( priority = EventPriority.NORMAL )
     public static void setup( final FMLCommonSetupEvent event ) {
-        // Nothing yet!
+        Config.initialize();
     }
 }

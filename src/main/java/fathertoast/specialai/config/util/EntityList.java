@@ -1,10 +1,9 @@
 package fathertoast.specialai.config.util;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.config.field.IStringArray;
+import fathertoast.specialai.config.file.TomlHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.entity.LivingEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,8 @@ import java.util.List;
 /**
  * A list of entity-value entries used to link one or more numbers to specific entity types.
  */
-public class EntityList {
+@SuppressWarnings( { "unused", "SameParameterValue" } )
+public class EntityList implements IStringArray {
     /** The entity-value entries in this list. */
     private final EntityEntry[] ENTRIES;
     
@@ -24,6 +24,14 @@ public class EntityList {
     private double maxValue = Double.POSITIVE_INFINITY;
     
     /**
+     * Create a new entity list from a list of entries.
+     * <p>
+     * By default, entity lists will allow any non-zero number of values, and the value(s) can be any numerical double.
+     * These parameters can be changed with helper methods that alter the number of values or values' bounds and return 'this'.
+     */
+    public EntityList( List<EntityEntry> entries ) { this( entries.toArray( new EntityEntry[0] ) ); }
+    
+    /**
      * Create a new entity list from an array of entries. Used for creating default configs.
      * <p>
      * By default, entity lists will allow any non-zero number of values, and the value(s) can be any numerical double.
@@ -33,32 +41,14 @@ public class EntityList {
         ENTRIES = entries;
     }
     
-    /** Create a new entity list from a list of strings, such as from a config file. */
-    public EntityList( List<? extends String> list ) {
-        // Iterate through the provided string list
-        ArrayList<EntityEntry> entryList = new ArrayList<>();
-        for( String item : list ) {
-            // Check if the entry should be "specific", i.e. check for entity class equality rather than instanceof
-            boolean extendable = true;
-            if( item.startsWith( "~" ) ) {
-                item = item.substring( 1 );
-                extendable = false;
-            }
-            
-            // Parse the entity-value pair
-            String[] itemList = item.split( " " );
-            EntityType<?> entityType = ForgeRegistries.ENTITIES.getValue( new ResourceLocation( itemList[0].trim() ) );
-            if( entityType != null ) {
-                entryList.add( new EntityEntry( entityType, extendable, itemList ) );
-            }
-            else {
-                ModCore.LOG.error( "Invalid entity id! ({})", item );
-            }
-        }
-        ENTRIES = entryList.toArray( new EntityEntry[0] );
+    /** @return A string representation of this object. */
+    @Override
+    public String toString() {
+        return TomlHelper.toLiteral( toStringList().toArray() );
     }
     
-    /** @return The string list representation of this entity list, as it would appear in a config file. */
+    /** @return A list of strings that will represent this object when written to a toml file. */
+    @Override
     public List<String> toStringList() {
         // Create a list of the entries in string format
         List<String> list = new ArrayList<>( ENTRIES.length );
@@ -72,6 +62,7 @@ public class EntityList {
     public boolean contains( Entity entity ) {
         final EntityEntry targetEntry = new EntityEntry( entity );
         for( EntityEntry currentEntry : ENTRIES ) {
+            currentEntry.checkClass( entity.level );
             if( currentEntry.contains( targetEntry ) )
                 return true;
         }
@@ -86,6 +77,7 @@ public class EntityList {
         final EntityEntry targetEntry = new EntityEntry( entity );
         EntityEntry bestMatch = null;
         for( EntityEntry currentEntry : ENTRIES ) {
+            currentEntry.checkClass( entity.level );
             // Immediately return if we match the most stringent entry possible
             if( !currentEntry.EXTEND && currentEntry.entityClass == targetEntry.entityClass ) {
                 return currentEntry.VALUES;
@@ -101,11 +93,23 @@ public class EntityList {
     /**
      * @param entity The entity to retrieve a value for.
      * @return The first value in the best-match entry's value array. Returns 0 if the entity is not contained in this
-     * entity list or has no values specified.
+     * entity list or has no values specified. This should only be used for 'single value' lists.
+     * @see #setSingleValue()
+     * @see #setSinglePercent()
      */
     public double getValue( Entity entity ) {
         double[] values = getValues( entity );
         return values == null || values.length < 1 ? 0.0 : values[0];
+    }
+    
+    /**
+     * @param entity The entity to roll a value for.
+     * @return Randomly rolls the first percentage value in the best-match entry's value array. Returns false if the entity
+     * is not contained in this entity list or has no values specified. This should only be used for 'single percent' lists.
+     * @see #setSinglePercent()
+     */
+    public boolean rollChance( LivingEntity entity ) {
+        return entity != null && entity.getRandom().nextDouble() < getValue( entity );
     }
     
     /** Marks this entity list as a simple percentage listing; exactly one percent (0 to 1) per entry. */
@@ -126,47 +130,25 @@ public class EntityList {
     /** Bounds entry values in this list between 0 and 1, inclusive. */
     public EntityList setRange0to1() { return setRange( 0.0, 1.0 ); }
     
-    /** Bounds entry values in this list to any positive value (including +0). */
+    /** Bounds entry values in this list to any positive value (>= +0). */
     public EntityList setRangePos() { return setRange( 0.0, Double.POSITIVE_INFINITY ); }
     
-    /** Bounds entry values in this list to the specified limits, inclusive. */
-    public EntityList setRange( double min, double max ) {
+    /** Bounds entry values in this list to the specified limits, inclusive. Note that 0 must be within the range. */
+    private EntityList setRange( double min, double max ) {
         minValue = min;
         maxValue = max;
         return this;
     }
     
-    /** Validator for array elements. Used to bound entry values and enforce number of values ver entry. */
-    public boolean validateEntry( Object object ) {
-        if( object instanceof String ) {
-            // Check that the string is a space-separated list
-            String[] args = ((String) object).trim().split( " " );
-            
-            // Verify number of arguments matches expected
-            if( entryValues < 0 ) {
-                // Variable-value; just needs at least one value
-                if( args.length < 2 ) return false;
-            }
-            else if( entryValues != args.length - 1 ) {
-                // Specified-value; must have the exact number of values
-                return false;
-            }
-            
-            // Make sure all arguments are numbers, except for the first index
-            for( int i = 1; i < args.length; i++ ) {
-                double value;
-                try {
-                    value = Double.parseDouble( args[i] );
-                }
-                catch( NumberFormatException ex ) {
-                    // This is thrown if the string is not a parsable number
-                    return false;
-                }
-                // Verify value is within range
-                if( value < minValue || value > maxValue ) return false;
-            }
-            return true;
-        }
-        return false;
-    }
+    /**
+     * @return The number of values that must be included in each entry.
+     * A negative value implies any non-zero number of values is allowed.
+     */
+    public int getRequiredValues() { return entryValues; }
+    
+    /** @return The minimum value that can be given to entry values. */
+    public double getMinValue() { return minValue; }
+    
+    /** @return The maximum value that can be given to entry values. */
+    public double getMaxValue() { return maxValue; }
 }

@@ -1,15 +1,19 @@
 package fathertoast.specialai.config.util;
 
+import fathertoast.specialai.ModCore;
+import fathertoast.specialai.config.field.EntityListField;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * One entity-value entry in an entity list.
  */
+@SuppressWarnings( "unused" )
 public class EntityEntry {
-    /** The entity type this entry is defined for. Null for comparison objects. */
+    /** The entity type this entry is defined for. If this is null, then this entry will match any entity. */
     public final EntityType<? extends Entity> TYPE;
     /** True if this should check for instanceof the entity class (as opposed to equals). */
     public final boolean EXTEND;
@@ -21,10 +25,15 @@ public class EntityEntry {
     
     /** Creates an entry used to compare entity classes internally with the entries in an entity list. */
     EntityEntry( Entity entity ) {
-        TYPE = null;
+        TYPE = entity.getType();
         EXTEND = false;
         VALUES = null;
         entityClass = entity.getClass();
+    }
+    
+    /** Creates an entry with the specified values that acts as a default matching all entity types. Used for creating default configs. */
+    public EntityEntry( double... values ) {
+        this( null, true, values );
     }
     
     /** Creates an extendable entry with the specified values. Used for creating default configs. */
@@ -39,34 +48,38 @@ public class EntityEntry {
         VALUES = values;
     }
     
-    /** Constructor used by the internal parser. Note that the 'args' parameter includes the entity string in its first index. */
-    EntityEntry( EntityType<?> entityType, boolean extend, String[] args ) {
-        TYPE = entityType;
-        EXTEND = extend;
-        VALUES = new double[args.length - 1];
-        
-        for( int i = 0; i < VALUES.length; i++ ) {
-            double val;
+    /** Called on this entry before using it to check if the entity class has been determined, and loads the class if it has not been. */
+    void checkClass( World world ) {
+        if( TYPE != null && entityClass == null ) {
             try {
-                val = Double.parseDouble( args[i + 1] );
+                Entity entity = TYPE.create( world );
+                if( entity != null ) {
+                    entityClass = entity.getClass();
+                    entity.kill();
+                }
             }
-            catch( NumberFormatException ex ) {
-                val = 0.0;
+            catch( Exception ex ) {
+                ModCore.LOG.warn( "Failed to load class of entity type {}!", TYPE );
+                ex.printStackTrace();
             }
-            VALUES[i] = val;
         }
     }
     
     /**
      * @return Returns true if the given entity description is contained within this one (is more specific).
      * <p>
-     * This operates under the assumption that there will never be more than one non-extendable entry for the same class in a list.
+     * This operates under the assumption that there will not be multiple default entries or multiple non-extendable
+     * entries for the same class in a list.
      */
     public boolean contains( EntityEntry entry ) {
-        if( entityClass == entry.entityClass )
-            return !entry.EXTEND;
-        if( EXTEND )
-            return entityClass.isAssignableFrom( entry.entityClass );
+        // Handle default entries
+        if( TYPE == null ) return true;
+        if( entry.TYPE == null ) return false;
+        // Same entity, but non-extendable is more specific
+        if( entityClass == entry.entityClass ) return !entry.EXTEND;
+        // Extendable entry, check if the other is for a subclass
+        if( EXTEND ) return entityClass.isAssignableFrom( entry.entityClass );
+        // Non-extendable entries cannot contain other entries
         return false;
     }
     
@@ -79,7 +92,7 @@ public class EntityEntry {
     public String toString() {
         // Start with the entity type registry key
         ResourceLocation resource = TYPE == null ? null : ForgeRegistries.ENTITIES.getKey( TYPE );
-        StringBuilder str = new StringBuilder( resource == null ? "null" : resource.toString() );
+        StringBuilder str = new StringBuilder( resource == null ? EntityListField.REG_KEY_DEFAULT : resource.toString() );
         // Insert "specific" prefix if not extendable
         if( !EXTEND ) {
             str.insert( 0, '~' );
