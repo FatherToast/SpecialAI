@@ -1,3 +1,13 @@
+1.16.5-1.0.0
+    - Rewritten and rebaselined for the MC 1.16.5 update.
+    - Due to village reworks, all village-related features have been removed until I work out the new mechanics.
+    - Uses the new TOML config format with runtime editing. These should be more user-friendly overall.
+    - Many config options have been improved to allow better control.
+        - Entity and block lists now always combine a blacklist with at least one whitelist.
+        - Entity lists can now have a "default" entry (block lists still have "*" postfix).
+    - Most values used by Elite AI patterns have been changed to pure config values.
+        - The few values that could be NBT-edited can no longer be, with the exception of the Spawner AI.
+        - Many more options are available now for Elite AIs, and they have been broken off into their own config file.
 1.1.0
     - Replaced vanilla door-breaking ai with one that is more configurable and works (slightly) better.
     - Added randomized villager names.

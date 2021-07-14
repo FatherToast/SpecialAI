@@ -1,4 +1,4 @@
 
-version = "1.1.0_for_mc1.12.2"
-group = "fathertoast.specialai"
-archivesBaseName = "specialai"
+version = '1.16.5-1.0.0'
+group = 'fathertoast.specialai'
+archivesBaseName = 'specialai'
