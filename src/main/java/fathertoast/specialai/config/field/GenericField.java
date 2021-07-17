@@ -2,6 +2,11 @@ package fathertoast.specialai.config.field;
 
 /**
  * Represents a config field with an object value.
+ * <p>
+ * Note that it is important the field type has a non-default implementation of equals(), as this is how the config spec
+ * determines when it does not need to rewrite to disk.
+ *
+ * @see Object#equals(Object)
  */
 public abstract class GenericField<T> extends AbstractConfigField {
     /** The default field value. */

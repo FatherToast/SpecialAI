@@ -42,8 +42,7 @@ public class ToastTomlWriter implements ConfigWriter {
      */
     @Override
     public void write( UnmodifiableConfig config, Writer writer ) {
-        ModCore.LOG.debug( "Writing config file! You may see this spammed when you edit a config file, please ignore in that case ({})",
-                CONFIG_SPEC.CONFIG_FILE.getFile() );
+        ModCore.LOG.debug( "Writing config file! ({}{})", CONFIG_SPEC.NAME, ToastConfigFormat.FILE_EXT );
         CharacterOutput output = new WriterOutput( writer );
         currentIndentLevel = 0;
         CONFIG_SPEC.write( this, output );

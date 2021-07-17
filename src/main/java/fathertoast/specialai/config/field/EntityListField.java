@@ -4,7 +4,6 @@ import fathertoast.specialai.ModCore;
 import fathertoast.specialai.config.file.TomlHelper;
 import fathertoast.specialai.config.util.EntityEntry;
 import fathertoast.specialai.config.util.EntityList;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;

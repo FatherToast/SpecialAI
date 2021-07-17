@@ -47,8 +47,7 @@ public class ToastTomlParser implements ConfigParser<CommentedConfig> {
      */
     @Override
     public void parse( Reader reader, Config destination, ParsingMode parsingMode ) {
-        ModCore.LOG.debug( "Parsing config file! You may see this spammed when you edit a config file, please ignore in that case ({})",
-                CONFIG_SPEC.CONFIG_FILE.getFile() );
+        ModCore.LOG.debug( "Parsing config file! ({}{})", CONFIG_SPEC.NAME, ToastConfigFormat.FILE_EXT );
         WRAPPED_PARSER.parse( reader, destination, parsingMode );
         CONFIG_SPEC.onLoad();
     }

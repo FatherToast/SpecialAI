@@ -20,12 +20,14 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.util.GroundPathHelper;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * This class handles game events to 'hook in' this mod's AI patterns or to help manage them outside of the AI tick.
@@ -56,10 +58,10 @@ public final class AIManager {
     private static final String TAG_FORCE_INIT = "force_init";
     
     /** All actions currently waiting to be performed at the end of the server tick. */
-    private static final List<Runnable> TICK_END_ACTIONS = new ArrayList<>();
+    private static final List<Supplier<Boolean>> TICK_END_ACTIONS = new ArrayList<>();
     
     /** Queues an action to perform at the end of the server tick. */
-    public static void queue( Runnable action ) { TICK_END_ACTIONS.add( action ); }
+    public static void queue( Supplier<Boolean> action ) { TICK_END_ACTIONS.add( action ); }
     
     /** The number of remaining global block scans that can be performed this server tick. */
     private static int scansLeft = Config.IDLE.GENERAL.scanCountGlobal.get();
@@ -218,8 +220,7 @@ public final class AIManager {
             
             // Run any queued actions
             if( !TICK_END_ACTIONS.isEmpty() ) {
-                for( Runnable action : TICK_END_ACTIONS ) { action.run(); }
-                TICK_END_ACTIONS.clear();
+                TICK_END_ACTIONS.removeIf( Supplier::get );
             }
         }
     }
@@ -231,7 +232,7 @@ public final class AIManager {
      */
     public static void onJoinWorld( EntityJoinWorldEvent event ) {
         // None of this should be done on the client side
-        if( event.getWorld().isClientSide() ) return;
+        if( event.getWorld().isClientSide() || !event.getEntity().isAlive() ) return;
         
         // Check if this is an arrow that can be dodged
         if( event.getEntity() instanceof ProjectileEntity && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
@@ -239,10 +240,24 @@ public final class AIManager {
             DodgeArrowsGoal.doDodgeCheckForArrow( event.getEntity() );
         }
         
-        // The remainder can only apply to mob entities, where the base ai goals system is implemented
-        if( !(event.getEntity() instanceof MobEntity) ) return;
-        
-        final MobEntity entity = (MobEntity) event.getEntity();
+        // Only initialize AI on mob entities, where the base AI system is implemented
+        if( event.getEntity() instanceof MobEntity ) {
+            if( ((ServerWorld) event.getEntity().level).getServer().getTickCount() > 0 ) {
+                initializeSpecialAI( (MobEntity) event.getEntity() );
+            }
+            else {
+                queue( new DelayedInit( (MobEntity) event.getEntity() ) );
+            }
+        }
+    }
+    
+    /**
+     * Called when any entity is spawned in the world, including by chunk loading and dimension transition.
+     *
+     * @param event The event data.
+     */
+    public static void initializeSpecialAI( MobEntity entity ) {
+        // The tag all info for this mod is stored on for the entity
         final CompoundNBT tag = NBTHelper.getModTag( entity );
         
         // Dodge arrows
@@ -264,6 +279,11 @@ public final class AIManager {
             }
             if( tag.getDouble( TAG_AVOID_EXPLOSIONS ) > 0.0 ) {
                 addAvoidExplosionsAI( (CreatureEntity) entity, tag.getDouble( TAG_AVOID_EXPLOSIONS ) );
+            }
+            
+            // Eat breeding items
+            if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof AnimalEntity ) {
+                addEatingAI( (AnimalEntity) entity );
             }
             
             // Defend village
@@ -321,11 +341,6 @@ public final class AIManager {
         }
         if( tag.getBoolean( TAG_RIDER ) ) {
             addRiderAI( entity, small );
-        }
-        
-        // Eat breeding items
-        if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof AnimalEntity ) {
-            addEatingAI( (AnimalEntity) entity );
         }
         
         // Passive griefing
@@ -412,4 +427,26 @@ public final class AIManager {
     
     // This is a static-only helper class.
     private AIManager() {}
+    
+    /**
+     * Used to delay AI initialization for entities until the world is fully loaded.
+     * This strategy is used because messing with entities in an unloaded world can cause world load deadlock.
+     */
+    private static class DelayedInit implements Supplier<Boolean> {
+        /** The entity to initialize. */
+        private final MobEntity MOB;
+        
+        DelayedInit( MobEntity entity ) { MOB = entity; }
+        
+        /** Called to finalize the item stealing process. Equips the item to the thief and destroys the dropped item. */
+        @Override
+        public Boolean get() {
+            if( ((ServerWorld) MOB.level).getServer().getTickCount() > 0 ) {
+                initializeSpecialAI( MOB );
+                return true;
+            }
+            // Return true if the mob was removed to cancel this action
+            return !MOB.isAlive();
+        }
+    }
 }
