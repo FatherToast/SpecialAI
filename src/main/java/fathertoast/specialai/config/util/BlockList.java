@@ -65,6 +65,14 @@ public class BlockList implements IStringArray {
         return TomlHelper.toLiteral( PRINT_LIST.toArray() );
     }
     
+    /** @return Returns true if this object has the same value as another object. */
+    @Override
+    public boolean equals( Object other ) {
+        if( !(other instanceof BlockList) ) return false;
+        // Compare by the string list view of the object
+        return toStringList().equals( ((BlockList) other).toStringList() );
+    }
+    
     /** @return A list of strings that will represent this object when written to a toml file. */
     @Override
     public List<String> toStringList() {

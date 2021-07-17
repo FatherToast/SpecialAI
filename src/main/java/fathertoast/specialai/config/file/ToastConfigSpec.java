@@ -33,6 +33,9 @@ public class ToastConfigSpec {
     /** The list of actions to perform, in a specific order, when reading or writing the config file. */
     private final List<Action> ACTIONS = new ArrayList<>();
     
+    /** Used to make sure the file is always rewritten when the config is initialized. */
+    private boolean firstLoad;
+    
     /** Creates a new config spec at a specified location with only the basic 'start of file' action. */
     public ToastConfigSpec( File dir, String fileName ) {
         DIR = dir;
@@ -45,22 +48,31 @@ public class ToastConfigSpec {
         }
         
         // Create the config file format
-        FileConfigBuilder builder = FileConfig.builder( new File( dir, fileName + ToastConfigFormat.FILE_EXT ),
+        final FileConfigBuilder builder = FileConfig.builder( new File( dir, fileName + ToastConfigFormat.FILE_EXT ),
                 new ToastConfigFormat( this ) );
-        builder.autoreload().autosave();
+        builder.sync().autoreload();
         CONFIG_FILE = builder.build();
     }
     
     /** Loads the config from disk. */
     public void initialize() {
-        ModCore.LOG.info( "First-time loading config file! ({})", CONFIG_FILE.getFile() );
+        ModCore.LOG.info( "First-time loading config file {}", CONFIG_FILE.getFile() );
+        firstLoad = true;
         CONFIG_FILE.load();
     }
     
     /** Called after the config is loaded to update cached values. */
     public void onLoad() {
         // Perform load actions
-        for( Action action : ACTIONS ) { action.onLoad(); }
+        boolean rewrite = false;
+        for( Action action : ACTIONS ) {
+            if( action.onLoad() ) rewrite = true;
+        }
+        // Only rewrite on first load or if one of the load actions requests it
+        if( rewrite || firstLoad ) {
+            firstLoad = false;
+            CONFIG_FILE.save();
+        }
     }
     
     /** Writes the current state of the config to file. */
@@ -71,7 +83,7 @@ public class ToastConfigSpec {
     /** Represents a single action performed by the spec when reading or writing the config file. */
     private interface Action {
         /** Called when the config is loaded. */
-        void onLoad();
+        boolean onLoad();
         
         /** Called when the config is saved. */
         void write( ToastTomlWriter writer, CharacterOutput output );
@@ -81,7 +93,7 @@ public class ToastConfigSpec {
     private static abstract class Format implements Action {
         /** Called when the config is loaded. */
         @Override
-        public final void onLoad() {} // Formatting actions do not affect file reading
+        public final boolean onLoad() { return false; } // Formatting actions do not affect file reading
         
         /** Called when the config is saved. */
         @Override
@@ -191,7 +203,10 @@ public class ToastConfigSpec {
         
         /** Called when the config is loaded. */
         @Override
-        public void onLoad() { CALLBACK.run(); }
+        public boolean onLoad() {
+            CALLBACK.run();
+            return false;
+        }
         
         /** Called when the config is saved. */
         @Override
@@ -214,19 +229,21 @@ public class ToastConfigSpec {
         
         /** Called when the config is loaded. */
         @Override
-        public void onLoad() {
+        public boolean onLoad() {
             // Get cached value to detect changes
-            Object oldRaw = FIELD.getRaw();
+            final Object oldRaw = FIELD.getRaw();
             
-            // Fetch the field's value
-            Object raw = PARENT.CONFIG_FILE.getOptional( FIELD.getKey() ).orElse( null );
-            FIELD.load( raw );
+            // Fetch the newly loaded value
+            final Object rawToml = PARENT.CONFIG_FILE.getOptional( FIELD.getKey() ).orElse( null );
+            FIELD.load( rawToml );
             
-            // Push the field's value back to the config
-            Object newRaw = FIELD.getRaw();
-            if( !Objects.equals( oldRaw, newRaw ) ) {
+            // Push the field's value back to the config if its value was changed
+            final Object newRaw = FIELD.getRaw();
+            if( rawToml == null || !Objects.equals( oldRaw, newRaw ) ) {
                 PARENT.CONFIG_FILE.set( FIELD.getKey(), newRaw );
+                return true;
             }
+            return false;
         }
         
         /** Called when the config is saved. */

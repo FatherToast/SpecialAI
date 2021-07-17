@@ -19,6 +19,7 @@ import net.minecraft.util.Hand;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * This AI causes an entity to steal a random item from a player, briefly turn invisible, and then just run away.
@@ -214,7 +215,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
      * Used to connect a stolen item to the thief that stole it, so the item can be equipped to the thief.
      * This strategy is used because changing entity equipment during the AI tick can crash the game.
      */
-    private static class EquipToThief implements Runnable {
+    private static class EquipToThief implements Supplier<Boolean> {
         /** The thief that stole the item. */
         private final MobEntity THIEF;
         /** The item stolen. */
@@ -227,11 +228,12 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
         
         /** Called to finalize the item stealing process. Equips the item to the thief and destroys the dropped item. */
         @Override
-        public void run() {
+        public Boolean get() {
             THIEF.setItemSlot( EquipmentSlotType.MAINHAND, ITEM.getItem() );
             THIEF.setGuaranteedDrop( EquipmentSlotType.MAINHAND );
             THIEF.setPersistenceRequired();
             ITEM.remove();
+            return true;
         }
     }
 }

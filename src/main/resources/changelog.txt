@@ -1,3 +1,6 @@
+1.16.5-1.0.1
+    - Config files will now only re-save on initial startup and when values are actually changed. Improves stability.
+    - Now delays AI initialization until the first server tick. Hopefully prevents world load deadlock.
 1.16.5-1.0.0
     - Rewritten and rebaselined for the MC 1.16.5 update.
     - Due to village reworks, all village-related features have been removed until I work out the new mechanics.

@@ -18,6 +18,10 @@ public class ModCore {
      *      + Villages
      *
      * Primary features:
+     *  - New Elite AIs:
+     *      + slam: wields an axe, performs knockback slam "explosion" when damaged in close range
+     *      + fishing: wields a fishing rod and uses it against its target
+     *      + grappling: similar to fishing, but pulls the mob to target instead, mob may mount the target?
      *  - Reactions:
      *      + better response to being sniped
      *  - Door Breaking:
@@ -33,6 +37,7 @@ public class ModCore {
      *	    ? strength when target is armored/enchanted
      *	    ? invisibility when shot by arrows
      *  - Bosses: Rare, powerful monsters
+     *      + Nemesis system? (See Darkmega)
      *      + Name influenced by entity type
      *      + Uses a "unique" item that is a guaranteed drop
      *      + Unique item is enchanted and has a special enchantment/modifier
@@ -45,6 +50,7 @@ public class ModCore {
      * Utility features:
      *  - Fix squid not pathing at all and fish moving super slowly in xz-plane
      *  - More editing for AI, particularly for editing pre-existing AI
+     *  - An extra whitelist for each elite AI to apply it directly
      *  - More effective configs, more per-entity-id options
      */
     

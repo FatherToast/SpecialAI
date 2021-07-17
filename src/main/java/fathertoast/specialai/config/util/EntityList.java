@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -37,21 +38,25 @@ public class EntityList implements IStringArray {
      * By default, entity lists will allow any non-zero number of values, and the value(s) can be any numerical double.
      * These parameters can be changed with helper methods that alter the number of values or values' bounds and return 'this'.
      */
-    public EntityList( EntityEntry... entries ) {
-        ENTRIES = entries;
-    }
+    public EntityList( EntityEntry... entries ) { ENTRIES = entries; }
     
     /** @return A string representation of this object. */
     @Override
-    public String toString() {
-        return TomlHelper.toLiteral( toStringList().toArray() );
+    public String toString() { return TomlHelper.toLiteral( toStringList().toArray() ); }
+    
+    /** @return Returns true if this object has the same value as another object. */
+    @Override
+    public boolean equals( Object other ) {
+        if( !(other instanceof EntityList) ) return false;
+        // Compare by the string list view of the object
+        return toStringList().equals( ((EntityList) other).toStringList() );
     }
     
     /** @return A list of strings that will represent this object when written to a toml file. */
     @Override
     public List<String> toStringList() {
         // Create a list of the entries in string format
-        List<String> list = new ArrayList<>( ENTRIES.length );
+        final List<String> list = new ArrayList<>( ENTRIES.length );
         for( EntityEntry entry : ENTRIES ) {
             list.add( entry.toString() );
         }
@@ -98,7 +103,7 @@ public class EntityList implements IStringArray {
      * @see #setSinglePercent()
      */
     public double getValue( Entity entity ) {
-        double[] values = getValues( entity );
+        final double[] values = getValues( entity );
         return values == null || values.length < 1 ? 0.0 : values[0];
     }
     
@@ -109,7 +114,7 @@ public class EntityList implements IStringArray {
      * @see #setSinglePercent()
      */
     public boolean rollChance( LivingEntity entity ) {
-        return entity != null && entity.getRandom().nextDouble() < getValue( entity );
+        return ENTRIES.length > 0 && entity != null && entity.getRandom().nextDouble() < getValue( entity );
     }
     
     /** Marks this entity list as a simple percentage listing; exactly one percent (0 to 1) per entry. */

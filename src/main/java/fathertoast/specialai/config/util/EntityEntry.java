@@ -52,7 +52,7 @@ public class EntityEntry {
     void checkClass( World world ) {
         if( TYPE != null && entityClass == null ) {
             try {
-                Entity entity = TYPE.create( world );
+                final Entity entity = TYPE.create( world );
                 if( entity != null ) {
                     entityClass = entity.getClass();
                     entity.kill();
