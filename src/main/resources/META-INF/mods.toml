@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[36,)"
+loaderVersion = "[37,)"
 license = "GNU General Public License v3.0"
 issueTrackerURL = "https://github.com/FatherToast/SpecialAI/issues/"
 

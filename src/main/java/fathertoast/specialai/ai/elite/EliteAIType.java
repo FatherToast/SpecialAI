@@ -4,16 +4,16 @@ import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
 import fathertoast.specialai.config.util.WeightedList;
 import fathertoast.specialai.util.NBTHelper;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.IDyeableArmorItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.DyeableLeatherItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new LeapEliteGoal( entity ) );
         }
     },
@@ -59,20 +59,21 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
+
             // Feather boots
             ItemStack boots = new ItemStack( Items.LEATHER_BOOTS );
             if( Config.ELITE_AI.JUMP.featherBootsEnchant.get() > 0 ) {
                 boots.enchant( Enchantments.FALL_PROTECTION, Config.ELITE_AI.JUMP.featherBootsEnchant.get() );
             }
             boots.setHoverName( EliteAIHelper.getText( this, "boots" ) );
-            ((IDyeableArmorItem) boots.getItem()).setColor( boots, 0x9664b4 );
+            ((DyeableLeatherItem) boots.getItem()).setColor( boots, 0x9664b4 );
             EliteAIHelper.equip( entity, boots, Config.ELITE_AI.JUMP.featherBootsDropChance.get() );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new JumpEliteGoal( entity ) );
         }
     },
@@ -93,19 +94,19 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Running boots
             ItemStack boots = new ItemStack( Items.LEATHER_BOOTS );
             EliteAIHelper.addModifier( this, boots, Attributes.MOVEMENT_SPEED, Config.ELITE_AI.SPRINT.runningBootsModifier.get(),
                     AttributeModifier.Operation.MULTIPLY_BASE );
             boots.setHoverName( EliteAIHelper.getText( this, "boots" ) );
-            ((IDyeableArmorItem) boots.getItem()).setColor( boots, 0xff0000 );
+            ((DyeableLeatherItem) boots.getItem()).setColor( boots, 0xff0000 );
             EliteAIHelper.equip( entity, boots, Config.ELITE_AI.SPRINT.runningBootsDropChance.get() );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new SprintEliteGoal( entity ) );
         }
     },
@@ -126,15 +127,15 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Dispenser head
             EliteAIHelper.equip( entity, new ItemStack( Items.DISPENSER ), Config.ELITE_AI.BARRAGE.dispenserDropChance.get(),
-                    EquipmentSlotType.HEAD );
+                    EquipmentSlot.HEAD );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new BarrageEliteGoal( entity ) );
         }
     },
@@ -157,7 +158,7 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Charger's Helmet
             ItemStack helmet = new ItemStack( Items.LEATHER_HELMET );
             if( Config.ELITE_AI.CHARGE.chargersHelmetEnchantLevel.get() > 0 ) {
@@ -165,13 +166,13 @@ public enum EliteAIType implements WeightedList.Value {
                         Config.ELITE_AI.CHARGE.chargersHelmetAllowTreasure.get() );
             }
             helmet.setHoverName( EliteAIHelper.getText( this, "helmet" ) );
-            ((IDyeableArmorItem) helmet.getItem()).setColor( helmet, 0xffff00 );
+            ((DyeableLeatherItem) helmet.getItem()).setColor( helmet, 0xffff00 );
             EliteAIHelper.equip( entity, helmet, Config.ELITE_AI.CHARGE.chargersHelmetDropChance.get() );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new ChargeEliteGoal( entity ) );
         }
     },
@@ -193,25 +194,25 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Disable loot pickup
             entity.setCanPickUpLoot( false );
             // Remove held item
             if( Config.ELITE_AI.THIEF.emptyHand.get() ) {
-                EliteAIHelper.unequip( entity, EquipmentSlotType.MAINHAND );
+                EliteAIHelper.unequip( entity, EquipmentSlot.MAINHAND );
             }
             // Thief's Cap
             ItemStack helmet = new ItemStack( Items.LEATHER_HELMET );
             EliteAIHelper.addModifier( this, helmet, Attributes.MOVEMENT_SPEED, Config.ELITE_AI.THIEF.thiefCapModifier.get(),
                     AttributeModifier.Operation.MULTIPLY_BASE );
             helmet.setHoverName( EliteAIHelper.getText( this, "helmet" ) );
-            ((IDyeableArmorItem) helmet.getItem()).setColor( helmet, 0x102024 );
+            ((DyeableLeatherItem) helmet.getItem()).setColor( helmet, 0x102024 );
             EliteAIHelper.equip( entity, helmet, Config.ELITE_AI.THIEF.thiefCapDropChance.get() );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new ThiefEliteGoal( entity ) );
         }
     },
@@ -234,18 +235,18 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Bone club
             EliteAIHelper.equip( entity, new ItemStack( Items.BONE ), Config.ELITE_AI.SHAMAN.boneDropChance.get(),
-                    EquipmentSlotType.MAINHAND );
+                    EquipmentSlot.MAINHAND );
             // Jack o lantern hat
             EliteAIHelper.equip( entity, new ItemStack( Items.JACK_O_LANTERN ), Config.ELITE_AI.SHAMAN.jackOLanternDropChance.get(),
-                    EquipmentSlotType.HEAD );
+                    EquipmentSlot.HEAD );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new ShamanEliteGoal( entity ) );
         }
     },
@@ -267,16 +268,16 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Spawner head
             if( Config.ELITE_AI.SPAWNER.spawnerHelmet.get() ) {
-                EliteAIHelper.equip( entity, new ItemStack( Items.SPAWNER ), 0.0, EquipmentSlotType.HEAD );
+                EliteAIHelper.equip( entity, new ItemStack( Items.SPAWNER ), 0.0, EquipmentSlot.HEAD );
             }
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new SpawnerEliteGoal( entity, aiTag ) );
         }
     },
@@ -297,7 +298,7 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new ThrowAllyEliteGoal( entity ) );
         }
     },
@@ -318,19 +319,19 @@ public enum EliteAIType implements WeightedList.Value {
         
         /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
         @Override
-        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+        public void initialize( Mob entity, CompoundTag aiTag ) {
             // Helmet of Strength
             ItemStack helmet = new ItemStack( Items.LEATHER_HELMET );
             EliteAIHelper.addModifier( this, helmet, Attributes.ATTACK_DAMAGE, Config.ELITE_AI.THROW_ENEMY.strengthHelmetModifier.get(),
                     AttributeModifier.Operation.ADDITION );
             helmet.setHoverName( EliteAIHelper.getText( this, "helmet" ) );
-            ((IDyeableArmorItem) helmet.getItem()).setColor( helmet, 0xff0000 );
+            ((DyeableLeatherItem) helmet.getItem()).setColor( helmet, 0xff0000 );
             EliteAIHelper.equip( entity, helmet, Config.ELITE_AI.THROW_ENEMY.strengthHelmetDropChance.get() );
         }
         
         /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        public void loadTo( Mob entity, CompoundTag aiTag ) {
             entity.goalSelector.addGoal( 0, new ThrowEnemyEliteGoal( entity ) );
         }
     };
@@ -373,23 +374,23 @@ public enum EliteAIType implements WeightedList.Value {
     public final int getDefaultWeight() { return DEFAULT_WEIGHT; }
     
     /** Saves this AI to the entity tag. */
-    public final void saveTo( CompoundNBT aiTag ) { aiTag.putBoolean( KEY, true ); }
+    public final void saveTo( CompoundTag aiTag ) { aiTag.putBoolean( KEY, true ); }
     
     /** @return Returns true if this AI type is saved to the tag. */
-    public final boolean isSaved( CompoundNBT aiTag ) {
+    public final boolean isSaved( CompoundTag aiTag ) {
         if( aiTag.contains( KEY, NBTHelper.ID_NUMERICAL ) ) return aiTag.getBoolean( KEY );
         return false;
     }
     
     /** @return True if the nbt compound used to store any additional data used by the AI exists. */
-    public final boolean hasTag( CompoundNBT aiTag ) { return aiTag.contains( KEY + TAG_SUFFIX, NBTHelper.ID_COMPOUND ); }
+    public final boolean hasTag( CompoundTag aiTag ) { return aiTag.contains( KEY + TAG_SUFFIX, NBTHelper.ID_COMPOUND ); }
     
     /** @return Gets or creates the nbt compound used to store any additional data used by the AI. */
-    public final CompoundNBT getTag( CompoundNBT aiTag ) { return NBTHelper.getOrCreateTag( aiTag, KEY + TAG_SUFFIX ); }
+    public final CompoundTag getTag( CompoundTag aiTag ) { return NBTHelper.getOrCreateTag( aiTag, KEY + TAG_SUFFIX ); }
     
     /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
-    public void initialize( MobEntity entity, CompoundNBT aiTag ) {}
+    public void initialize( Mob entity, CompoundTag aiTag ) {}
     
     /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-    abstract void loadTo( MobEntity entity, CompoundNBT aiTag );
+    abstract void loadTo( Mob entity, CompoundTag aiTag );
 }

@@ -2,19 +2,16 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.AvoidEntityGoal;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -26,12 +23,12 @@ import java.util.function.Supplier;
  */
 public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     /** The avoidance AI to be used after an item was stolen. */
-    private final AvoidEntityGoal<PlayerEntity> aiAvoid;
+    private final AvoidEntityGoal<Player> aiAvoid;
     
-    ThiefEliteGoal( MobEntity entity ) {
+    ThiefEliteGoal( Mob entity ) {
         super( entity );
-        if( entity instanceof CreatureEntity ) {
-            aiAvoid = new AvoidEntityGoal<>( (CreatureEntity) entity, PlayerEntity.class, (float) Config.ELITE_AI.THIEF.avoidRange.get(),
+        if( entity instanceof PathfinderMob) {
+            aiAvoid = new AvoidEntityGoal<>( (PathfinderMob) entity, Player.class, (float) Config.ELITE_AI.THIEF.avoidRange.get(),
                     Config.ELITE_AI.THIEF.avoidWalkSpeed.get(), Config.ELITE_AI.THIEF.avoidRunSpeed.get() );
         }
         else {
@@ -44,9 +41,10 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     @Override
     public boolean canUse() {
         final LivingEntity target = mob.getTarget();
+        
         // Wants to steal an item
-        if( target instanceof PlayerEntity && mob.getMainHandItem().isEmpty() ) {
-            return hasItems( (PlayerEntity) target );
+        if( target instanceof Player && mob.getMainHandItem().isEmpty() ) {
+            return hasItems( (Player) target );
         }
         // Wants to avoid the target
         if( aiAvoid != null && (target == null || target.getHealth() > target.getMaxHealth() * 0.3333F) ) {
@@ -101,12 +99,12 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
             }
             mob.getLookControl().setLookAt( target, 30.0F, 30.0F );
             
-            if( mob.distanceToSqr( target ) <= mob.getBbWidth() * mob.getBbWidth() * 4.0F + target.getBbWidth() && mob.canSee( target ) ) {
+            if( mob.distanceToSqr( target ) <= mob.getBbWidth() * mob.getBbWidth() * 4.0F + target.getBbWidth() && mob.hasLineOfSight( target ) ) {
                 // The target is in range; deal a tiny hit of damage, steal the item, and turn invisible
                 target.hurt( DamageSource.mobAttack( mob ), (float) Config.ELITE_AI.THIEF.stealDamage.get() );
-                mob.swing( Hand.MAIN_HAND );
-                if( target instanceof PlayerEntity ) {
-                    final ItemStack stolen = removeRandomItem( (PlayerEntity) target );
+                mob.swing( InteractionHand.MAIN_HAND );
+                if( target instanceof Player ) {
+                    final ItemStack stolen = removeRandomItem( (Player) target );
                     if( !stolen.isEmpty() ) {
                         final ItemEntity drop = new ItemEntity( mob.level, mob.getX(), mob.getY() + 0.5, mob.getZ(), stolen );
                         drop.setPickUpDelay( 20 );
@@ -115,7 +113,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
                     }
                 }
                 if( Config.ELITE_AI.THIEF.invisibilityDuration.get() > 0 ) {
-                    mob.addEffect( new EffectInstance( Effects.INVISIBILITY, Config.ELITE_AI.THIEF.invisibilityDuration.get(), 0 ) );
+                    mob.addEffect( new MobEffectInstance( MobEffects.INVISIBILITY, Config.ELITE_AI.THIEF.invisibilityDuration.get(), 0 ) );
                 }
                 mob.getNavigation().stop();
             }
@@ -149,28 +147,28 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     }
     
     /** Returns true if the given slot is a valid theft target. */
-    private static boolean isValidSlot( int index, PlayerEntity player ) {
-        return Config.ELITE_AI.THIEF.validSlots.get().isValidSlot( index, player ) && !player.inventory.getItem( index ).isEmpty();
+    private static boolean isValidSlot( int index, Player player ) {
+        return Config.ELITE_AI.THIEF.validSlots.get().isValidSlot( index, player ) && !player.getInventory().getItem( index ).isEmpty();
     }
     
     /** Returns true if the player has any items in their inventory that can be stolen. */
-    private static boolean hasItems( PlayerEntity player ) {
-        for( int i = 0; i < player.inventory.getContainerSize(); i++ ) {
+    private static boolean hasItems( Player player ) {
+        for( int i = 0; i < player.getInventory().getContainerSize(); i++ ) {
             if( isValidSlot( i, player ) ) return true;
         }
         return false;
     }
     
     /** Removes a random item stack from the player's inventory and returns it. */
-    private static ItemStack removeRandomItem( PlayerEntity player ) {
+    private static ItemStack removeRandomItem( Player player ) {
         // Build a list of valid inventory slot indexes
         final List<Integer> targetSlots = new ArrayList<>();
-        for( int i = 0; i < player.inventory.getContainerSize(); i++ ) {
+        for( int i = 0; i < player.getInventory().getContainerSize(); i++ ) {
             if( isValidSlot( i, player ) ) targetSlots.add( i );
         }
         // Pick a random slot index, remove the item from the player, and return the item removed
         if( !targetSlots.isEmpty() ) {
-            return player.inventory.removeItemNoUpdate( targetSlots.get( player.getRandom().nextInt( targetSlots.size() ) ) );
+            return player.getInventory().removeItemNoUpdate( targetSlots.get( player.getRandom().nextInt( targetSlots.size() ) ) );
         }
         return ItemStack.EMPTY;
     }
@@ -196,15 +194,15 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
         }
         
         /** @return Returns true if the provided index is a valid slot for this targeting setup. */
-        public boolean isValidSlot( int index, PlayerEntity player ) {
+        public boolean isValidSlot( int index, Player player ) {
             // In hotbar
-            if( PlayerInventory.isHotbarSlot( index ) )
+            if( Inventory.isHotbarSlot( index ) )
                 return TARGET_HOTBAR;
             // In main inventory
-            if( index < player.inventory.items.size() )
+            if( index < player.getInventory().items.size() )
                 return TARGET_MAIN;
             // In armor inventory
-            if( index - player.inventory.items.size() < player.inventory.armor.size() )
+            if( index - player.getInventory().items.size() < player.getInventory().armor.size() )
                 return TARGET_ARMOR;
             // In offhand (considered part of hotbar)
             return TARGET_HOTBAR;
@@ -217,11 +215,11 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
      */
     private static class EquipToThief implements Supplier<Boolean> {
         /** The thief that stole the item. */
-        private final MobEntity THIEF;
+        private final Mob THIEF;
         /** The item stolen. */
         private final ItemEntity ITEM;
         
-        EquipToThief( MobEntity entity, ItemEntity item ) {
+        EquipToThief( Mob entity, ItemEntity item ) {
             THIEF = entity;
             ITEM = item;
         }
@@ -229,10 +227,10 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
         /** Called to finalize the item stealing process. Equips the item to the thief and destroys the dropped item. */
         @Override
         public Boolean get() {
-            THIEF.setItemSlot( EquipmentSlotType.MAINHAND, ITEM.getItem() );
-            THIEF.setGuaranteedDrop( EquipmentSlotType.MAINHAND );
+            THIEF.setItemSlot( EquipmentSlot.MAINHAND, ITEM.getItem() );
+            THIEF.setGuaranteedDrop( EquipmentSlot.MAINHAND );
             THIEF.setPersistenceRequired();
-            ITEM.remove();
+            ITEM.remove(Entity.RemovalReason.DISCARDED);
             return true;
         }
     }

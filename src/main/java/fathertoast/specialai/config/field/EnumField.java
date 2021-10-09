@@ -2,16 +2,8 @@ package fathertoast.specialai.config.field;
 
 import fathertoast.specialai.ModCore;
 import fathertoast.specialai.config.file.TomlHelper;
-import fathertoast.specialai.config.util.EntityEntry;
-import fathertoast.specialai.config.util.EntityList;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

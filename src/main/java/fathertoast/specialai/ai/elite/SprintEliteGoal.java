@@ -1,9 +1,8 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 
 import java.util.EnumSet;
 
@@ -16,7 +15,7 @@ public class SprintEliteGoal extends AbstractEliteGoal {
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     
-    SprintEliteGoal( MobEntity entity ) {
+    SprintEliteGoal( Mob entity ) {
         super( entity );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }

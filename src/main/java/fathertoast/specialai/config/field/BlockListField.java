@@ -1,9 +1,8 @@
 package fathertoast.specialai.config.field;
 
 import fathertoast.specialai.config.file.TomlHelper;
-import fathertoast.specialai.config.util.BlockEntry;
 import fathertoast.specialai.config.util.BlockList;
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

@@ -1,12 +1,12 @@
 package fathertoast.specialai.ai;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.PrioritizedGoal;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -19,20 +19,20 @@ public class DodgeArrowsGoal extends Goal {
     /** Called for each arrow the first time it is spawned in the world to check if any entities should try to dodge it. */
     public static void doDodgeCheckForArrow( Entity arrow ) {
         // Get the world instance
-        if( !(arrow.level instanceof ServerWorld) ) return;
-        ServerWorld world = (ServerWorld) arrow.level;
+        if( !(arrow.level instanceof ServerLevel) ) return;
+        ServerLevel world = (ServerLevel) arrow.level;
         
         // Calculate the arrow's width and direction
         float width = arrow.getBbWidth() + 0.3F;
-        final Vector3d arrowMotion = arrow.getDeltaMovement();
+        final Vec3 arrowMotion = arrow.getDeltaMovement();
         final double vH = Math.sqrt( arrowMotion.x * arrowMotion.x + arrowMotion.z * arrowMotion.z );
-        final Vector3d arrowDirection = new Vector3d( arrowMotion.x / vH, 0.0, arrowMotion.z / vH );
+        final Vec3 arrowDirection = new Vec3( arrowMotion.x / vH, 0.0, arrowMotion.z / vH );
         
         // Check all entities in the world that may be in the arrow's line of fire
         final int rangeVertical = 16;
         final int rangeHorizontal = 24;
         for( Entity entity : world.getAllEntities() ) {
-            if( entity instanceof CreatureEntity ) {
+            if( entity instanceof PathfinderMob ) {
                 // Check vertical range
                 final int distanceY = Math.abs( (int) entity.position().y - (int) arrow.position().y );
                 if( distanceY <= rangeVertical ) {
@@ -45,7 +45,7 @@ public class DodgeArrowsGoal extends Goal {
                         final double cos = (arrowDirection.x * distanceX + arrowDirection.z * distanceZ) / distanceH;
                         final double sin = Math.sqrt( 1 - cos * cos );
                         if( width > distanceH * sin ) {
-                            tryDodgeArrow( (CreatureEntity) entity, arrowDirection );
+                            tryDodgeArrow( (PathfinderMob) entity, arrowDirection );
                         }
                     }
                 }
@@ -54,8 +54,8 @@ public class DodgeArrowsGoal extends Goal {
     }
     
     /** Alerts the entity's arrow dodge AI, if it has one, that an arrow has been fired at the entity. */
-    private static void tryDodgeArrow( CreatureEntity entity, Vector3d arrowDirection ) {
-        for( PrioritizedGoal task : new ArrayList<>( entity.goalSelector.availableGoals ) ) {
+    private static void tryDodgeArrow( PathfinderMob entity, Vec3 arrowDirection ) {
+        for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
             if( task.getGoal() instanceof DodgeArrowsGoal ) {
                 ((DodgeArrowsGoal) task.getGoal()).setDodgeTarget( arrowDirection );
             }
@@ -63,12 +63,12 @@ public class DodgeArrowsGoal extends Goal {
     }
     
     /** The owner of this AI. */
-    protected final MobEntity mob;
+    protected final Mob mob;
     /** The chance that this AI will activate when an arrow is fired at the entity. */
     private final double dodgeChance;
     
     /** The horizontal direction of the arrow being avoided. */
-    private Vector3d arrowMotionDirection;
+    private Vec3 arrowMotionDirection;
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     /** Used to prevent mobs from leaping all over the place from multiple arrows. */
@@ -78,14 +78,14 @@ public class DodgeArrowsGoal extends Goal {
      * @param entity The owner of this AI.
      * @param chance The chance for the entity to dodge arrows fired.
      */
-    public DodgeArrowsGoal( MobEntity entity, double chance ) {
+    public DodgeArrowsGoal( Mob entity, double chance ) {
         mob = entity;
         dodgeChance = chance;
         setFlags( EnumSet.of( Flag.JUMP ) );
     }
     
     /** Tells this AI that an arrow has been fired toward the entity and provides the arrow's facing. */
-    private void setDodgeTarget( Vector3d arrowDirection ) {
+    private void setDodgeTarget( Vec3 arrowDirection ) {
         if( arrowDirection == null ) {
             arrowMotionDirection = null;
             giveUpDelay = 0;
@@ -107,8 +107,8 @@ public class DodgeArrowsGoal extends Goal {
     public void start() {
         if( arrowMotionDirection != null ) {
             // Calculate a vector perpendicular to the arrow's movement direction
-            Vector3d selfAxis = new Vector3d( 0.0, 1.0, 0.0 );
-            Vector3d dodgeDirection = selfAxis.cross( arrowMotionDirection );
+            Vec3 selfAxis = new Vec3( 0.0, 1.0, 0.0 );
+            Vec3 dodgeDirection = selfAxis.cross( arrowMotionDirection );
             
             // Pick a random direction to sidestep
             double velocity = 0.8;

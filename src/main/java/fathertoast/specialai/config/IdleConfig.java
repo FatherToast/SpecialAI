@@ -6,9 +6,9 @@ import fathertoast.specialai.config.util.BlockEntry;
 import fathertoast.specialai.config.util.BlockList;
 import fathertoast.specialai.config.util.EntityEntry;
 import fathertoast.specialai.config.util.EntityList;
-import net.minecraft.block.*;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.level.block.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -155,7 +155,7 @@ public class IdleConfig extends Config.AbstractConfig {
                         block instanceof StonecutterBlock || block instanceof LoomBlock || block instanceof CartographyTableBlock ||
                         
                         // Equipment reworking blocks
-                        block instanceof EnchantingTableBlock || block instanceof AnvilBlock || block instanceof GrindstoneBlock ||
+                        block instanceof EnchantmentTableBlock || block instanceof AnvilBlock || block instanceof GrindstoneBlock ||
                         
                         // Access blocks
                         block instanceof LadderBlock || block instanceof ScaffoldingBlock

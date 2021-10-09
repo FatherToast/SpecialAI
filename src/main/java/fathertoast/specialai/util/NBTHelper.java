@@ -1,8 +1,8 @@
 package fathertoast.specialai.util;
 
 import fathertoast.specialai.ModCore;
-import net.minecraft.entity.Entity;
 import net.minecraft.nbt.*;
+import net.minecraft.world.entity.Entity;
 
 /**
  * Contains helper methods and info used for NBT data.
@@ -43,25 +43,25 @@ public final class NBTHelper {
      * @param entity The entity to get data for.
      * @return The nbt compound to store all the given entity's data for this mod.
      */
-    public static CompoundNBT getModTag( Entity entity ) {
-        final CompoundNBT data = entity.getPersistentData();
+    public static CompoundTag getModTag( Entity entity ) {
+        final CompoundTag data = entity.getPersistentData();
         if( !data.contains( ModCore.MOD_ID, ID_COMPOUND ) ) {
-            data.put( ModCore.MOD_ID, new CompoundNBT() );
+            data.put( ModCore.MOD_ID, new CompoundTag() );
         }
         return data.getCompound( ModCore.MOD_ID );
     }
     
     /** @return Gets a compound tag within the given parent tag; if the compound didn't exist, this will generate it. */
-    public static CompoundNBT getOrCreateTag( CompoundNBT tag, String key ) {
+    public static CompoundTag getOrCreateTag( CompoundTag tag, String key ) {
         if( !tag.contains( key, NBTHelper.ID_COMPOUND ) ) {
-            tag.put( key, new CompoundNBT() );
+            tag.put( key, new CompoundTag() );
         }
         return tag.getCompound( key );
     }
     
     /** @return Gets a compound tag within the given parent tag; if the compound didn't exist, this will generate it. */
-    public static CompoundNBT getOrCreateTag( CompoundNBT tag, String... path ) {
-        CompoundNBT returnTag = tag;
+    public static CompoundTag getOrCreateTag( CompoundTag tag, String... path ) {
+        CompoundTag returnTag = tag;
         for( String key : path ) {
             returnTag = getOrCreateTag( returnTag, key );
         }

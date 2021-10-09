@@ -2,10 +2,10 @@ package fathertoast.specialai.config.util;
 
 import fathertoast.specialai.ModCore;
 import fathertoast.specialai.config.field.EntityListField;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -49,10 +49,10 @@ public class EntityEntry {
     }
     
     /** Called on this entry before using it to check if the entity class has been determined, and loads the class if it has not been. */
-    void checkClass( World world ) {
+    void checkClass( Level level ) {
         if( TYPE != null && entityClass == null ) {
             try {
-                final Entity entity = TYPE.create( world );
+                final Entity entity = TYPE.create( level );
                 if( entity != null ) {
                     entityClass = entity.getClass();
                     entity.kill();

@@ -1,9 +1,9 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -14,7 +14,7 @@ public class JumpEliteGoal extends AbstractEliteGoal {
     /** Ticks until the AI can activate again. */
     private int cooldownTimer;
     
-    JumpEliteGoal( MobEntity entity ) {
+    JumpEliteGoal( Mob entity ) {
         super( entity );
         setFlags( EnumSet.of( Flag.JUMP ) );
     }
@@ -42,7 +42,7 @@ public class JumpEliteGoal extends AbstractEliteGoal {
         
         // Perform the jump
         mob.getLookControl().setLookAt( target, 180.0F, 0.0F );
-        final Vector3d jumpXZ = new Vector3d( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() )
+        final Vec3 jumpXZ = new Vec3( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() )
                 .normalize().scale( Config.ELITE_AI.JUMP.jumpSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
         mob.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.JUMP.jumpSpeedUpward.get(), jumpXZ.z );
         

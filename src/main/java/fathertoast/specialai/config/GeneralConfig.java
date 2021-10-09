@@ -1,11 +1,14 @@
 package fathertoast.specialai.config;
 
-import fathertoast.specialai.config.field.*;
+import fathertoast.specialai.config.field.BlockListField;
+import fathertoast.specialai.config.field.BooleanField;
+import fathertoast.specialai.config.field.DoubleField;
+import fathertoast.specialai.config.field.EntityListField;
 import fathertoast.specialai.config.file.ToastConfigSpec;
 import fathertoast.specialai.config.util.BlockList;
 import fathertoast.specialai.config.util.EntityEntry;
 import fathertoast.specialai.config.util.EntityList;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
 
 import java.io.File;
 

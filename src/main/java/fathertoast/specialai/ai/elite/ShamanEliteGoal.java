@@ -2,11 +2,11 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.util.BlockHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -19,14 +19,14 @@ import java.util.function.Predicate;
 public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     /** Selects mobs that are alive. */
     private static final Predicate<Entity> MOB_SELECTOR = entity ->
-            entity instanceof MobEntity && entity.isAlive() && !entity.isSpectator();
+            entity instanceof Mob && entity.isAlive() && !entity.isSpectator();
     
     /** The entity this mob is following. */
-    private MobEntity followTarget;
+    private Mob followTarget;
     /** Ticks until next aura pulse. */
     private int pulseTime;
     
-    ShamanEliteGoal( MobEntity entity ) {
+    ShamanEliteGoal( Mob entity ) {
         super( entity );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
@@ -82,7 +82,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
             List<Entity> list = getHotMILFsInArea();
             for( Entity entity : list ) {
                 if( isInRangeAlly( target, entity ) ) {
-                    auraPulse( (MobEntity) entity );
+                    auraPulse( (Mob) entity );
                 }
             }
         }
@@ -95,7 +95,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     }
     
     /** Applies all effects from one aura pulse to the target mob. */
-    private static void auraPulse( MobEntity ally ) {
+    private static void auraPulse( Mob ally ) {
         // Heal and extinguish burning
         if( Config.ELITE_AI.SHAMAN.healAmount.get() > 0.0 ) {
             ally.heal( (float) Config.ELITE_AI.SHAMAN.healAmount.get() );
@@ -106,22 +106,22 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
         
         // Apply potion effects
         if( Config.ELITE_AI.SHAMAN.strengthPotency.get() >= 0 ) {
-            ally.addEffect( new EffectInstance( Effects.DAMAGE_BOOST, 60, Config.ELITE_AI.SHAMAN.strengthPotency.get() ) );
+            ally.addEffect( new MobEffectInstance( MobEffects.DAMAGE_BOOST, 60, Config.ELITE_AI.SHAMAN.strengthPotency.get() ) );
         }
         if( Config.ELITE_AI.SHAMAN.resistancePotency.get() >= 0 ) {
-            ally.addEffect( new EffectInstance( Effects.DAMAGE_RESISTANCE, 60, Config.ELITE_AI.SHAMAN.resistancePotency.get() ) );
+            ally.addEffect( new MobEffectInstance( MobEffects.DAMAGE_RESISTANCE, 60, Config.ELITE_AI.SHAMAN.resistancePotency.get() ) );
         }
         if( Config.ELITE_AI.SHAMAN.speedPotency.get() >= 0 ) {
-            ally.addEffect( new EffectInstance( Effects.MOVEMENT_SPEED, 60, Config.ELITE_AI.SHAMAN.speedPotency.get() ) );
+            ally.addEffect( new MobEffectInstance( MobEffects.MOVEMENT_SPEED, 60, Config.ELITE_AI.SHAMAN.speedPotency.get() ) );
         }
         if( Config.ELITE_AI.SHAMAN.slowFalling.get() ) {
-            ally.addEffect( new EffectInstance( Effects.SLOW_FALLING, 60, 0 ) );
+            ally.addEffect( new MobEffectInstance( MobEffects.SLOW_FALLING, 60, 0 ) );
         }
         if( Config.ELITE_AI.SHAMAN.fireResistance.get() ) {
-            ally.addEffect( new EffectInstance( Effects.FIRE_RESISTANCE, 60, 0 ) );
+            ally.addEffect( new MobEffectInstance( MobEffects.FIRE_RESISTANCE, 60, 0 ) );
         }
         if( Config.ELITE_AI.SHAMAN.waterBreathing.get() ) {
-            ally.addEffect( new EffectInstance( Effects.WATER_BREATHING, 60, 0 ) );
+            ally.addEffect( new MobEffectInstance( MobEffects.WATER_BREATHING, 60, 0 ) );
         }
         
         // Play green particle effects
@@ -135,7 +135,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
             List<Entity> list = getHotMILFsInArea();
             for( Entity entity : list ) {
                 if( isInRangeAlly( target, entity ) ) {
-                    followTarget = (MobEntity) entity;
+                    followTarget = (Mob) entity;
                     return true;
                 }
             }
@@ -153,7 +153,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     
     /** @return Returns true if the entity is in range and an ally (targeting the same entity). */
     private boolean isInRangeAlly( LivingEntity target, Entity entity ) {
-        return entity instanceof MobEntity && mob.distanceToSqr( entity ) <= Config.ELITE_AI.SHAMAN.auraRangeSqr.get() &&
-                target == ((MobEntity) entity).getTarget();
+        return entity instanceof Mob && mob.distanceToSqr( entity ) <= Config.ELITE_AI.SHAMAN.auraRangeSqr.get() &&
+                target == ((Mob) entity).getTarget();
     }
 }

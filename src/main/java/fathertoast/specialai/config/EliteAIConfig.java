@@ -7,8 +7,8 @@ import fathertoast.specialai.config.field.*;
 import fathertoast.specialai.config.file.ToastConfigSpec;
 import fathertoast.specialai.config.file.TomlHelper;
 import fathertoast.specialai.config.util.*;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.io.File;
 import java.util.ArrayList;

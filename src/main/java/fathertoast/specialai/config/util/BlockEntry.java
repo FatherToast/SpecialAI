@@ -3,12 +3,12 @@ package fathertoast.specialai.config.util;
 import fathertoast.specialai.ModCore;
 import fathertoast.specialai.config.field.AbstractConfigField;
 import fathertoast.specialai.config.file.TomlHelper;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.state.Property;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
@@ -140,7 +140,8 @@ public class BlockEntry implements Cloneable {
         if( stateString.isEmpty() ) {
             return new State( Collections.emptyList() );
         }
-        final StateContainer<Block, BlockState> stateContainer = block.getStateDefinition();
+
+        final StateDefinition<Block, BlockState> stateContainer = block.getStateDefinition();
         
         // Parse the state and build the matcher
         final StateBuilder builder = new StateBuilder();

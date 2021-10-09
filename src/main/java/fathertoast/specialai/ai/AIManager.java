@@ -9,18 +9,20 @@ import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.file.ToastConfigFormat;
 import fathertoast.specialai.util.NBTHelper;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.passive.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.util.GroundPathHelper;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.util.GoalUtils;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -83,50 +85,50 @@ public final class AIManager {
     
     /** @param entity Clears the entity's AI action goals entirely. */
     @SuppressWarnings( "unused" )
-    private static void clearActionAI( MobEntity entity ) {
-        for( PrioritizedGoal task : new ArrayList<>( entity.goalSelector.availableGoals ) ) {
+    private static void clearActionAI( Mob entity ) {
+        for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
             entity.goalSelector.removeGoal( task.getGoal() );
         }
     }
     
     /** @param entity Clears the entity's AI target goals entirely. */
     @SuppressWarnings( "unused" )
-    private static void clearTargetAI( MobEntity entity ) {
-        for( PrioritizedGoal task : new ArrayList<>( entity.targetSelector.availableGoals ) ) {
+    private static void clearTargetAI( Mob entity ) {
+        for( WrappedGoal task : new ArrayList<>( entity.targetSelector.getAvailableGoals() ) ) {
             entity.targetSelector.removeGoal( task.getGoal() );
         }
     }
     
     /** @param entity Adds dodge arrows AI to the entity. */
-    private static void addDodgeArrowsAI( MobEntity entity, double dodgeChance ) {
+    private static void addDodgeArrowsAI( Mob entity, double dodgeChance ) {
         entity.goalSelector.addGoal( -1, new DodgeArrowsGoal( entity, dodgeChance ) );
     }
     
     /** @param entity Adds avoid explosions AI to the entity. */
-    private static void addAvoidExplosionsAI( CreatureEntity entity, double speedMulti ) {
+    private static void addAvoidExplosionsAI( PathfinderMob entity, double speedMulti ) {
         entity.goalSelector.addGoal( -1, new AvoidExplosionsGoal( entity, speedMulti ) );
     }
     
     /** @param entity Adds defend village AI to the entity, as well as attack AI if needed. */
-    private static void addDefendVillageTargetAI( VillagerEntity entity ) {
+    private static void addDefendVillageTargetAI( Villager entity ) {
         // TODO
         //entity.targetSelector.addGoal( 0, new VillagerDefendVillageGoal( entity ) );
     }
     
     /** @param entity Adds hurt by target AI to the entity, as well as attack AI if needed. */
-    private static void addHurtByTargetAI( CreatureEntity entity ) {
+    private static void addHurtByTargetAI( PathfinderMob entity ) {
         entity.targetSelector.addGoal( 0, new HurtByTargetGoal( entity ) );
     }
     
     /** @param entity Adds aggressive AI to the entity, as well as attack AI if needed. */
-    private static void addAggressiveTargetAI( CreatureEntity entity ) {
-        entity.targetSelector.addGoal( 1, new NearestAttackableTargetGoal<>( entity, PlayerEntity.class, true ) );
+    private static void addAggressiveTargetAI( PathfinderMob entity ) {
+        entity.targetSelector.addGoal( 1, new NearestAttackableTargetGoal<>( entity, Player.class, true ) );
     }
     
     /** @param entity Adds a melee attack AI to the entity, unless an attack AI is detected. */
-    private static void addMeleeAttackAI( CreatureEntity entity ) {
+    private static void addMeleeAttackAI( PathfinderMob entity ) {
         // Make sure the entity doesn't already have a recognized attack AI
-        for( PrioritizedGoal task : new ArrayList<>( entity.goalSelector.availableGoals ) ) {
+        for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
             if( task.getGoal() instanceof MeleeAttackGoal || task.getGoal() instanceof OcelotAttackGoal ||
                     task.getGoal() instanceof RangedAttackGoal || task.getGoal() instanceof RangedBowAttackGoal || task.getGoal() instanceof RangedCrossbowAttackGoal ) {
                 return;
@@ -136,8 +138,8 @@ public final class AIManager {
     }
     
     /** @param entity Sets the entity's "call for help" flag to true. */
-    private static void setHelpAI( MobEntity entity ) {
-        for( PrioritizedGoal task : new ArrayList<>( entity.targetSelector.availableGoals ) ) {
+    private static void setHelpAI( Mob entity ) {
+        for( WrappedGoal task : new ArrayList<>( entity.targetSelector.getAvailableGoals() ) ) {
             if( task.getGoal() instanceof HurtByTargetGoal ) {
                 ((HurtByTargetGoal) task.getGoal()).setAlertOthers();
                 return;
@@ -146,28 +148,28 @@ public final class AIManager {
     }
     
     /** @param entity Adds rider AI to the entity. */
-    private static void addRiderAI( MobEntity entity, boolean small ) {
+    private static void addRiderAI( Mob entity, boolean small ) {
         entity.goalSelector.addGoal( getPassivePriority( entity ), new RiderGoal( entity, small ) );
     }
     
     /** @param entity Adds eat breeding items AI to the entity. */
-    private static void addEatingAI( AnimalEntity entity ) {
+    private static void addEatingAI( Animal entity ) {
         entity.goalSelector.addGoal( getPassivePriority( entity ), new EatBreedingItemGoal( entity ) );
     }
     
     /** @param entity Adds idle griefing/fiddling AI to the entity, if at least one of the behaviors is enabled. */
-    private static void addIdleAI( MobEntity entity, boolean griefing, boolean fiddling ) {
+    private static void addIdleAI( Mob entity, boolean griefing, boolean fiddling ) {
         if( griefing || fiddling ) {
             entity.goalSelector.addGoal( getPassivePriority( entity ), new IdleActionsGoal( entity, griefing, fiddling ) );
         }
     }
     
     /** @return Returns the priority that idle AI patterns should be assigned to. */
-    private static int getPassivePriority( MobEntity entity ) {
-        if( entity.goalSelector.availableGoals.isEmpty() ) return 6;
+    private static int getPassivePriority( Mob entity ) {
+        if( entity.goalSelector.getAvailableGoals().isEmpty() ) return 6;
         int highest = Integer.MIN_VALUE;
-        for( PrioritizedGoal task : new ArrayList<>( entity.goalSelector.availableGoals ) ) {
-            if( task.getGoal() instanceof RandomWalkingGoal || task.getGoal() instanceof LookAtGoal || task.getGoal() instanceof LookRandomlyGoal )
+        for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
+            if( task.getGoal() instanceof RandomStrollGoal || task.getGoal() instanceof LookAtPlayerGoal || task.getGoal() instanceof RandomLookAroundGoal )
                 return task.getPriority();
             if( highest < task.getPriority() ) {
                 highest = task.getPriority();
@@ -178,16 +180,16 @@ public final class AIManager {
     
     /** @param entity Adds digging AI to the entity. */
     @SuppressWarnings( "unused" )
-    private static void addDigAI( MobEntity entity ) {
+    private static void addDigAI( Mob entity ) {
         //entity.goalSelector.addGoal( 0, new DigGoal( entity ) );
     }
     
     /** @param entity Adds door breaking AI to the entity, replacing any pre-existing door breaking AI. */
-    private static void addDoorBreakAI( MobEntity entity ) {
-        if( GroundPathHelper.hasGroundPathNavigation( entity ) ) {
+    private static void addDoorBreakAI( Mob entity ) {
+        if( GoalUtils.hasGroundPathNavigation( entity ) ) {
             int priority = 1;
             // Remove any pre-existing door-breaking ai
-            for( PrioritizedGoal task : new ArrayList<>( entity.goalSelector.availableGoals ) ) {
+            for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
                 if( task.getGoal() instanceof BreakDoorGoal ) {
                     if( task.getPriority() < priority ) {
                         priority = task.getPriority();
@@ -197,7 +199,7 @@ public final class AIManager {
             }
             
             // Add the new ai
-            ((GroundPathNavigator) entity.getNavigation()).setCanOpenDoors( true );
+            ((GroundPathNavigation) entity.getNavigation()).setCanOpenDoors( true );
             entity.goalSelector.addGoal( priority, new SpecialBreakDoorGoal( entity ) );
         }
         else {
@@ -235,18 +237,18 @@ public final class AIManager {
         if( event.getWorld().isClientSide() || !event.getEntity().isAlive() ) return;
         
         // Check if this is an arrow that can be dodged
-        if( event.getEntity() instanceof ProjectileEntity && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
+        if( event.getEntity() instanceof Projectile && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
             event.getEntity().getPersistentData().putBoolean( TAG_ARROW_DODGE_CHECKED, true );
             DodgeArrowsGoal.doDodgeCheckForArrow( event.getEntity() );
         }
         
         // Only initialize AI on mob entities, where the base AI system is implemented
-        if( event.getEntity() instanceof MobEntity ) {
-            if( ((ServerWorld) event.getEntity().level).getServer().getTickCount() > 0 ) {
-                initializeSpecialAI( (MobEntity) event.getEntity() );
+        if( event.getEntity() instanceof Mob ) {
+            if( ((ServerLevel) event.getEntity().level).getServer().getTickCount() > 0 ) {
+                initializeSpecialAI( (Mob) event.getEntity() );
             }
             else {
-                queue( new DelayedInit( (MobEntity) event.getEntity() ) );
+                queue( new DelayedInit( (Mob) event.getEntity() ) );
             }
         }
     }
@@ -254,11 +256,11 @@ public final class AIManager {
     /**
      * Called when any entity is spawned in the world, including by chunk loading and dimension transition.
      *
-     * @param event The event data.
+     * @param entity The entity to initialize.
      */
-    public static void initializeSpecialAI( MobEntity entity ) {
+    public static void initializeSpecialAI( Mob entity ) {
         // The tag all info for this mod is stored on for the entity
-        final CompoundNBT tag = NBTHelper.getModTag( entity );
+        final CompoundTag tag = NBTHelper.getModTag( entity );
         
         // Dodge arrows
         if( !tag.contains( TAG_DODGE_ARROWS, NBTHelper.ID_NUMERICAL ) ) {
@@ -269,7 +271,7 @@ public final class AIManager {
             addDodgeArrowsAI( entity, tag.getDouble( TAG_DODGE_ARROWS ) );
         }
         
-        if( entity instanceof CreatureEntity ) {
+        if( entity instanceof PathfinderMob ) {
             // Set to true any time an attack target AI is added
             boolean needsAttackAI = false;
             
@@ -278,17 +280,17 @@ public final class AIManager {
                 tag.putDouble( TAG_AVOID_EXPLOSIONS, Config.GENERAL.REACTIONS.avoidExplosionsList.getValue( entity ) );
             }
             if( tag.getDouble( TAG_AVOID_EXPLOSIONS ) > 0.0 ) {
-                addAvoidExplosionsAI( (CreatureEntity) entity, tag.getDouble( TAG_AVOID_EXPLOSIONS ) );
+                addAvoidExplosionsAI( (PathfinderMob) entity, tag.getDouble( TAG_AVOID_EXPLOSIONS ) );
             }
             
             // Eat breeding items
-            if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof AnimalEntity ) {
-                addEatingAI( (AnimalEntity) entity );
+            if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof Animal ) {
+                addEatingAI( (Animal) entity );
             }
             
             // Defend village
-            if( entity instanceof VillagerEntity ) {
-                addDefendVillageTargetAI( (VillagerEntity) entity );
+            if( entity instanceof Villager ) {
+                addDefendVillageTargetAI( (Villager) entity );
                 needsAttackAI = true;
             }
             
@@ -297,7 +299,7 @@ public final class AIManager {
                 tag.putBoolean( TAG_DEPACIFY, Config.GENERAL.ANIMALS.depacifyList.rollChance( entity ) );
             }
             if( tag.getBoolean( TAG_DEPACIFY ) ) {
-                addHurtByTargetAI( (CreatureEntity) entity );
+                addHurtByTargetAI( (PathfinderMob) entity );
                 needsAttackAI = true;
             }
             
@@ -306,12 +308,12 @@ public final class AIManager {
                 tag.putBoolean( TAG_AGGRESSIVE, Config.GENERAL.ANIMALS.aggressiveList.rollChance( entity ) );
             }
             if( tag.getBoolean( TAG_AGGRESSIVE ) ) {
-                addAggressiveTargetAI( (CreatureEntity) entity );
+                addAggressiveTargetAI( (PathfinderMob) entity );
                 needsAttackAI = true;
             }
             
             if( needsAttackAI ) {
-                addMeleeAttackAI( (CreatureEntity) entity );
+                addMeleeAttackAI( (PathfinderMob) entity );
             }
         }
         
@@ -368,7 +370,7 @@ public final class AIManager {
         }
         
         // Elite AI
-        final CompoundNBT eliteTag;
+        final CompoundTag eliteTag;
         if( !tag.contains( TAG_ELITE_AI, NBTHelper.ID_COMPOUND ) ) {
             eliteTag = NBTHelper.getOrCreateTag( tag, TAG_ELITE_AI );
             
@@ -404,19 +406,19 @@ public final class AIManager {
     public static void onLivingDeath( LivingDeathEvent event ) {
         // Call for help on death
         final double chance = Config.GENERAL.REACTIONS.callForHelpOnDeathList.getValue( event.getEntityLiving() );
-        if( chance > 0.0 && event.getEntityLiving() instanceof MobEntity && event.getEntityLiving().getRandom().nextDouble() < chance ) {
-            MobEntity entity = (MobEntity) event.getEntityLiving();
+        if( chance > 0.0 && event.getEntityLiving() instanceof Mob && event.getEntityLiving().getRandom().nextDouble() < chance ) {
+            Mob entity = (Mob) event.getEntityLiving();
             Entity target = event.getSource().getEntity();
             if( target instanceof LivingEntity ) {
                 
                 // Alert all similar entities around the killed entity to the killer
                 final double range = entity.getAttributeValue( Attributes.FOLLOW_RANGE );
-                AxisAlignedBB boundingBox = AxisAlignedBB.unitCubeFromLowerCorner( entity.position() ).inflate( range, 10.0, range );
+                AABB boundingBox = AABB.unitCubeFromLowerCorner( entity.position() ).inflate( range, 10.0, range );
                 
                 // Note this logic is duplicated from the "hurt by target" goal, it is just massively simplified
-                for( MobEntity other : entity.level.getLoadedEntitiesOfClass( entity.getClass(), boundingBox ) ) {
+                for( Mob other : entity.level.getEntitiesOfClass( entity.getClass(), boundingBox ) ) {
                     if( entity != other && other.getTarget() == null &&
-                            (!(entity instanceof TameableEntity) || ((TameableEntity) entity).getOwner() == ((TameableEntity) other).getOwner()) &&
+                            (!(entity instanceof TamableAnimal) || ((TamableAnimal) entity).getOwner() == ((TamableAnimal) other).getOwner()) &&
                             !other.isAlliedTo( target ) ) {
                         other.setTarget( (LivingEntity) target );
                     }
@@ -434,14 +436,14 @@ public final class AIManager {
      */
     private static class DelayedInit implements Supplier<Boolean> {
         /** The entity to initialize. */
-        private final MobEntity MOB;
+        private final Mob MOB;
         
-        DelayedInit( MobEntity entity ) { MOB = entity; }
+        DelayedInit( Mob entity ) { MOB = entity; }
         
         /** Called to finalize the item stealing process. Equips the item to the thief and destroys the dropped item. */
         @Override
         public Boolean get() {
-            if( ((ServerWorld) MOB.level).getServer().getTickCount() > 0 ) {
+            if( ((ServerLevel) MOB.level).getServer().getTickCount() > 0 ) {
                 initializeSpecialAI( MOB );
                 return true;
             }

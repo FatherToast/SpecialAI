@@ -1,10 +1,9 @@
 package fathertoast.specialai.util;
 
 import fathertoast.specialai.ModCore;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
 
 import java.util.*;
 
@@ -35,9 +34,9 @@ public final class VillagerNameHelper {
         return profKey + "#" + careerName;
     }
     
-    public static void setVillagerName( Random random, VillagerEntity entity ) {
+    public static void setVillagerName( Random random, Villager entity ) {
         // Get the villager's profession and career (sub-profession)
-        CompoundNBT tag = new CompoundNBT();
+        CompoundTag tag = new CompoundTag();
         entity.save( tag );
         
         //        VillagerProfession prof = entity.getProfessionForge();

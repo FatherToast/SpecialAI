@@ -1,10 +1,8 @@
 package fathertoast.specialai.ai.elite;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Contains the most basic implementations used by all (or most) elite AI goals that regularly pathfind to entities.
@@ -12,11 +10,11 @@ import net.minecraft.util.math.vector.Vector3d;
 public abstract class AbstractPathingEliteGoal extends AbstractEliteGoal {
     
     /** The last position pathed to. */
-    private Vector3d pathedTargetPos = Vector3d.ZERO;
+    private Vec3 pathedTargetPos = Vec3.ZERO;
     /** Time until the entity can update its path. */
     private int ticksUntilNextPathRecalculation;
     
-    AbstractPathingEliteGoal( MobEntity entity ) { super( entity ); }
+    AbstractPathingEliteGoal( Mob entity ) { super( entity ); }
     
     /** Called to path to a target; should only be directly called when starting to path to a new target. */
     public void startPathing( Entity entity, double speed ) {

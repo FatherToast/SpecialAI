@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
@@ -13,19 +13,19 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 // The mod's version and id
-version = '1.16.5-1.0.1'
+version = '1.17.1-2.0.1'
 archivesBaseName = 'specialai'
 group = "fathertoast.${archivesBaseName}"
 
 // Versions for mods to include at runtime during development
-def jei_version = '1.16.5:7.7.0.106'
-def top_version = '1.16:1.16-3.1.4-22'
+def jei_version = '1.17.1:8.1.0.23'
+def top_version = '1.17:4.0.2'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
 minecraft {
-    mappings channel: 'official', version: '1.16.5'
+    mappings channel: 'official', version: '1.17.1'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
@@ -79,7 +79,7 @@ repositories {
     // Repos for mods to include during development
     maven {
         name 'prog'
-        url 'http://dvs1.progwml6.com/files/maven'
+        url 'https://dvs1.progwml6.com/files/maven'
     }
     maven {
         name 'tterrag'
@@ -88,11 +88,13 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.5-36.1.25'
+    minecraft 'net.minecraftforge:forge:1.17.1-37.0.84'
 
     // Add in JEI and TOP to assist debugging during development
     runtimeOnly fg.deobf("mezz.jei:jei-${jei_version}")
-    runtimeOnly fg.deobf("mcjty.theoneprobe:TheOneProbe-${top_version}")
+
+    // 1.17 version is currently not on the maven repo
+    //runtimeOnly fg.deobf("mcjty.theoneprobe:TheOneProbe-${top_version}")
 }
 
 jar.finalizedBy('reobfJar')

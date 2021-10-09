@@ -1,11 +1,11 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -15,13 +15,13 @@ import java.util.List;
  */
 public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal {
     /** The entity this mob is following. */
-    private MobEntity throwTarget;
+    private Mob throwTarget;
     /** Ticks until next attack. */
     private int attackTime;
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     
-    ThrowAllyEliteGoal( MobEntity entity ) {
+    ThrowAllyEliteGoal( Mob entity ) {
         super( entity );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
@@ -80,15 +80,15 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal {
                 throwEntity.stopRiding();
                 throwEntity.setOnGround( false );
                 throwEntity.fallDistance = 0.0F;
-                if( throwEntity instanceof MobEntity ) {
-                    ((MobEntity) throwEntity).getLookControl().setLookAt( target, 180.0F, 0.0F );
+                if( throwEntity instanceof Mob ) {
+                    ((Mob) throwEntity).getLookControl().setLookAt( target, 180.0F, 0.0F );
                 }
-                final Vector3d jumpXZ = new Vector3d( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() )
+                final Vec3 jumpXZ = new Vec3( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() )
                         .normalize().scale( Config.ELITE_AI.THROW_ALLY.throwSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
                 throwEntity.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.THROW_ALLY.throwSpeedUpward.get(), jumpXZ.z );
                 
                 mob.getNavigation().stop();
-                mob.swing( Hand.MAIN_HAND );
+                mob.swing( InteractionHand.MAIN_HAND );
                 giveUpDelay = 666;
                 attackTime = Config.ELITE_AI.THROW_ALLY.cooldown.next( mob.getRandom() );
             }
@@ -106,7 +106,7 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal {
                 throwTarget = null;
                 
                 startPathing( target, Config.ELITE_AI.THROW_ALLY.speedToTarget.get() );
-                mob.swing( Hand.MAIN_HAND );
+                mob.swing( InteractionHand.MAIN_HAND );
                 attackTime = 20 + mob.getRandom().nextInt( 10 );
             }
             else {
@@ -137,15 +137,15 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal {
         final List<Entity> nearbyEntities = mob.level.getEntities( mob, mob.getBoundingBox().inflate( Math.sqrt( closestDistanceSqr ) + 2.0 ) );
         for( Entity entity : nearbyEntities ) {
             // Check if the entity is a valid throw target
-            if( !(entity instanceof MobEntity) || !entity.isAlive() || !entity.isOnGround() || entity.isPassenger() ||
-                    target != ((MobEntity) entity).getTarget() || entity.distanceToSqr( target ) < Config.ELITE_AI.THROW_ALLY.allyRangeSqrMin.get() )
+            if( !(entity instanceof Mob) || !entity.isAlive() || !entity.isOnGround() || entity.isPassenger() ||
+                    target != ((Mob) entity).getTarget() || entity.distanceToSqr( target ) < Config.ELITE_AI.THROW_ALLY.allyRangeSqrMin.get() )
                 continue;
             
             // Pick the closest target only
             final double distanceSqr = mob.distanceToSqr( entity );
             if( distanceSqr < closestDistanceSqr ) {
                 closestDistanceSqr = distanceSqr;
-                throwTarget = (MobEntity) entity;
+                throwTarget = (Mob) entity;
             }
         }
         return throwTarget != null;

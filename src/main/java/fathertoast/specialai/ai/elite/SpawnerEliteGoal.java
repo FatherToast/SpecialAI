@@ -5,19 +5,22 @@ import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.util.NBTHelper;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.*;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.*;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.spawner.AbstractSpawner;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.random.WeightedRandom;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.level.BaseSpawner;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.SpawnData;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,16 +34,16 @@ import java.util.Random;
  */
 public class SpawnerEliteGoal extends AbstractEliteGoal {
     /** The mob spawner logic for this AI. */
-    private final AbstractSpawner spawnerLogic;
+    private final SpawnerLogic spawnerLogic;
     /** The nbt compound used to store any additional data used by the AI. */
-    private final CompoundNBT extraData;
+    private final CompoundTag extraData;
     
     /** Time until the entity can check line of sight again. */
     private int canSeeTicks;
     /** Time until the next save update. */
     private int saveTicks;
     
-    SpawnerEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+    SpawnerEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity );
         spawnerLogic = new SpawnerLogic( this );
         
@@ -48,7 +51,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         extraData = EliteAIType.SPAWNER.getTag( aiTag );
         
         // Load from tag if initialized, otherwise initialize by saving to tag
-        if( initialized ) { spawnerLogic.load( extraData ); }
+        if( initialized ) { spawnerLogic.load( entity.level, entity.blockPosition(), extraData ); }
         else { save(); }
     }
     
@@ -76,7 +79,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         if( target != null ) {
             if( canSeeTicks-- > 0 ) return fallback;
             canSeeTicks = 4 + mob.getRandom().nextInt( 7 );
-            return mob.canSee( target );
+            return mob.hasLineOfSight( target );
         }
         return false;
     }
@@ -85,6 +88,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
     @Override
     public void tick() {
         spawnerLogic.tick();
+
         if( saveTicks-- <= 0 ) { save(); }
     }
     
@@ -96,7 +100,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
     
     /** Saves the current state of the spawner logic and resets the save timer. */
     private void save() {
-        spawnerLogic.save( extraData );
+        spawnerLogic.save( this.mob.level, this.mob.blockPosition(), extraData );
         saveTicks = 10 + mob.getRandom().nextInt( 20 );
     }
     
@@ -106,14 +110,15 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
      */
     @MethodsReturnNonnullByDefault
     @ParametersAreNonnullByDefault
-    public static final class SpawnerLogic extends AbstractSpawner {
+    public static final class SpawnerLogic extends BaseSpawner {
+
         /** The AI goal using this logic. */
         private final SpawnerEliteGoal aiGoal;
         /** The entity using this logic. */
-        private final MobEntity mob;
+        private final Mob mob;
         
         /** List of mobs that can be spawned; will pick a new mob for each spawn wave. */
-        private final List<WeightedSpawnerEntity> spawnPotentials = Lists.newArrayList();
+        private final List<SpawnData> spawnPotentials = Lists.newArrayList();
         /** Minimum time between spawn waves. */
         private int minSpawnDelay = Config.ELITE_AI.SPAWNER.cooldown.getMin();
         /** Maximum time between spawn waves. */
@@ -130,7 +135,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         /** Time before the next spawn wave. */
         private int spawnDelay = Config.ELITE_AI.SPAWNER.initialCooldown.get();
         /** Data of the mob to spawn for the next wave. */
-        private WeightedSpawnerEntity nextSpawnData = new WeightedSpawnerEntity();
+        private SpawnData nextSpawnData = new SpawnData();
         
         SpawnerLogic( SpawnerEliteGoal goal ) {
             aiGoal = goal;
@@ -140,16 +145,14 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         
         /** Sends an event to the client. */
         @Override
-        public void broadcastEvent( int eventId ) {
+        public void broadcastEvent( Level level, BlockPos pos, int eventId ) {
             // Ignore; there is no client side AI to receive events
         }
         
         /** @return The world this spawner is in. */
-        @Override
-        public World getLevel() { return mob.level; }
+        public Level getLevel() { return mob.level; }
         
         /** @return The block position this spawner is at. */
-        @Override
         public BlockPos getPos() { return mob.blockPosition(); }
         
         /** @return The entity acting as the spawner, if any. */
@@ -162,15 +165,15 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         public void setEntityId( EntityType<?> entityType ) {
             // Carry over deprecated registry from base spawner logic
             //noinspection deprecation
-            nextSpawnData.getTag().putString( TAG_ENTITY_ID, Registry.ENTITY_TYPE.getKey( entityType ).toString() );
+            nextSpawnData.getTag().putString( TAG_ENTITY_ID, ForgeRegistries.ENTITIES.getKey( entityType ).toString() );
         }
         
         /** Sets the data of the mob to spawn for the next wave. */
         @Override
-        public void setNextSpawnData( WeightedSpawnerEntity spawnData ) { nextSpawnData = spawnData; }
-        
+        public void setNextSpawnData( Level level, BlockPos pos, SpawnData spawnData ) { nextSpawnData = spawnData; }
+
+
         /** Called each tick while this spawner is active. */
-        @Override
         public void tick() {
             final LivingEntity target = mob.getTarget();
             if( target != null && mob.distanceToSqr( target ) <= requiredPlayerRange * requiredPlayerRange ) {
@@ -190,19 +193,19 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         
         /** Spawns a wave of mobs from the spawner. */
         private void spawnWave() {
-            final AxisAlignedBB nearbyCheckBB = new AxisAlignedBB( mob.blockPosition() ).inflate( spawnRange );
+            final AABB nearbyCheckBB = new AABB( mob.blockPosition() ).inflate( spawnRange );
             final BlockPos headPos = new BlockPos( mob.getX(), mob.getEyeY(), mob.getZ() );
-            final ServerWorld world = (ServerWorld) getLevel();
+            final ServerLevel world = (ServerLevel) getLevel();
             final Random random = mob.getRandom();
             
             for( int i = 0; i < spawnCount; i++ ) {
                 // Load entity type
-                final CompoundNBT spawnData = nextSpawnData.getTag();
+                final CompoundTag spawnData = nextSpawnData.getTag();
                 final Optional<EntityType<?>> entityType = EntityType.by( spawnData );
-                if( !entityType.isPresent() ) break;
-                
+                if(entityType.isEmpty()) break;
+
                 // Pick a random spawn position; ignore any dumb nbt position (unlike base spawn logic)
-                final Vector3d spawnPos = mob.position().add(
+                final Vec3 spawnPos = mob.position().add(
                         (random.nextDouble() - random.nextDouble()) * (double) spawnRange,
                         random.nextInt( 3 ) - 1,
                         (random.nextDouble() - random.nextDouble()) * (double) spawnRange
@@ -213,7 +216,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                 
                 // Create the entity to spawn
                 final Entity newEntity = EntityType.loadEntityRecursive( spawnData, world, ( loadEntity ) -> {
-                    loadEntity.moveTo( spawnPos.x, spawnPos.y, spawnPos.z, loadEntity.yRot, loadEntity.xRot );
+                    loadEntity.moveTo( spawnPos.x, spawnPos.y, spawnPos.z, loadEntity.getYRot(), loadEntity.getXRot() );
                     return loadEntity;
                 } );
                 if( newEntity == null ) break;
@@ -226,7 +229,9 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                 // Attempt to spawn the entity
                 newEntity.moveTo( newEntity.getX(), newEntity.getY(), newEntity.getZ(),
                         random.nextFloat() * 360.0F, 0.0F );
-                final MobEntity newMob = newEntity instanceof MobEntity ? (MobEntity) newEntity : null;
+
+                final Mob newMob = newEntity instanceof Mob ? (Mob) newEntity : null;
+
                 if( newMob != null ) {
                     // Create the elite AI compound to prevent any elite AIs from generating on the spawned entity
                     NBTHelper.getOrCreateTag( NBTHelper.getModTag( newMob ), AIManager.TAG_ELITE_AI );
@@ -237,9 +242,9 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                     
                     // If needed, perform the standard entity spawn initialization
                     if( nextSpawnData.getTag().size() == 1 && nextSpawnData.getTag().contains( TAG_ENTITY_ID, NBTHelper.ID_STRING ) &&
-                            !ForgeEventFactory.doSpecialSpawn( newMob, world, (float) newEntity.getX(), (float) newEntity.getY(), (float) newEntity.getZ(), this, SpawnReason.SPAWNER ) ) {
+                            !ForgeEventFactory.doSpecialSpawn( newMob, world, (float) newEntity.getX(), (float) newEntity.getY(), (float) newEntity.getZ(), this, MobSpawnType.SPAWNER ) ) {
                         newMob.finalizeSpawn( world, world.getCurrentDifficultyAt( newEntity.blockPosition() ),
-                                SpawnReason.SPAWNER, null, null );
+                                MobSpawnType.SPAWNER, null, null );
                     }
                 }
                 if( !world.tryAddFreshEntityWithPassengers( newEntity ) ) break;
@@ -267,7 +272,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             }
             // Reset mob selection
             if( !spawnPotentials.isEmpty() ) {
-                setNextSpawnData( WeightedRandom.getRandomItem( mob.getRandom(), spawnPotentials ) );
+                setNextSpawnData( this.getLevel(), this.getPos(), WeightedRandom.getRandomItem( mob.getRandom(), spawnPotentials ).orElseGet(SpawnData::new) );
             }
             // Save the updated data
             aiGoal.save();
@@ -287,21 +292,21 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         
         /** Loads the spawner from nbt. */
         @Override
-        public void load( CompoundNBT tag ) {
+        public void load( @Nullable Level level, BlockPos pos, CompoundTag tag ) {
             spawnDelay = tag.getShort( TAG_DELAY );
             spawnPotentials.clear();
             if( tag.contains( TAG_SPAWN_POTENTIALS, NBTHelper.ID_LIST ) ) {
-                ListNBT listnbt = tag.getList( TAG_SPAWN_POTENTIALS, NBTHelper.ID_COMPOUND );
+                ListTag listnbt = tag.getList( TAG_SPAWN_POTENTIALS, NBTHelper.ID_COMPOUND );
                 
                 for( int i = 0; i < listnbt.size(); ++i ) {
-                    spawnPotentials.add( new WeightedSpawnerEntity( listnbt.getCompound( i ) ) );
+                    spawnPotentials.add( new SpawnData( listnbt.getCompound( i ) ) );
                 }
             }
             if( tag.contains( TAG_SPAWN_DATA, NBTHelper.ID_COMPOUND ) ) {
-                setNextSpawnData( new WeightedSpawnerEntity( 1, tag.getCompound( TAG_SPAWN_DATA ) ) );
+                setNextSpawnData( this.getLevel(), this.getPos(), new SpawnData( 1, tag.getCompound( TAG_SPAWN_DATA ) ) );
             }
             else if( !spawnPotentials.isEmpty() ) {
-                setNextSpawnData( WeightedRandom.getRandomItem( mob.getRandom(), spawnPotentials ) );
+                setNextSpawnData( this.getLevel(), this.getPos(), WeightedRandom.getRandomItem( mob.getRandom(), spawnPotentials ).orElseGet(SpawnData::new) );
             }
             if( tag.contains( TAG_MIN_DELAY, NBTHelper.ID_NUMERICAL ) ) {
                 minSpawnDelay = tag.getShort( TAG_MIN_DELAY );
@@ -319,7 +324,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         
         /** Saves the spawner to nbt. */
         @Override
-        public CompoundNBT save( CompoundNBT tag ) {
+        public CompoundTag save( @Nullable Level level, BlockPos pos, CompoundTag tag ) {
             tag.putShort( TAG_DELAY, (short) spawnDelay );
             tag.putShort( TAG_MIN_DELAY, (short) minSpawnDelay );
             tag.putShort( TAG_MAX_DELAY, (short) maxSpawnDelay );
@@ -329,12 +334,12 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             tag.putShort( TAG_SPAWN_RANGE, (short) spawnRange );
             verifyEntityId();
             tag.put( TAG_SPAWN_DATA, nextSpawnData.getTag().copy() );
-            ListNBT potentials = new ListNBT();
+            ListTag potentials = new ListTag();
             if( spawnPotentials.isEmpty() ) {
                 potentials.add( nextSpawnData.save() );
             }
             else {
-                for( WeightedSpawnerEntity weightedspawnerentity : spawnPotentials ) {
+                for( SpawnData weightedspawnerentity : spawnPotentials ) {
                     potentials.add( weightedspawnerentity.save() );
                 }
             }
@@ -347,7 +352,8 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             // Try to load the entity id
             final String id = nextSpawnData.getTag().getString( TAG_ENTITY_ID );
             ResourceLocation regKey;
-            try { regKey = StringUtils.isNullOrEmpty( id ) ? null : new ResourceLocation( id ); }
+            try { regKey = id.isEmpty() ? null : new ResourceLocation( id ); }
+
             catch( ResourceLocationException ex ) { regKey = null; }
             
             if( regKey == null ) {

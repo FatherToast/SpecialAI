@@ -1,13 +1,13 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.play.server.SEntityVelocityPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -23,7 +23,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
     private Activity currentActivity = Activity.NONE;
     
     /** The entity this mob is following. */
-    private MobEntity throwTarget;
+    private Mob throwTarget;
     /** Ticks until next attack. */
     private int attackTime;
     /** Ticks until the entity gives up. */
@@ -31,7 +31,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
     /** Number of times the entity will re-grab escaping players before giving up. */
     private int extraGrabAttempts;
     
-    ThrowEnemyEliteGoal( MobEntity entity ) {
+    ThrowEnemyEliteGoal( Mob entity ) {
         super( entity );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
@@ -94,7 +94,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
             // Pick up the target
             target.startRiding( mob, true );
             startPathing( throwTarget, Config.ELITE_AI.THROW_ENEMY.speedToAlly.get() );
-            mob.swing( Hand.MAIN_HAND );
+            mob.swing( InteractionHand.MAIN_HAND );
             attackTime = 20 + mob.getRandom().nextInt( 10 );
             currentActivity = Activity.CARRY;
         }
@@ -116,12 +116,12 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
                 throwEntity.stopRiding();
                 throwEntity.setOnGround( false );
                 throwEntity.fallDistance = 0.0F;
-                final Vector3d jumpXZ = new Vector3d( throwTarget.getX() - mob.getX(), 0.0, throwTarget.getZ() - mob.getZ() )
+                final Vec3 jumpXZ = new Vec3( throwTarget.getX() - mob.getX(), 0.0, throwTarget.getZ() - mob.getZ() )
                         .normalize().scale( Config.ELITE_AI.THROW_ENEMY.throwSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
                 throwEntity.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.THROW_ENEMY.throwSpeedUpward.get(), jumpXZ.z );
-                if( throwEntity instanceof ServerPlayerEntity ) {
+                if( throwEntity instanceof ServerPlayer) {
                     try {
-                        ((ServerPlayerEntity) throwEntity).connection.send( new SEntityVelocityPacket( throwEntity ) );
+                        ((ServerPlayer) throwEntity).connection.send( new ClientboundSetEntityMotionPacket( throwEntity ) );
                     }
                     catch( Exception ex ) {
                         ex.printStackTrace();
@@ -129,7 +129,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
                 }
                 
                 mob.getNavigation().stop();
-                mob.swing( Hand.MAIN_HAND );
+                mob.swing( InteractionHand.MAIN_HAND );
                 currentActivity = Activity.NONE;
             }
             else {
@@ -168,7 +168,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
         int mostNearby = -1;
         for( Entity entity : entitiesNearTarget ) {
             // Check if the entity is a valid ally
-            if( !(entity instanceof MobEntity) || !entity.isAlive() || target != ((MobEntity) entity).getTarget() )
+            if( !(entity instanceof Mob) || !entity.isAlive() || target != ((Mob) entity).getTarget() )
                 continue;
             final double distanceSqr = entity.distanceToSqr( target );
             if( distanceSqr > maxTargetRange * maxTargetRange ) continue;
@@ -182,7 +182,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
             final int nearby = entity.level.getEntities( entity, entity.getBoundingBox().inflate( 4.0 ) ).size();
             if( nearby > mostNearby ) {
                 mostNearby = nearby;
-                throwTarget = (MobEntity) entity;
+                throwTarget = (Mob) entity;
             }
         }
         return throwTarget != null;

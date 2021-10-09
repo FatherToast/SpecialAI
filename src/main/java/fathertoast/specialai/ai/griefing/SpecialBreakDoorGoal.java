@@ -1,18 +1,19 @@
 package fathertoast.specialai.ai.griefing;
 
-import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.config.Config;
-import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.BreakDoorGoal;
-import net.minecraft.entity.monster.CreeperEntity;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.GroundPathHelper;
-import net.minecraft.util.math.BlockPos;
+import fathertoast.specialai.util.BlockHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.BreakDoorGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.util.GoalUtils;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.function.Predicate;
 
@@ -43,7 +44,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     /**
      * @param entity The owner of this AI.
      */
-    public SpecialBreakDoorGoal( MobEntity entity ) {
+    public SpecialBreakDoorGoal( Mob entity ) {
         super( entity, DIFFICULTY_PREDICATE );
     }
     
@@ -54,7 +55,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
             return false;
         }
         // Try to find a blocking door
-        if( mob.horizontalCollision && GroundPathHelper.hasGroundPathNavigation( mob ) ) {
+        if( mob.horizontalCollision && GoalUtils.hasGroundPathNavigation( mob ) ) {
             findObstructingDoor();
         }
         // Return true if we are allowed to destroy the door
@@ -64,15 +65,15 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     /** Attempt to find an obstructing door and targets it, if possible. */
     private void findObstructingDoor() {
         hasDoor = false;
-        GroundPathNavigator navigator = (GroundPathNavigator) mob.getNavigation();
+        GroundPathNavigation navigator = (GroundPathNavigation) mob.getNavigation();
         Path path = navigator.getPath();
         if( path != null && !path.isDone() && navigator.canOpenDoors() ) {
             // Search along the entity's path
             final int maxPoint = Math.min( path.getNextNodeIndex() + 2, path.getNodeCount() );
             for( int i = 0; i < maxPoint; i++ ) {
-                PathPoint pathpoint = path.getNode( i );
+                Node node = path.getNode( i );
                 // Start at floor level so we can target shorter doors
-                BlockPos floorPos = new BlockPos( pathpoint.x, pathpoint.y - 1, pathpoint.z );
+                BlockPos floorPos = new BlockPos( node.x, node.y - 1, node.z );
                 if( mob.distanceToSqr( floorPos.getX(), mob.getY(), floorPos.getZ() ) <= 2.25 && tryTargetDoor( floorPos ) ) {
                     return;
                 }
@@ -120,7 +121,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     @Override
     public void start() {
         if( madCreeper() ) {
-            ((CreeperEntity) mob).ignite();
+            ((Creeper) mob).ignite();
             completed = true;
         }
         else {
@@ -201,5 +202,5 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     }
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the door. */
-    private boolean madCreeper() { return Config.GENERAL.DOOR_BREAKING.madCreepers.get() && mob instanceof CreeperEntity; }
+    private boolean madCreeper() { return Config.GENERAL.DOOR_BREAKING.madCreepers.get() && mob instanceof Creeper; }
 }

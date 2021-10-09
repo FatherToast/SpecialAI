@@ -1,11 +1,6 @@
 package fathertoast.specialai.config.field;
 
-import fathertoast.specialai.ModCore;
-import fathertoast.specialai.config.file.TomlHelper;
-
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Random;
 
 /**
  * Represents a config field with a double value. The entered config value is squared when loaded.

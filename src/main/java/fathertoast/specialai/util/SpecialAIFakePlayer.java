@@ -1,22 +1,18 @@
 package fathertoast.specialai.util;
 
 import com.mojang.authlib.GameProfile;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.FoodStats;
-import net.minecraft.util.Hand;
-import net.minecraft.util.HandSide;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.EffectInstance;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ITeleporter;
 
@@ -33,17 +29,17 @@ public class SpecialAIFakePlayer extends FakePlayer {
     private static final GameProfile FAKE_PLAYER_PROFILE = new GameProfile( null, "[SpecialAIFakePlayer]" );
     
     /** The entity posing as this fake player. */
-    private final MobEntity wrappedEntity;
+    private final Mob wrappedEntity;
     
     /**
      * @param entity The entity to wrap inside a fake player.
      */
-    public SpecialAIFakePlayer( MobEntity entity ) {
-        super( (ServerWorld) entity.level, FAKE_PLAYER_PROFILE );
+    public SpecialAIFakePlayer( Mob entity ) {
+        super( (ServerLevel) entity.level, FAKE_PLAYER_PROFILE );
         wrappedEntity = entity;
         foodData = new FakeFoodStats( this );
         
-        absMoveTo( entity.getX(), entity.getY(), entity.getZ(), entity.yRot, entity.xRot );
+        absMoveTo( entity.getX(), entity.getY(), entity.getZ(), entity.getYRot(), entity.getXRot() );
         setDeltaMovement( entity.getDeltaMovement() );
     }
     
@@ -52,7 +48,7 @@ public class SpecialAIFakePlayer extends FakePlayer {
      * After this is called, you should probably throw away all references to this player.
      */
     public void updateWrappedEntityState() {
-        wrappedEntity.absMoveTo( getX(), getY(), getZ(), yRot, xRot );
+        wrappedEntity.absMoveTo( getX(), getY(), getZ(), this.getYRot(), this.getXRot() );
         wrappedEntity.setDeltaMovement( getDeltaMovement() );
     }
     
@@ -61,7 +57,7 @@ public class SpecialAIFakePlayer extends FakePlayer {
      * <p>
      * Note that the wrapped entity will never be null at the time this is created.
      */
-    private static class FakeFoodStats extends FoodStats {
+    private static class FakeFoodStats extends FoodData {
         /** The fake player this food stats belong to. */
         final SpecialAIFakePlayer fakePlayer;
         
@@ -89,7 +85,7 @@ public class SpecialAIFakePlayer extends FakePlayer {
     }
     
     @Override
-    public boolean canHarmPlayer( PlayerEntity player ) { return true; }
+    public boolean canHarmPlayer( Player player ) { return true; }
     
     @Override
     public void die( DamageSource source ) { if( wrappedEntity != null ) { wrappedEntity.die( source ); } }
@@ -125,8 +121,8 @@ public class SpecialAIFakePlayer extends FakePlayer {
     
     @Override
     @Nullable
-    public Entity changeDimension( ServerWorld world, ITeleporter teleporter ) {
-        if( wrappedEntity != null ) { return wrappedEntity.changeDimension( world, teleporter ); }
+    public Entity changeDimension( ServerLevel level, ITeleporter teleporter ) {
+        if( wrappedEntity != null ) { return wrappedEntity.changeDimension( level, teleporter ); }
         return null;
     }
     
@@ -142,13 +138,13 @@ public class SpecialAIFakePlayer extends FakePlayer {
     // Attributes
     
     @Override
-    public AttributeModifierManager getAttributes() {
+    public AttributeMap getAttributes() {
         if( wrappedEntity != null ) { return wrappedEntity.getAttributes(); }
         return super.getAttributes();
     }
     
     @Override
-    public CreatureAttribute getMobType() {
+    public MobType getMobType() {
         if( wrappedEntity != null ) { return wrappedEntity.getMobType(); }
         return super.getMobType();
     }
@@ -156,12 +152,12 @@ public class SpecialAIFakePlayer extends FakePlayer {
     // Equipment and hands
     
     @Override
-    public void swing( Hand hand, boolean sendToSelf ) {
+    public void swing( InteractionHand hand, boolean sendToSelf ) {
         if( wrappedEntity != null ) { wrappedEntity.swing( hand, false ); }
     }
     
     @Override
-    public HandSide getMainArm() {
+    public HumanoidArm getMainArm() {
         if( wrappedEntity != null ) { return wrappedEntity.getMainArm(); }
         return super.getMainArm();
     }
@@ -173,13 +169,13 @@ public class SpecialAIFakePlayer extends FakePlayer {
     }
     
     @Override
-    public Hand getUsedItemHand() {
+    public InteractionHand getUsedItemHand() {
         if( wrappedEntity != null ) { return wrappedEntity.getUsedItemHand(); }
         return super.getUsedItemHand();
     }
     
     @Override
-    public boolean isHolding( Predicate<Item> itemPredicate ) {
+    public boolean isHolding( Predicate<ItemStack> itemPredicate ) {
         if( wrappedEntity != null ) { return wrappedEntity.isHolding( itemPredicate ); }
         return false;
     }
@@ -191,13 +187,13 @@ public class SpecialAIFakePlayer extends FakePlayer {
     }
     
     @Override
-    public ItemStack getItemBySlot( EquipmentSlotType slot ) {
+    public ItemStack getItemBySlot( EquipmentSlot slot ) {
         if( wrappedEntity != null ) { return wrappedEntity.getItemBySlot( slot ); }
         return ItemStack.EMPTY;
     }
     
     @Override
-    public void setItemSlot( EquipmentSlotType slot, ItemStack item ) {
+    public void setItemSlot( EquipmentSlot slot, ItemStack item ) {
         if( wrappedEntity != null ) { wrappedEntity.setItemSlot( slot, item ); }
     }
     
@@ -210,51 +206,51 @@ public class SpecialAIFakePlayer extends FakePlayer {
     }
     
     @Override
-    public Collection<EffectInstance> getActiveEffects() {
+    public Collection<MobEffectInstance> getActiveEffects() {
         if( wrappedEntity != null ) { return wrappedEntity.getActiveEffects(); }
         return super.getActiveEffects();
     }
     
     @Override
-    public Map<Effect, EffectInstance> getActiveEffectsMap() {
+    public Map<MobEffect, MobEffectInstance> getActiveEffectsMap() {
         if( wrappedEntity != null ) { return wrappedEntity.getActiveEffectsMap(); }
         return super.getActiveEffectsMap();
     }
     
     @Override
-    public boolean hasEffect( Effect effect ) {
+    public boolean hasEffect( MobEffect effect ) {
         if( wrappedEntity != null ) { return wrappedEntity.hasEffect( effect ); }
         return false;
     }
     
     @Override
     @Nullable
-    public EffectInstance getEffect( Effect effect ) {
+    public MobEffectInstance getEffect( MobEffect effect ) {
         if( wrappedEntity != null ) { return wrappedEntity.getEffect( effect ); }
         return null;
     }
-    
+
     @Override
-    public boolean addEffect( EffectInstance effect ) {
+    public boolean addEffect( MobEffectInstance effect ) {
         if( wrappedEntity != null ) { return wrappedEntity.addEffect( effect ); }
         return false;
     }
     
     @Override
-    public boolean canBeAffected( EffectInstance effect ) {
+    public boolean canBeAffected( MobEffectInstance effect ) {
         if( wrappedEntity != null ) { return wrappedEntity.canBeAffected( effect ); }
         return false;
     }
     
     @Override
     @Nullable
-    public EffectInstance removeEffectNoUpdate( @Nullable Effect effect ) {
+    public MobEffectInstance removeEffectNoUpdate( @Nullable MobEffect effect ) {
         if( wrappedEntity != null ) { return wrappedEntity.removeEffectNoUpdate( effect ); }
         return null;
     }
     
     @Override
-    public boolean removeEffect( Effect effect ) {
+    public boolean removeEffect( MobEffect effect ) {
         if( wrappedEntity != null ) { return wrappedEntity.removeEffect( effect ); }
         return false;
     }

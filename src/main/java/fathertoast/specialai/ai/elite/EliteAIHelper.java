@@ -2,18 +2,21 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.ModCore;
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Hand;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ProjectileWeaponItem;
+
 
 /**
  * This class contains several helper methods for managing elite AI.
@@ -26,13 +29,13 @@ public final class EliteAIHelper {
     static String getLangKey( EliteAIType ai, String subKey ) { return LANG_KEY + ai.getKey() + "." + subKey; }
     
     /** The translation text component. */
-    static ITextComponent getText( EliteAIType ai, String subKey ) { return new TranslationTextComponent( getLangKey( ai, subKey ) ); }
+    static Component getText(EliteAIType ai, String subKey ) { return new TranslatableComponent( getLangKey( ai, subKey ) ); }
     
     /**
      * @param entity Applies a random elite AI to this mob.
      * @param aiTag  The mob's save data.
      */
-    public static void saveEliteAI( MobEntity entity, CompoundNBT aiTag ) {
+    public static void saveEliteAI( Mob entity, CompoundTag aiTag ) {
         EliteAIType eliteAI = Config.ELITE_AI.GENERAL.eliteAIWeights.next( entity.getRandom() );
         if( eliteAI != null && !eliteAI.isSaved( aiTag ) ) {
             eliteAI.saveTo( aiTag );
@@ -44,7 +47,7 @@ public final class EliteAIHelper {
      * @param aiTag  The mob's save data.
      * @param init   When true, the loaded AIs will apply their attribute modifiers and equipment.
      */
-    public static void loadEliteAI( MobEntity entity, CompoundNBT aiTag, boolean init ) {
+    public static void loadEliteAI( Mob entity, CompoundTag aiTag, boolean init ) {
         float healthDiff = init ? entity.getMaxHealth() - entity.getHealth() : Float.NaN;
         
         // Load each AI goal and initialize, as needed
@@ -59,7 +62,7 @@ public final class EliteAIHelper {
     }
     
     /** Called to perform the initialization for an elite AI type. */
-    private static void initialize( EliteAIType ai, MobEntity entity, CompoundNBT aiTag ) {
+    private static void initialize( EliteAIType ai, Mob entity, CompoundTag aiTag ) {
         // Handle weapon preference
         if( ai.getConfigCategory().preferMelee.get() ) {
             preferMelee( entity );
@@ -82,11 +85,13 @@ public final class EliteAIHelper {
     }
     
     /** Replaces any held shooting item with a melee weapon, in hopes that the entity will use melee attacks. */
-    static void preferMelee( MobEntity entity ) {
+    static void preferMelee( Mob entity ) {
         if( Config.ELITE_AI.GENERAL.enablePreferMelee.get() ) {
-            for( Hand hand : Hand.values() ) {
+            for( InteractionHand hand : InteractionHand.values() ) {
                 ItemStack held = entity.getItemInHand( hand );
-                if( !held.isEmpty() && held.getItem() instanceof ShootableItem ) {
+
+                // TODO - ShootableItem, very epic, but what is it?
+                if( !held.isEmpty() && held.getItem() instanceof ProjectileWeaponItem) {
                     entity.setItemInHand( hand, new ItemStack( Items.GOLDEN_SWORD ) );
                 }
             }
@@ -94,16 +99,16 @@ public final class EliteAIHelper {
     }
     
     /** Unequips the entity of any equipped item in the specified slot. */
-    static void unequip( MobEntity entity, EquipmentSlotType slot ) { equip( entity, ItemStack.EMPTY, 0.085, slot ); }
+    static void unequip( Mob entity, EquipmentSlot slot ) { equip( entity, ItemStack.EMPTY, 0.085, slot ); }
     
     /** Equips the entity with an item in its natural slot, overwriting any currently equipped item. */
-    static void equip( MobEntity entity, ItemStack item, double dropChance ) {
-        equip( entity, item, dropChance, MobEntity.getEquipmentSlotForItem( item ) );
+    static void equip( Mob entity, ItemStack item, double dropChance ) {
+        equip( entity, item, dropChance, Mob.getEquipmentSlotForItem( item ) );
     }
     
     /** Equips the entity with an item in the specified slot, optionally overwriting any currently equipped item. */
-    static void equip( MobEntity entity, ItemStack item, double dropChance, EquipmentSlotType slot ) {
-        if( slot == null ) slot = EquipmentSlotType.MAINHAND;
+    static void equip( Mob entity, ItemStack item, double dropChance, EquipmentSlot slot ) {
+        if( slot == null ) slot = EquipmentSlot.MAINHAND;
         if( dropChance >= 0.0 && (Config.ELITE_AI.GENERAL.enableEquipmentReplace.get() || !entity.hasItemInSlot( slot )) ) {
             entity.setItemSlot( slot, item );
             entity.setDropChance( slot, (float) dropChance );
@@ -111,9 +116,9 @@ public final class EliteAIHelper {
     }
     
     /** Adds a custom attribute modifier to the entity. */
-    private static void addModifier( EliteAIType ai, MobEntity entity, Attribute attribute, double value, AttributeModifier.Operation operation ) {
+    private static void addModifier( EliteAIType ai, Mob entity, Attribute attribute, double value, AttributeModifier.Operation operation ) {
         if( Config.ELITE_AI.GENERAL.enableAttributeMods.get() && value != 0.0 ) {
-            ModifiableAttributeInstance attributeInstance = entity.getAttribute( attribute );
+            AttributeInstance attributeInstance = entity.getAttribute( attribute );
             if( attributeInstance != null ) {
                 attributeInstance.addPermanentModifier(
                         new AttributeModifier( ModCore.MOD_ID + ":" + ai.getKey() + " spawn bonus", value, operation ) );
@@ -126,7 +131,7 @@ public final class EliteAIHelper {
         if( value != 0.0 ) {
             stack.addAttributeModifier( attribute,
                     new AttributeModifier( ModCore.MOD_ID + ":" + ai.getKey() + " item bonus", value, operation ),
-                    MobEntity.getEquipmentSlotForItem( stack ) );
+                    Mob.getEquipmentSlotForItem( stack ) );
         }
     }
     

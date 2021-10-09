@@ -5,21 +5,22 @@ import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.util.SpecialAIFakePlayer;
-import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.monster.CreeperEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -34,7 +35,7 @@ public class IdleActionsGoal extends Goal {
     private enum Activity { NONE, GRIEFING, FIDDLING }
     
     /** The owner of this AI. */
-    protected final MobEntity mob;
+    protected final Mob mob;
     /** Whether this should perform idle griefing. */
     private final boolean griefingEnabled;
     /** Whether this should perform idle fiddling. */
@@ -48,7 +49,7 @@ public class IdleActionsGoal extends Goal {
     /** The block to attack. */
     private BlockState targetBlock;
     /** The ray trace resulting from sight check, if successful. */
-    private BlockRayTraceResult targetHitResult;
+    private BlockHitResult targetHitResult;
     /** True if the target is in the entity's range and can be seen. */
     private boolean canReach;
     /** Ticks until the entity can check line of sight again. */
@@ -75,7 +76,7 @@ public class IdleActionsGoal extends Goal {
      * @param griefing True if the entity should idly destroy blocks.
      * @param fiddling True if the entity should idly interact with blocks.
      */
-    public IdleActionsGoal( MobEntity entity, boolean griefing, boolean fiddling ) {
+    public IdleActionsGoal( Mob entity, boolean griefing, boolean fiddling ) {
         mob = entity;
         griefingEnabled = griefing;
         fiddlingEnabled = fiddling;
@@ -101,7 +102,7 @@ public class IdleActionsGoal extends Goal {
             // Try picking random blocks; the strategy used favors blocks closer to the mob
             final int rangeXZ = Config.IDLE.GENERAL.rangeHorizontal.get();
             final int rangeY = Config.IDLE.GENERAL.rangeVertical.get();
-            BlockPos.Mutable pos = new BlockPos.Mutable();
+            BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
             for( int i = 0; i < Config.IDLE.GENERAL.scanCount.get() && AIManager.canScan(); i++ ) {
                 pos.set(
                         mob.blockPosition().getX() + mob.getRandom().nextInt( rangeXZ ) - mob.getRandom().nextInt( rangeXZ ),
@@ -245,7 +246,7 @@ public class IdleActionsGoal extends Goal {
         
         if( madCreeper() ) {
             // Goal complete
-            ((CreeperEntity) mob).ignite();
+            ((Creeper) mob).ignite();
             targetBlock = null;
             return;
         }
@@ -299,9 +300,9 @@ public class IdleActionsGoal extends Goal {
     
     /** Called each tick while this AI is active, in fiddling mode, and the mob can reach its target. */
     private void performFiddling() {
-        if( mob.level instanceof ServerWorld ) { // This should always be true, but check just in case
+        if( mob.level instanceof ServerLevel) { // This should always be true, but check just in case
             // Handle special cases
-            if( targetBlock.getBlock() instanceof TNTBlock ) {
+            if( targetBlock.getBlock() instanceof TntBlock) {
                 targetBlock.getBlock().catchFire( targetBlock, mob.level, targetPos, null, mob );
                 mob.level.removeBlock( targetPos, false );
             }
@@ -310,7 +311,7 @@ public class IdleActionsGoal extends Goal {
                 // Surrounded with try/catch in case the fake player interaction causes issues
                 try {
                     SpecialAIFakePlayer fakePlayer = new SpecialAIFakePlayer( mob );
-                    targetBlock.use( mob.level, fakePlayer, Hand.MAIN_HAND, targetHitResult );
+                    targetBlock.use( mob.level, fakePlayer, InteractionHand.MAIN_HAND, targetHitResult );
                     fakePlayer.updateWrappedEntityState();
                 }
                 catch( Exception ex ) {
@@ -337,7 +338,7 @@ public class IdleActionsGoal extends Goal {
         double y = targetPos.getY() + 0.5;
         double z = targetPos.getZ() + 0.5;
         if( mob.distanceToSqr( x, y - mob.getEyeHeight(), z ) <= Config.IDLE.GENERAL.reach.get() * Config.IDLE.GENERAL.reach.get() ) {
-            Vector3d posVec = new Vector3d( mob.getX(), mob.getY() + mob.getEyeHeight(), mob.getZ() );
+            Vec3 posVec = new Vec3( mob.getX(), mob.getY() + mob.getEyeHeight(), mob.getZ() );
             
             // Ray trace to the center of the nearest x-, y-, and z-axis faces
             if( checkSight( posVec, x, y + (mob.getY() > y ? 0.5 : -0.5), z ) ||
@@ -355,14 +356,14 @@ public class IdleActionsGoal extends Goal {
      *
      * @return Returns true if there is an unobstructed view of the (possibly new) target.
      */
-    private boolean checkSight( final Vector3d posVec, double x, double y, double z ) {
-        final Vector3d targetVec = new Vector3d( x, y, z );
-        BlockRayTraceResult hit = mob.level.clip( new RayTraceContext( posVec, targetVec,
-                RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, mob ) );
+    private boolean checkSight( final Vec3 posVec, double x, double y, double z ) {
+        final Vec3 targetVec = new Vec3( x, y, z );
+        BlockHitResult hit = mob.level.clip( new ClipContext( posVec, targetVec,
+                ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mob ) );
         
-        if( RayTraceResult.Type.MISS.equals( hit.getType() ) ) {
+        if( HitResult.Type.MISS.equals( hit.getType() ) ) {
             // A miss is okay; this means the target was unobstructed, but its hitbox is smaller than a full cube - convert to a hit
-            hit = new BlockRayTraceResult( hit.getLocation(), hit.getDirection(), hit.getBlockPos(), hit.isInside() );
+            hit = new BlockHitResult( hit.getLocation(), hit.getDirection(), hit.getBlockPos(), hit.isInside() );
         }
         // If the target is hit, move forward - otherwise see if what we did hit would make a valid target
         if( targetPos.equals( hit.getBlockPos() ) ||
@@ -374,23 +375,20 @@ public class IdleActionsGoal extends Goal {
     }
     
     /** @return Called when a sight check hits blocks other than the target. Changes the target to the hit block if possible. */
-    private boolean tryTargetObstructingBlock( BlockRayTraceResult hit ) {
+    private boolean tryTargetObstructingBlock( BlockHitResult hit ) {
         BlockState block = mob.level.getBlockState( hit.getBlockPos() );
-        switch( currentActivity ) {
-            case GRIEFING:
-                return tryTargetBlockGriefing( block, hit.getBlockPos() );
-            case FIDDLING:
-                return tryTargetBlockFiddling( block, hit.getBlockPos() );
-            default:
-                return false;
-        }
+
+        return switch (currentActivity) {
+            case GRIEFING -> tryTargetBlockGriefing(block, hit.getBlockPos());
+            case FIDDLING -> tryTargetBlockFiddling(block, hit.getBlockPos());
+            default -> false;
+        };
     }
     
     /** @return Tries to target the block at a position for either the griefing or fiddling action. Returns true if successful. */
     private boolean tryTargetBlock( BlockPos pos ) {
         BlockState block = mob.level.getBlockState( pos );
-        //noinspection deprecation
-        if( block.isAir( mob.level, pos ) /* Note: this will be replaced by #isAir() in 1.17+ */ ) return false;
+        if( block.isAir()) return false;
         
         return griefingEnabled && tryTargetBlockGriefing( block, pos ) ||
                 fiddlingEnabled && fiddleDelay <= 0 && tryTargetBlockFiddling( block, pos );
@@ -424,7 +422,7 @@ public class IdleActionsGoal extends Goal {
         if( state.getMaterial().isLiquid() || Config.IDLE.GRIEFING.targetBlacklist.get().matches( state ) ) {
             return false;
         }
-        if( Config.IDLE.GRIEFING.targetLights.get() && state.getLightValue( mob.level, pos ) > 1 && !isNaturalLightBlock( state.getBlock() ) ) {
+        if( Config.IDLE.GRIEFING.targetLights.get() && state.getLightBlock( mob.level, pos ) > 1 && !isNaturalLightBlock( state.getBlock() ) ) {
             return true;
         }
         if( Config.IDLE.GRIEFING.targetBeds.get() && state.getBlock() instanceof BedBlock ) {
@@ -440,10 +438,10 @@ public class IdleActionsGoal extends Goal {
     @SuppressWarnings( "BooleanMethodIsAlwaysInverted" )
     private boolean isNaturalLightBlock( Block block ) {
         // Note: 1.17+ has Glow Berries/Lichen & Amethyst Bud/Cluster
-        return block instanceof AbstractFireBlock || block instanceof OreBlock || block instanceof RedstoneOreBlock ||
+        return block instanceof BaseFireBlock || block instanceof OreBlock || block instanceof RedStoneOreBlock ||
                 block == Blocks.SEA_PICKLE || block == Blocks.MAGMA_BLOCK || block == Blocks.SHROOMLIGHT ||
                 // Unnatural when outside the Nether
-                World.NETHER.equals( mob.level.dimension() ) && block == Blocks.GLOWSTONE;
+                Level.NETHER.equals( mob.level.dimension() ) && block == Blocks.GLOWSTONE;
     }
     
     /** @return Returns true if the specified block can be targeted for fiddling. */
@@ -456,7 +454,7 @@ public class IdleActionsGoal extends Goal {
                 (block instanceof DoorBlock || block instanceof TrapDoorBlock || block instanceof FenceGateBlock) ) {
             return true;
         }
-        if( Config.IDLE.FIDDLING.targetSwitches.get() && (block instanceof LeverBlock || block instanceof AbstractButtonBlock) ) {
+        if( Config.IDLE.FIDDLING.targetSwitches.get() && (block instanceof LeverBlock || block instanceof ButtonBlock ) ) {
             return true;
         }
         return Config.IDLE.FIDDLING.targetList.WHITELIST.get().matches( state );
@@ -464,15 +462,15 @@ public class IdleActionsGoal extends Goal {
     
     /**
      * @return Returns true if the specified block is not a container with a loot table tag.
-     * @see net.minecraft.tileentity.LockableLootTileEntity#tryLoadLootTable(CompoundNBT)
+     * @see net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity#tryLoadLootTable(CompoundTag)
      */
     private boolean isLootContainerTargetable( BlockPos pos ) {
-        TileEntity container = mob.level.getBlockEntity( pos );
+        BlockEntity container = mob.level.getBlockEntity( pos );
         if( container == null ) return true;
         
-        return !container.save( new CompoundNBT() ).contains( "LootTable", 8 );
+        return !container.save( new CompoundTag() ).contains( "LootTable", 8 );
     }
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the block. */
-    private boolean madCreeper() { return Config.IDLE.GRIEFING.madCreepers.get() && mob instanceof CreeperEntity; }
+    private boolean madCreeper() { return Config.IDLE.GRIEFING.madCreepers.get() && mob instanceof Creeper; }
 }
