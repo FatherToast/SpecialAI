@@ -55,7 +55,7 @@ public class EntityEntry {
                 final Entity entity = TYPE.create( world );
                 if( entity != null ) {
                     entityClass = entity.getClass();
-                    entity.kill();
+                    entity.remove();
                 }
             }
             catch( Exception ex ) {
