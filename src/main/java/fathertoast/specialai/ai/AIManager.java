@@ -20,7 +20,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.util.GroundPathHelper;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -242,19 +241,14 @@ public final class AIManager {
         
         // Only initialize AI on mob entities, where the base AI system is implemented
         if( event.getEntity() instanceof MobEntity ) {
-            if( ((ServerWorld) event.getEntity().level).getServer().getTickCount() > 0 ) {
-                initializeSpecialAI( (MobEntity) event.getEntity() );
-            }
-            else {
-                queue( new DelayedInit( (MobEntity) event.getEntity() ) );
-            }
+            initializeSpecialAI( (MobEntity) event.getEntity() );
         }
     }
     
     /**
      * Called when any entity is spawned in the world, including by chunk loading and dimension transition.
      *
-     * @param event The event data.
+     * @param entity The entity to initialize.
      */
     public static void initializeSpecialAI( MobEntity entity ) {
         // The tag all info for this mod is stored on for the entity
@@ -427,26 +421,4 @@ public final class AIManager {
     
     // This is a static-only helper class.
     private AIManager() {}
-    
-    /**
-     * Used to delay AI initialization for entities until the world is fully loaded.
-     * This strategy is used because messing with entities in an unloaded world can cause world load deadlock.
-     */
-    private static class DelayedInit implements Supplier<Boolean> {
-        /** The entity to initialize. */
-        private final MobEntity MOB;
-        
-        DelayedInit( MobEntity entity ) { MOB = entity; }
-        
-        /** Called to finalize the item stealing process. Equips the item to the thief and destroys the dropped item. */
-        @Override
-        public Boolean get() {
-            if( ((ServerWorld) MOB.level).getServer().getTickCount() > 0 ) {
-                initializeSpecialAI( MOB );
-                return true;
-            }
-            // Return true if the mob was removed to cancel this action
-            return !MOB.isAlive();
-        }
-    }
 }
