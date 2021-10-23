@@ -1,3 +1,6 @@
+1.16.5-1.0.2
+    - World load deadlock fixed.
+    - No longer delays AI initialization until the first server tick.
 1.16.5-1.0.1
     - Config files will now only re-save on initial startup and when values are actually changed. Improves stability.
     - Now delays AI initialization until the first server tick. Hopefully prevents world load deadlock.
