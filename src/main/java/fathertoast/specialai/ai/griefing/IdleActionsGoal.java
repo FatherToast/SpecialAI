@@ -273,20 +273,17 @@ public class IdleActionsGoal extends Goal {
         blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, world, targetPos ) * Config.IDLE.GRIEFING.breakSpeed.get();
         if( blockDamage >= 1.0F ) {
             // Block is broken
-            if (!ForgeEventFactory.onEntityDestroyBlock( mob, targetPos, world.getBlockState( targetPos ))) {
-
-                // Handle special cases
-                if (targetBlock.getBlock() == Blocks.FARMLAND) {
-                    world.setBlock(targetPos, Blocks.DIRT.defaultBlockState(), 3);
+            // Handle special cases
+            if( targetBlock.getBlock() == Blocks.FARMLAND ) {
+                world.setBlock( targetPos, Blocks.DIRT.defaultBlockState(), 3 );
+            }
+            // Otherwise, destroy the block
+            else {
+                world.destroyBlock( targetPos, Config.IDLE.GRIEFING.leaveDrops.get() );
+                if( Config.IDLE.GRIEFING.breakSound.get() ) {
+                    BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play( mob, targetPos );
                 }
-                // Otherwise, destroy the block
-                else {
-                    world.destroyBlock(targetPos, Config.IDLE.GRIEFING.leaveDrops.get());
-                    if (Config.IDLE.GRIEFING.breakSound.get()) {
-                        BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play(mob, targetPos);
-                    }
-                    BlockHelper.LevelEventMeta.playBreakBlock(mob, targetPos);
-                }
+                BlockHelper.LevelEventMeta.playBreakBlock( mob, targetPos );
             }
             
             // Play animation; goal complete

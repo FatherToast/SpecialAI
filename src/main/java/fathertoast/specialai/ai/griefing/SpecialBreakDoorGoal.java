@@ -185,14 +185,11 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, world, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get();
         if( blockDamage >= 1.0F ) {
             // Block is broken
-            if (!ForgeEventFactory.onEntityDestroyBlock( mob, doorPos, world.getBlockState(doorPos) )) {
-
-                world.destroyBlock(doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob);
-                BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play(mob, doorPos);
-                BlockHelper.LevelEventMeta.playBreakBlock(mob, doorPos);
-                if (!mob.swinging) {
-                    mob.swing(mob.getUsedItemHand());
-                }
+            world.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
+            BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play( mob, doorPos );
+            BlockHelper.LevelEventMeta.playBreakBlock( mob, doorPos );
+            if( !mob.swinging ) {
+                mob.swing( mob.getUsedItemHand() );
             }
             blockDamage = 0.0F;
             completed = true;
