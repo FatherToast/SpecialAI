@@ -12,6 +12,7 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -20,7 +21,11 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.EntityMobGriefingEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.EnumSet;
@@ -249,11 +254,12 @@ public class IdleActionsGoal extends Goal {
             targetBlock = null;
             return;
         }
+        World world = mob.level;
         
         // Play hit effects
         if( hitCounter == 0 ) {
-            SoundType sound = targetBlock.getBlock().getSoundType( targetBlock, mob.level, targetPos, mob );
-            mob.level.playSound( null, targetPos, sound.getBreakSound(), mob.getSoundSource(),
+            SoundType sound = targetBlock.getBlock().getSoundType( targetBlock, world, targetPos, mob );
+            world.playSound( null, targetPos, sound.getBreakSound(), mob.getSoundSource(),
                     sound.getVolume(), sound.getPitch() * 0.8F );
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
@@ -264,21 +270,23 @@ public class IdleActionsGoal extends Goal {
         }
         
         // Perform block breaking
-        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, mob.level, targetPos ) * Config.IDLE.GRIEFING.breakSpeed.get();
+        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, world, targetPos ) * Config.IDLE.GRIEFING.breakSpeed.get();
         if( blockDamage >= 1.0F ) {
             // Block is broken
-            
-            // Handle special cases
-            if( targetBlock.getBlock() == Blocks.FARMLAND ) {
-                mob.level.setBlock( targetPos, Blocks.DIRT.defaultBlockState(), 3 );
-            }
-            // Otherwise, destroy the block
-            else {
-                mob.level.destroyBlock( targetPos, Config.IDLE.GRIEFING.leaveDrops.get() );
-                if( Config.IDLE.GRIEFING.breakSound.get() ) {
-                    BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play( mob, targetPos );
+            if (!ForgeEventFactory.onEntityDestroyBlock( mob, targetPos, world.getBlockState( targetPos ))) {
+
+                // Handle special cases
+                if (targetBlock.getBlock() == Blocks.FARMLAND) {
+                    world.setBlock(targetPos, Blocks.DIRT.defaultBlockState(), 3);
                 }
-                BlockHelper.LevelEventMeta.playBreakBlock( mob, targetPos );
+                // Otherwise, destroy the block
+                else {
+                    world.destroyBlock(targetPos, Config.IDLE.GRIEFING.leaveDrops.get());
+                    if (Config.IDLE.GRIEFING.breakSound.get()) {
+                        BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play(mob, targetPos);
+                    }
+                    BlockHelper.LevelEventMeta.playBreakBlock(mob, targetPos);
+                }
             }
             
             // Play animation; goal complete

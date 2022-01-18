@@ -13,6 +13,8 @@ import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.GroundPathHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.World;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.function.Predicate;
 
@@ -177,16 +179,20 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         if( ++hitCounter >= 16 ) {
             hitCounter = 0;
         }
+        World world = mob.level;
         
         // Perform block breaking
-        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, mob.level, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get();
+        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, world, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get();
         if( blockDamage >= 1.0F ) {
             // Block is broken
-            mob.level.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
-            BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play( mob, doorPos );
-            BlockHelper.LevelEventMeta.playBreakBlock( mob, doorPos );
-            if( !mob.swinging ) {
-                mob.swing( mob.getUsedItemHand() );
+            if (!ForgeEventFactory.onEntityDestroyBlock( mob, doorPos, world.getBlockState(doorPos) )) {
+
+                world.destroyBlock(doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob);
+                BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play(mob, doorPos);
+                BlockHelper.LevelEventMeta.playBreakBlock(mob, doorPos);
+                if (!mob.swinging) {
+                    mob.swing(mob.getUsedItemHand());
+                }
             }
             blockDamage = 0.0F;
             completed = true;
@@ -195,7 +201,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         // Update block damage
         final int damage = (int) Math.ceil( blockDamage * 10.0F ) - 1;
         if( damage != lastBlockDamage ) {
-            mob.level.destroyBlockProgress( mob.getId(), doorPos, damage );
+            world.destroyBlockProgress( mob.getId(), doorPos, damage );
             lastBlockDamage = damage;
         }
     }
