@@ -257,7 +257,7 @@ public final class AIManager {
         // Dodge arrows
         if( !tag.contains( TAG_DODGE_ARROWS, NBTHelper.ID_NUMERICAL ) ) {
             final double[] dodgeValues = Config.GENERAL.REACTIONS.dodgeArrowsList.getValues( entity );
-            tag.putDouble( TAG_DODGE_ARROWS, entity.getRandom().nextDouble() < dodgeValues[0] ? dodgeValues[1] : 0.0 );
+            tag.putDouble( TAG_DODGE_ARROWS, dodgeValues != null && entity.getRandom().nextDouble() < dodgeValues[0] ? dodgeValues[1] : 0.0 );
         }
         if( tag.getDouble( TAG_DODGE_ARROWS ) > 0.0F ) {
             addDodgeArrowsAI( entity, tag.getDouble( TAG_DODGE_ARROWS ) );
@@ -420,5 +420,5 @@ public final class AIManager {
     }
     
     // This is a static-only helper class.
-    private AIManager() {}
+    private AIManager() { }
 }
