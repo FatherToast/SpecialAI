@@ -46,7 +46,7 @@ public final class GameEventHandler {
      * @param event The event data.
      */
     @SubscribeEvent( priority = EventPriority.NORMAL )
-    public void onLivingDeath( LivingDeathEvent event ) {
+    public static void onLivingDeath( LivingDeathEvent event ) {
         AIManager.onLivingDeath( event );
     }
 }
