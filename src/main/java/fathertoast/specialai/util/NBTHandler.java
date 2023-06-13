@@ -8,7 +8,7 @@ import net.minecraft.nbt.*;
  * Contains helper methods and info used for NBT data.
  */
 @SuppressWarnings( "unused" )
-public final class NBTHelper {
+public final class NBTHandler {
     /** Special 'id' that represents all numerical tag types (byte, short, int, long, float, or double). */
     public static final byte ID_NUMERICAL = 99;
     /** Id for the Byte numerical tag type. */
@@ -53,7 +53,7 @@ public final class NBTHelper {
     
     /** @return Gets a compound tag within the given parent tag; if the compound didn't exist, this will generate it. */
     public static CompoundNBT getOrCreateTag( CompoundNBT tag, String key ) {
-        if( !tag.contains( key, NBTHelper.ID_COMPOUND ) ) {
+        if( !tag.contains( key, NBTHandler.ID_COMPOUND ) ) {
             tag.put( key, new CompoundNBT() );
         }
         return tag.getCompound( key );
@@ -69,5 +69,5 @@ public final class NBTHelper {
     }
     
     // This is a static-only helper class.
-    private NBTHelper() {}
+    private NBTHandler() {}
 }

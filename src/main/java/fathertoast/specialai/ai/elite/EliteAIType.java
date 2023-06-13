@@ -1,9 +1,9 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.crust.api.config.common.value.WeightedList;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
-import fathertoast.specialai.config.util.WeightedList;
-import fathertoast.specialai.util.NBTHelper;
+import fathertoast.specialai.util.NBTHandler;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.MobEntity;
@@ -377,15 +377,15 @@ public enum EliteAIType implements WeightedList.Value {
     
     /** @return Returns true if this AI type is saved to the tag. */
     public final boolean isSaved( CompoundNBT aiTag ) {
-        if( aiTag.contains( KEY, NBTHelper.ID_NUMERICAL ) ) return aiTag.getBoolean( KEY );
+        if( aiTag.contains( KEY, NBTHandler.ID_NUMERICAL ) ) return aiTag.getBoolean( KEY );
         return false;
     }
     
     /** @return True if the nbt compound used to store any additional data used by the AI exists. */
-    public final boolean hasTag( CompoundNBT aiTag ) { return aiTag.contains( KEY + TAG_SUFFIX, NBTHelper.ID_COMPOUND ); }
+    public final boolean hasTag( CompoundNBT aiTag ) { return aiTag.contains( KEY + TAG_SUFFIX, NBTHandler.ID_COMPOUND ); }
     
     /** @return Gets or creates the nbt compound used to store any additional data used by the AI. */
-    public final CompoundNBT getTag( CompoundNBT aiTag ) { return NBTHelper.getOrCreateTag( aiTag, KEY + TAG_SUFFIX ); }
+    public final CompoundNBT getTag( CompoundNBT aiTag ) { return NBTHandler.getOrCreateTag( aiTag, KEY + TAG_SUFFIX ); }
     
     /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
     public void initialize( MobEntity entity, CompoundNBT aiTag ) {}

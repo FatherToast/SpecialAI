@@ -1,14 +1,14 @@
 package fathertoast.specialai.ai;
 
 
+import fathertoast.crust.api.config.common.ConfigUtil;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIHelper;
 import fathertoast.specialai.ai.griefing.EatBreedingItemGoal;
 import fathertoast.specialai.ai.griefing.IdleActionsGoal;
 import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
-import fathertoast.specialai.config.file.ToastConfigFormat;
-import fathertoast.specialai.util.NBTHelper;
+import fathertoast.specialai.util.NBTHandler;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -77,7 +77,7 @@ public final class AIManager {
             scansLeft--;
             if( scansLeft == 0 ) {
                 SpecialAI.LOG.warn( "Maximum scans reached. If you are getting spammed by this under normal conditions, " +
-                        "you should change your scan settings in {}{}.", Config.IDLE.SPEC.NAME, ToastConfigFormat.FILE_EXT );
+                        "you should change your scan settings in {}.", ConfigUtil.toRelativePath( Config.IDLE.SPEC.getFile() ) );
             }
             return true;
         }
@@ -257,10 +257,10 @@ public final class AIManager {
      */
     public static void initializeSpecialAI( MobEntity entity ) {
         // The tag all info for this mod is stored on for the entity
-        final CompoundNBT tag = NBTHelper.getModTag( entity );
+        final CompoundNBT tag = NBTHandler.getModTag( entity );
         
         // Dodge arrows
-        if( !tag.contains( TAG_DODGE_ARROWS, NBTHelper.ID_NUMERICAL ) ) {
+        if( !tag.contains( TAG_DODGE_ARROWS, NBTHandler.ID_NUMERICAL ) ) {
             final double[] dodgeValues = Config.GENERAL.REACTIONS.dodgeArrowsList.getValues( entity );
             tag.putDouble( TAG_DODGE_ARROWS, dodgeValues != null && entity.getRandom().nextDouble() < dodgeValues[0] ? dodgeValues[1] : 0.0 );
         }
@@ -273,7 +273,7 @@ public final class AIManager {
             boolean needsAttackAI = false;
             
             // Avoid explosions
-            if( !tag.contains( TAG_AVOID_EXPLOSIONS, NBTHelper.ID_NUMERICAL ) ) {
+            if( !tag.contains( TAG_AVOID_EXPLOSIONS, NBTHandler.ID_NUMERICAL ) ) {
                 tag.putDouble( TAG_AVOID_EXPLOSIONS, Config.GENERAL.REACTIONS.avoidExplosionsList.getValue( entity ) );
             }
             if( tag.getDouble( TAG_AVOID_EXPLOSIONS ) > 0.0 ) {
@@ -292,7 +292,7 @@ public final class AIManager {
             }
             
             // Depacify
-            if( !tag.contains( TAG_DEPACIFY, NBTHelper.ID_NUMERICAL ) ) {
+            if( !tag.contains( TAG_DEPACIFY, NBTHandler.ID_NUMERICAL ) ) {
                 tag.putBoolean( TAG_DEPACIFY, Config.GENERAL.ANIMALS.depacifyList.rollChance( entity ) );
             }
             if( tag.getBoolean( TAG_DEPACIFY ) ) {
@@ -301,7 +301,7 @@ public final class AIManager {
             }
             
             // Aggressive
-            if( !tag.contains( TAG_AGGRESSIVE, NBTHelper.ID_NUMERICAL ) ) {
+            if( !tag.contains( TAG_AGGRESSIVE, NBTHandler.ID_NUMERICAL ) ) {
                 tag.putBoolean( TAG_AGGRESSIVE, Config.GENERAL.ANIMALS.aggressiveList.rollChance( entity ) );
             }
             if( tag.getBoolean( TAG_AGGRESSIVE ) ) {
@@ -315,7 +315,7 @@ public final class AIManager {
         }
         
         // Call for help
-        if( !tag.contains( TAG_CALL_FOR_HELP, NBTHelper.ID_NUMERICAL ) ) {
+        if( !tag.contains( TAG_CALL_FOR_HELP, NBTHandler.ID_NUMERICAL ) ) {
             tag.putBoolean( TAG_CALL_FOR_HELP, Config.GENERAL.REACTIONS.callForHelpList.rollChance( entity ) );
         }
         if( tag.getBoolean( TAG_CALL_FOR_HELP ) ) {
@@ -324,7 +324,7 @@ public final class AIManager {
         
         // Rider
         final boolean small = Config.GENERAL.JOCKEYS.riderWhitelistSmall.get().contains( entity );
-        if( !tag.contains( TAG_RIDER, NBTHelper.ID_NUMERICAL ) ) {
+        if( !tag.contains( TAG_RIDER, NBTHandler.ID_NUMERICAL ) ) {
             final boolean makeRider;
             if( Config.GENERAL.JOCKEYS.riderBlacklist.get().contains( entity ) ) {
                 makeRider = false;
@@ -343,10 +343,10 @@ public final class AIManager {
         }
         
         // Passive griefing
-        if( !tag.contains( TAG_GRIEF, NBTHelper.ID_NUMERICAL ) ) {
+        if( !tag.contains( TAG_GRIEF, NBTHandler.ID_NUMERICAL ) ) {
             tag.putBoolean( TAG_GRIEF, Config.IDLE.GRIEFING.entityList.rollChance( entity ) );
         }
-        if( !tag.contains( TAG_FIDDLE, NBTHelper.ID_NUMERICAL ) ) {
+        if( !tag.contains( TAG_FIDDLE, NBTHandler.ID_NUMERICAL ) ) {
             tag.putBoolean( TAG_FIDDLE, Config.IDLE.FIDDLING.entityList.rollChance( entity ) );
         }
         addIdleAI( entity, tag.getBoolean( TAG_GRIEF ), tag.getBoolean( TAG_FIDDLE ) );
@@ -359,7 +359,7 @@ public final class AIManager {
          */
         
         // Door-breaking AI
-        if( !tag.contains( TAG_DOOR_BREAK, NBTHelper.ID_NUMERICAL ) ) {
+        if( !tag.contains( TAG_DOOR_BREAK, NBTHandler.ID_NUMERICAL ) ) {
             tag.putBoolean( TAG_DOOR_BREAK, Config.GENERAL.DOOR_BREAKING.entityList.rollChance( entity ) );
         }
         if( tag.getBoolean( TAG_DOOR_BREAK ) ) {
@@ -368,8 +368,8 @@ public final class AIManager {
         
         // Elite AI
         final CompoundNBT eliteTag;
-        if( !tag.contains( TAG_ELITE_AI, NBTHelper.ID_COMPOUND ) ) {
-            eliteTag = NBTHelper.getOrCreateTag( tag, TAG_ELITE_AI );
+        if( !tag.contains( TAG_ELITE_AI, NBTHandler.ID_COMPOUND ) ) {
+            eliteTag = NBTHandler.getOrCreateTag( tag, TAG_ELITE_AI );
             
             // Apply new AI(s), if needed
             final double[] chances = Config.ELITE_AI.GENERAL.entityList.getValues( entity );
@@ -382,7 +382,7 @@ public final class AIManager {
             }
             
             // Mark this entity to init, if not already forced
-            if( !tag.contains( TAG_FORCE_INIT, NBTHelper.ID_NUMERICAL ) ) {
+            if( !tag.contains( TAG_FORCE_INIT, NBTHandler.ID_NUMERICAL ) ) {
                 tag.putBoolean( TAG_FORCE_INIT, true );
             }
         }

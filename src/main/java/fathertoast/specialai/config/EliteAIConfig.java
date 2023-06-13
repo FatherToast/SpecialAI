@@ -1,20 +1,23 @@
 package fathertoast.specialai.config;
 
+import fathertoast.crust.api.config.common.AbstractConfigCategory;
+import fathertoast.crust.api.config.common.AbstractConfigFile;
+import fathertoast.crust.api.config.common.ConfigManager;
+import fathertoast.crust.api.config.common.field.*;
+import fathertoast.crust.api.config.common.file.TomlHelper;
+import fathertoast.crust.api.config.common.value.EntityEntry;
+import fathertoast.crust.api.config.common.value.EntityList;
+import fathertoast.crust.api.config.common.value.WeightedList;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
-import fathertoast.specialai.config.field.*;
-import fathertoast.specialai.config.file.ToastConfigSpec;
-import fathertoast.specialai.config.file.TomlHelper;
-import fathertoast.specialai.config.util.*;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EliteAIConfig extends Config.AbstractConfig {
+public class EliteAIConfig extends AbstractConfigFile {
     
     public final EliteGeneral GENERAL;
     
@@ -30,8 +33,8 @@ public class EliteAIConfig extends Config.AbstractConfig {
     public final ThrowEnemy THROW_ENEMY;
     
     /** Builds the config spec that should be used for this config. */
-    EliteAIConfig( File dir, String fileName ) {
-        super( dir, fileName,
+    EliteAIConfig( ConfigManager cfgManager, String cfgName ) {
+        super( cfgManager, cfgName,
                 "This config contains options for elite AI patterns. Elite AI patterns bestow stat boosts, specific",
                 "equipment, and allow these 'elite' mobs to perform actions in combat that can pose a great threat.",
                 "See the appendix at the bottom of this file for more information on the elite AI patterns available.",
@@ -42,17 +45,17 @@ public class EliteAIConfig extends Config.AbstractConfig {
         SPEC.newLine();
         SPEC.describeEntityList();
         
-        GENERAL = new EliteGeneral( SPEC );
-        LEAP = new Leap( SPEC );
-        JUMP = new Jump( SPEC );
-        SPRINT = new Sprint( SPEC );
-        BARRAGE = new Barrage( SPEC );
-        CHARGE = new Charge( SPEC );
-        THIEF = new Thief( SPEC );
-        SHAMAN = new Shaman( SPEC );
-        SPAWNER = new Spawner( SPEC );
-        THROW_ALLY = new ThrowAlly( SPEC );
-        THROW_ENEMY = new ThrowEnemy( SPEC );
+        GENERAL = new EliteGeneral( this );
+        LEAP = new Leap( this );
+        JUMP = new Jump( this );
+        SPRINT = new Sprint( this );
+        BARRAGE = new Barrage( this );
+        CHARGE = new Charge( this );
+        THIEF = new Thief( this );
+        SHAMAN = new Shaman( this );
+        SPAWNER = new Spawner( this );
+        THROW_ALLY = new ThrowAlly( this );
+        THROW_ENEMY = new ThrowEnemy( this );
         
         // Print description for each elite AI pattern
         SPEC.decreaseIndent();
@@ -74,7 +77,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
         }
     }
     
-    public static class EliteGeneral extends Config.AbstractCategory {
+    public static class EliteGeneral extends AbstractConfigCategory<EliteAIConfig> {
         
         public final EntityListField.Combined entityList;
         
@@ -84,7 +87,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final BooleanField enableAttributeMods;
         public final BooleanField enableEquipmentReplace;
         
-        EliteGeneral( ToastConfigSpec parent ) {
+        EliteGeneral( EliteAIConfig parent ) {
             super( parent, "general",
                     "Options for customizing the elite AI system and options that affect all elite AI patterns." );
             
@@ -135,15 +138,15 @@ public class EliteAIConfig extends Config.AbstractConfig {
         
         public final IntField.RandomRange cooldown;
         
-        public final SpeedField jumpSpeedForward;
-        public final SpeedField jumpSpeedUpward;
+        public final ScaledDoubleField.Rate jumpSpeedForward;
+        public final ScaledDoubleField.Rate jumpSpeedUpward;
         
-        Leap( ToastConfigSpec parent ) {
+        Leap( EliteAIConfig parent ) {
             super( parent, EliteAIType.LEAP, true, new AttributeMods().knockback( 1.0 ).speed( 0.1 ) );
             
-            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 2.0, DoubleField.Range.POSITIVE,
+            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 2.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
-            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 6.0, DoubleField.Range.POSITIVE ) );
+            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 6.0, DoubleField.Range.NON_NEGATIVE ) );
             
             SPEC.newLine();
             
@@ -156,9 +159,9 @@ public class EliteAIConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            jumpSpeedForward = SPEC.define( new SpeedField( "jump_speed.forward", 16.0,
+            jumpSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.forward", 16.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the entity in its target's direction when this AI activates, in blocks per second (m/s)." ) );
-            jumpSpeedUpward = SPEC.define( new SpeedField( "jump_speed.upward", 8.0,
+            jumpSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.upward", 8.0, DoubleField.Range.ANY,
                     "The vertical speed given to the entity when this AI activates, in blocks per second (m/s).",
                     "For reference, normal jumping speed is 8.4 m/s." ) );
         }
@@ -171,18 +174,18 @@ public class EliteAIConfig extends Config.AbstractConfig {
         
         public final IntField.RandomRange cooldown;
         
-        public final SpeedField jumpSpeedForward;
-        public final SpeedField jumpSpeedUpward;
+        public final ScaledDoubleField.Rate jumpSpeedForward;
+        public final ScaledDoubleField.Rate jumpSpeedUpward;
         
         public final DoubleField featherBootsDropChance;
         public final IntField featherBootsEnchant;
         
-        Jump( ToastConfigSpec parent ) {
+        Jump( EliteAIConfig parent ) {
             super( parent, EliteAIType.JUMP, false );
             
-            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 6.0, DoubleField.Range.POSITIVE,
+            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 6.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
-            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 12.0, DoubleField.Range.POSITIVE ) );
+            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 12.0, DoubleField.Range.NON_NEGATIVE ) );
             
             SPEC.newLine();
             
@@ -195,9 +198,9 @@ public class EliteAIConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            jumpSpeedForward = SPEC.define( new SpeedField( "jump_speed.forward", 28.0,
+            jumpSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.forward", 28.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the entity in its target's direction when this AI activates, in blocks per second (m/s)." ) );
-            jumpSpeedUpward = SPEC.define( new SpeedField( "jump_speed.upward", 20.0,
+            jumpSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.upward", 20.0, DoubleField.Range.ANY,
                     "The vertical speed given to the entity when this AI activates, in blocks per second (m/s).",
                     "For reference, normal jumping speed is 8.4 m/s." ) );
             
@@ -223,29 +226,29 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final DoubleField runningBootsDropChance;
         public final DoubleField runningBootsModifier;
         
-        Sprint( ToastConfigSpec parent ) {
+        Sprint( EliteAIConfig parent ) {
             super( parent, EliteAIType.SPRINT, false );
             
-            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 12.0, DoubleField.Range.POSITIVE,
+            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 12.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
             
             SPEC.newLine();
             
-            runSpeed = SPEC.define( new DoubleField( "run_speed", 1.7, DoubleField.Range.POSITIVE,
+            runSpeed = SPEC.define( new DoubleField( "run_speed", 1.7, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while this AI is active. For reference, sprint-jumping gives players about a 1.65 speed multi." ) );
             
             SPEC.newLine();
             
-            endRangeSqrMin = SPEC.define( new SqrDoubleField( "end_range.min", 3.0, DoubleField.Range.POSITIVE,
+            endRangeSqrMin = SPEC.define( new SqrDoubleField( "end_range.min", 3.0, DoubleField.Range.NON_NEGATIVE,
                     "This AI will deactivate when the entity is between the minimum and maximum distance from its target, in blocks (meters)." ) );
-            endRangeSqrMax = SPEC.define( new SqrDoubleField( "end_range.max", 6.0, DoubleField.Range.POSITIVE ) );
+            endRangeSqrMax = SPEC.define( new SqrDoubleField( "end_range.max", 6.0, DoubleField.Range.NON_NEGATIVE ) );
             
             SPEC.newLine();
             
             runningBootsDropChance = SPEC.define( new DoubleField( "running_boots.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
                     "The drop chance for Running Boots (0 to 1). The item will drop damaged randomly, like normal equipment.",
                     "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
-            runningBootsModifier = SPEC.define( new DoubleField( "running_boots.modifier", 0.15,
+            runningBootsModifier = SPEC.define( new DoubleField( "running_boots.modifier", 0.15, DoubleField.Range.ANY,
                     "The movement speed modifier on Running Boots (uses 'multiply base' operation). 0 disables the modifier." ) );
         }
     }
@@ -266,12 +269,12 @@ public class EliteAIConfig extends Config.AbstractConfig {
         
         public final DoubleField dispenserDropChance;
         
-        Barrage( ToastConfigSpec parent ) {
+        Barrage( EliteAIConfig parent ) {
             super( parent, EliteAIType.BARRAGE, false, new AttributeMods().addedMaxHealth( 20.0 ) );
             
-            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 5.0, DoubleField.Range.POSITIVE,
+            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 5.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
-            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 16.0, DoubleField.Range.POSITIVE ) );
+            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 16.0, DoubleField.Range.NON_NEGATIVE ) );
             
             SPEC.newLine();
             
@@ -287,7 +290,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
             arrowDamage = SPEC.define( new DoubleField( "arrow_damage", 3.0, 0.25, Double.POSITIVE_INFINITY,
                     "The base damage dealt by arrows. Note this varies \u00b10.25, gains +0.11 per difficulty level,",
                     "and final damage is scaled by total velocity (this is the normal behavior for monster-fired arrows)." ) );
-            arrowVariance = SPEC.define( new DoubleField( "arrow_variance", 20.0, DoubleField.Range.POSITIVE,
+            arrowVariance = SPEC.define( new DoubleField( "arrow_variance", 20.0, DoubleField.Range.NON_NEGATIVE,
                     "The direction variance for fired arrows. The higher this value, the less accurate arrows are." ) );
             shotTime = SPEC.define( new IntField( "shot_time", 5, IntField.Range.POSITIVE,
                     "The time between each arrow shot during the barrage (20 ticks = 1 second)." ) );
@@ -313,8 +316,8 @@ public class EliteAIConfig extends Config.AbstractConfig {
         
         public final IntField.RandomRange cooldown;
         
-        public final SpeedField chargingSpeed;
-        public final SpeedField knockbackSpeed;
+        public final ScaledDoubleField.Rate chargingSpeed;
+        public final ScaledDoubleField.Rate knockbackSpeed;
         public final DoubleField selfDamage;
         
         public final IntField chargeUpDuration;
@@ -325,12 +328,12 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final IntField chargersHelmetEnchantLevel;
         public final BooleanField chargersHelmetAllowTreasure;
         
-        Charge( ToastConfigSpec parent ) {
+        Charge( EliteAIConfig parent ) {
             super( parent, EliteAIType.CHARGE, false, new AttributeMods().addedMaxHealth( 20.0 ).knockbackResist( 0.5 ) );
             
-            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 6.0, DoubleField.Range.POSITIVE,
+            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 6.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
-            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 16.0, DoubleField.Range.POSITIVE ) );
+            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 16.0, DoubleField.Range.NON_NEGATIVE ) );
             
             SPEC.newLine();
             
@@ -343,11 +346,11 @@ public class EliteAIConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            chargingSpeed = SPEC.define( new SpeedField( "charging_speed", 28.0, DoubleField.Range.POSITIVE,
+            chargingSpeed = SPEC.define( new ScaledDoubleField.Rate( "charging_speed", 28.0, DoubleField.Range.NON_NEGATIVE,
                     "The horizontal speed given to the entity in its target's direction while charging, in blocks per second (m/s)." ) );
-            knockbackSpeed = SPEC.define( new SpeedField( "knockback_speed", 120.0, DoubleField.Range.POSITIVE,
+            knockbackSpeed = SPEC.define( new ScaledDoubleField.Rate( "knockback_speed", 120.0, DoubleField.Range.NON_NEGATIVE,
                     "The horizontal speed given to the target on hit while charging, in blocks per second (m/s)." ) );
-            selfDamage = SPEC.define( new DoubleField( "self_damage", 5.0, DoubleField.Range.POSITIVE,
+            selfDamage = SPEC.define( new DoubleField( "self_damage", 5.0, DoubleField.Range.NON_NEGATIVE,
                     "The horizontal speed given to the entity in its target's direction while charging, in blocks per second (m/s)." ) );
             
             SPEC.newLine();
@@ -387,20 +390,20 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final DoubleField thiefCapDropChance;
         public final DoubleField thiefCapModifier;
         
-        Thief( ToastConfigSpec parent ) {
+        Thief( EliteAIConfig parent ) {
             super( parent, EliteAIType.THIEF, false, new AttributeMods().speed( 0.1 ) );
             
-            moveSpeed = SPEC.define( new DoubleField( "move_speed", 1.2, DoubleField.Range.POSITIVE,
+            moveSpeed = SPEC.define( new DoubleField( "move_speed", 1.2, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while moving to the target player to steal an item." ) );
             
             SPEC.newLine();
             
-            avoidRange = SPEC.define( new DoubleField( "avoid_range", 16.0, DoubleField.Range.POSITIVE,
+            avoidRange = SPEC.define( new DoubleField( "avoid_range", 16.0, DoubleField.Range.NON_NEGATIVE,
                     "The maximum range to avoid players in.",
                     "Note that all changes to the avoidance behavior require reload to take effect on existing entities." ) );
-            avoidWalkSpeed = SPEC.define( new DoubleField( "avoid_speed.walk", 1.0, DoubleField.Range.POSITIVE,
+            avoidWalkSpeed = SPEC.define( new DoubleField( "avoid_speed.walk", 1.0, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while avoiding far away players (" + SpecialAI.GREATER_OR_EQUAL + " 7 blocks away)." ) );
-            avoidRunSpeed = SPEC.define( new DoubleField( "avoid_speed.run", 1.2, DoubleField.Range.POSITIVE,
+            avoidRunSpeed = SPEC.define( new DoubleField( "avoid_speed.run", 1.2, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while avoiding nearby players (< 7 blocks away)." ) );
             
             SPEC.newLine();
@@ -409,7 +412,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
                     "The inventory slots that can be stolen from by entities with this AI.",
                     "For this purpose, the armor inventory is your head, chest, legs, and feet slots, the main inventory is",
                     "the big 3x9 inventory space, and the hotbar inventory is everything else (bottom 9 + offhand slots)." ) );
-            stealDamage = SPEC.define( new DoubleField( "steal_damage", 1.0, DoubleField.Range.POSITIVE,
+            stealDamage = SPEC.define( new DoubleField( "steal_damage", 1.0, DoubleField.Range.NON_NEGATIVE,
                     "The damage dealt to the player when stealing an item." ) );
             invisibilityDuration = SPEC.define( new IntField( "invisibility_duration", 60, IntField.Range.NON_NEGATIVE,
                     "The time the entity turns invisible for after stealing an item (20 ticks = 1 second)." ) );
@@ -422,7 +425,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
             thiefCapDropChance = SPEC.define( new DoubleField( "thief_helmet.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
                     "The drop chance for Thief's Caps (0 to 1). The item will drop damaged randomly, like normal equipment.",
                     "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
-            thiefCapModifier = SPEC.define( new DoubleField( "thief_helmet.modifier", 0.15,
+            thiefCapModifier = SPEC.define( new DoubleField( "thief_helmet.modifier", 0.15, DoubleField.Range.ANY,
                     "The movement speed modifier on Thief's Caps (uses 'multiply base' operation). 0 disables the modifier." ) );
         }
     }
@@ -443,12 +446,12 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final DoubleField boneDropChance;
         public final DoubleField jackOLanternDropChance;
         
-        Shaman( ToastConfigSpec parent ) {
+        Shaman( EliteAIConfig parent ) {
             super( parent, EliteAIType.SHAMAN, false );
             
-            auraRangeSqr = SPEC.define( new SqrDoubleField( "aura_range", 16.0, DoubleField.Range.POSITIVE,
+            auraRangeSqr = SPEC.define( new SqrDoubleField( "aura_range", 16.0, DoubleField.Range.NON_NEGATIVE,
                     "The range for the entity's aura (in blocks), which pulses healing and effects every two seconds to allies." ) );
-            healAmount = SPEC.define( new DoubleField( "heal_amount", 2.0, DoubleField.Range.POSITIVE,
+            healAmount = SPEC.define( new DoubleField( "heal_amount", 2.0, DoubleField.Range.NON_NEGATIVE,
                     "The amount of health restored with each aura pulse (in half-hearts)." ) );
             extinguish = SPEC.define( new BooleanField( "extinguish", true,
                     "If true, the entity will extinguish burning with each aura pulse." ) );
@@ -490,7 +493,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
         
         public final BooleanField spawnerHelmet;
         
-        Spawner( ToastConfigSpec parent ) {
+        Spawner( EliteAIConfig parent ) {
             super( parent, EliteAIType.SPAWNER, false, new AttributeMods().addedMaxHealth( 20.0 ).knockbackResist( 0.5 )
                     .armor( 10.0 ).armorToughness( 10.0 ).speed( -0.3 ) );
             
@@ -541,19 +544,19 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final DoubleField speedToAlly;
         public final DoubleField speedToTarget;
         
-        public final SpeedField throwSpeedForward;
-        public final SpeedField throwSpeedUpward;
+        public final ScaledDoubleField.Rate throwSpeedForward;
+        public final ScaledDoubleField.Rate throwSpeedUpward;
         
-        ThrowAlly( ToastConfigSpec parent ) {
+        ThrowAlly( EliteAIConfig parent ) {
             super( parent, EliteAIType.THROW_ALLY, false, new AttributeMods().speed( 0.1 ) );
             
-            throwRangeSqrMin = SPEC.define( new SqrDoubleField( "throw_range.min", 3.0, DoubleField.Range.POSITIVE,
+            throwRangeSqrMin = SPEC.define( new SqrDoubleField( "throw_range.min", 3.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
-            throwRangeSqrMax = SPEC.define( new SqrDoubleField( "throw_range.max", 10.0, DoubleField.Range.POSITIVE ) );
+            throwRangeSqrMax = SPEC.define( new SqrDoubleField( "throw_range.max", 10.0, DoubleField.Range.NON_NEGATIVE ) );
             
             SPEC.newLine();
             
-            allyRangeSqrMin = SPEC.define( new SqrDoubleField( "ally_range.min", 6.0, DoubleField.Range.POSITIVE,
+            allyRangeSqrMin = SPEC.define( new SqrDoubleField( "ally_range.min", 6.0, DoubleField.Range.NON_NEGATIVE,
                     "This AI will only attempt to throw allies farther than this distance from the target, in blocks (meters)." ) );
             
             SPEC.newLine();
@@ -567,16 +570,16 @@ public class EliteAIConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            speedToAlly = SPEC.define( new DoubleField( "speed_to_ally", 1.3, DoubleField.Range.POSITIVE,
+            speedToAlly = SPEC.define( new DoubleField( "speed_to_ally", 1.3, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while moving to pick up the ally to throw." ) );
-            speedToTarget = SPEC.define( new DoubleField( "speed_to_target", 1.1, DoubleField.Range.POSITIVE,
+            speedToTarget = SPEC.define( new DoubleField( "speed_to_target", 1.1, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while moving to the target (carrying the ally to throw)." ) );
             
             SPEC.newLine();
             
-            throwSpeedForward = SPEC.define( new SpeedField( "throw_speed.forward", 20.0,
+            throwSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.forward", 20.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the thrown entity in its target's direction, in blocks per second (m/s)." ) );
-            throwSpeedUpward = SPEC.define( new SpeedField( "throw_speed.upward", 8.4,
+            throwSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.upward", 8.4, DoubleField.Range.ANY,
                     "The vertical speed given to the thrown entity, in blocks per second (m/s).",
                     "For reference, normal jumping speed is 8.4 m/s." ) );
         }
@@ -595,19 +598,19 @@ public class EliteAIConfig extends Config.AbstractConfig {
         
         public final IntField.RandomRange reGrabs;
         
-        public final SpeedField throwSpeedForward;
-        public final SpeedField throwSpeedUpward;
+        public final ScaledDoubleField.Rate throwSpeedForward;
+        public final ScaledDoubleField.Rate throwSpeedUpward;
         
         public final DoubleField strengthHelmetDropChance;
         public final DoubleField strengthHelmetModifier;
         
-        ThrowEnemy( ToastConfigSpec parent ) {
+        ThrowEnemy( EliteAIConfig parent ) {
             super( parent, EliteAIType.THROW_ENEMY, false, new AttributeMods().knockbackResist( 0.5 ) );
             
-            throwRangeSqrMin = SPEC.define( new SqrDoubleField( "throw_range.min", 3.0, DoubleField.Range.POSITIVE,
+            throwRangeSqrMin = SPEC.define( new SqrDoubleField( "throw_range.min", 3.0, DoubleField.Range.NON_NEGATIVE,
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
-            throwRangeSqrMax = SPEC.define( new SqrDoubleField( "throw_range.max", 10.0, DoubleField.Range.POSITIVE ) );
-            carryRange = SPEC.define( new DoubleField( "carry_range", 8.0, DoubleField.Range.POSITIVE,
+            throwRangeSqrMax = SPEC.define( new SqrDoubleField( "throw_range.max", 10.0, DoubleField.Range.NON_NEGATIVE ) );
+            carryRange = SPEC.define( new DoubleField( "carry_range", 8.0, DoubleField.Range.NON_NEGATIVE,
                     "The maximum range the entity will plan on carrying its target before throwing.",
                     "Note that this only affects the search radius when finding allies to throw to." ) );
             
@@ -622,9 +625,9 @@ public class EliteAIConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            speedToTarget = SPEC.define( new DoubleField( "speed_to_target", 1.3, DoubleField.Range.POSITIVE,
+            speedToTarget = SPEC.define( new DoubleField( "speed_to_target", 1.3, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while moving to pick up the enemy/player to throw." ) );
-            speedToAlly = SPEC.define( new DoubleField( "speed_to_ally", 1.1, DoubleField.Range.POSITIVE,
+            speedToAlly = SPEC.define( new DoubleField( "speed_to_ally", 1.1, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while moving to allies (carrying the enemy/player to throw)." ) );
             
             SPEC.newLine();
@@ -639,9 +642,9 @@ public class EliteAIConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            throwSpeedForward = SPEC.define( new SpeedField( "throw_speed.forward", 20.0,
+            throwSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.forward", 20.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the thrown entity in its target's direction, in blocks per second (m/s)." ) );
-            throwSpeedUpward = SPEC.define( new SpeedField( "throw_speed.upward", 8.4,
+            throwSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.upward", 8.4, DoubleField.Range.ANY,
                     "The vertical speed given to the thrown entity, in blocks per second (m/s).",
                     "For reference, normal jumping speed is 8.4 m/s." ) );
             
@@ -650,7 +653,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
             strengthHelmetDropChance = SPEC.define( new DoubleField( "helmet_of_strength.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
                     "The drop chance for Helmets of Strength (0 to 1). The item will drop damaged randomly, like normal equipment.",
                     "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
-            strengthHelmetModifier = SPEC.define( new DoubleField( "helmet_of_strength.modifier", 1.0,
+            strengthHelmetModifier = SPEC.define( new DoubleField( "helmet_of_strength.modifier", 1.0, DoubleField.Range.ANY,
                     "The attack damage modifier on Helmets of Strength (uses 'addition' operation). 0 disables the modifier." ) );
         }
     }
@@ -658,7 +661,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
     /**
      * The category extended by each elite AI pattern's category to provide some common structure.
      */
-    public abstract static class EliteAICategory extends Config.AbstractCategory {
+    public abstract static class EliteAICategory extends AbstractConfigCategory<EliteAIConfig> {
         
         public final BooleanField preferMelee;
         
@@ -674,12 +677,12 @@ public class EliteAIConfig extends Config.AbstractConfig {
         public final DoubleField speed;
         
         /** Creates a category that has no attribute modifiers by default. */
-        EliteAICategory( ToastConfigSpec parent, EliteAIType ai, boolean defaultPreferMelee ) {
+        EliteAICategory( EliteAIConfig parent, EliteAIType ai, boolean defaultPreferMelee ) {
             this( parent, ai, defaultPreferMelee, new AttributeMods() );
         }
         
         /** Creates a category that has the specified attribute modifiers by default. */
-        EliteAICategory( ToastConfigSpec parent, EliteAIType ai, boolean defaultPreferMelee, AttributeMods attributes ) {
+        EliteAICategory( EliteAIConfig parent, EliteAIType ai, boolean defaultPreferMelee, AttributeMods attributes ) {
             super( parent, ai.getKey(),
                     "Options for customizing the " + ai.getDisplayName() + " elite AI pattern." );
             
@@ -692,16 +695,16 @@ public class EliteAIConfig extends Config.AbstractConfig {
                     "Notably, most passive mobs do not have damage or knockback attributes, so those modifiers cannot apply to them.",
                     "Added modifiers use the 'addition' operation and increased modifiers use the 'multiply base' operation.",
                     TomlHelper.multiFieldInfo( DoubleField.Range.ANY ) );
-            followRange = SPEC.define( new DoubleField( "modifier.added_follow_range", attributes.followRange, (String[]) null ) );
-            addedMaxHealth = SPEC.define( new DoubleField( "modifier.added_max_health", attributes.addedMaxHealth, (String[]) null ) );
-            increasedMaxHealth = SPEC.define( new DoubleField( "modifier.increased_max_health", attributes.increasedMaxHealth, (String[]) null ) );
-            knockbackResist = SPEC.define( new DoubleField( "modifier.added_knockback_resistance", attributes.knockbackResist, (String[]) null ) );
-            armor = SPEC.define( new DoubleField( "modifier.added_armor", attributes.armor, (String[]) null ) );
-            armorToughness = SPEC.define( new DoubleField( "modifier.added_armor_toughness", attributes.armorToughness, (String[]) null ) );
-            addedDamage = SPEC.define( new DoubleField( "modifier.added_damage", attributes.addedDamage, (String[]) null ) );
-            increasedDamage = SPEC.define( new DoubleField( "modifier.increased_damage", attributes.increasedDamage, (String[]) null ) );
-            knockback = SPEC.define( new DoubleField( "modifier.added_knockback", attributes.knockback, (String[]) null ) );
-            speed = SPEC.define( new DoubleField( "modifier.increased_speed", attributes.speed, (String[]) null ) );
+            followRange = SPEC.define( new DoubleField( "modifier.added_follow_range", attributes.followRange, DoubleField.Range.ANY,(String[]) null ) );
+            addedMaxHealth = SPEC.define( new DoubleField( "modifier.added_max_health", attributes.addedMaxHealth,DoubleField.Range.ANY, (String[]) null ) );
+            increasedMaxHealth = SPEC.define( new DoubleField( "modifier.increased_max_health", attributes.increasedMaxHealth,DoubleField.Range.ANY, (String[]) null ) );
+            knockbackResist = SPEC.define( new DoubleField( "modifier.added_knockback_resistance", attributes.knockbackResist,DoubleField.Range.ANY, (String[]) null ) );
+            armor = SPEC.define( new DoubleField( "modifier.added_armor", attributes.armor, DoubleField.Range.ANY, (String[]) null ) );
+            armorToughness = SPEC.define( new DoubleField( "modifier.added_armor_toughness", attributes.armorToughness, DoubleField.Range.ANY,(String[]) null ) );
+            addedDamage = SPEC.define( new DoubleField( "modifier.added_damage", attributes.addedDamage,DoubleField.Range.ANY, (String[]) null ) );
+            increasedDamage = SPEC.define( new DoubleField( "modifier.increased_damage", attributes.increasedDamage,DoubleField.Range.ANY, (String[]) null ) );
+            knockback = SPEC.define( new DoubleField( "modifier.added_knockback", attributes.knockback, DoubleField.Range.ANY,(String[]) null ) );
+            speed = SPEC.define( new DoubleField( "modifier.increased_speed", attributes.speed, DoubleField.Range.ANY, (String[]) null ) );
             
             SPEC.newLine();
         }

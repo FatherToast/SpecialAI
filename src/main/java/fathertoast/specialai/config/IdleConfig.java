@@ -1,29 +1,30 @@
 package fathertoast.specialai.config;
 
-import fathertoast.specialai.config.field.*;
-import fathertoast.specialai.config.file.ToastConfigSpec;
-import fathertoast.specialai.config.util.BlockEntry;
-import fathertoast.specialai.config.util.BlockList;
-import fathertoast.specialai.config.util.EntityEntry;
-import fathertoast.specialai.config.util.EntityList;
+import fathertoast.crust.api.config.common.AbstractConfigCategory;
+import fathertoast.crust.api.config.common.AbstractConfigFile;
+import fathertoast.crust.api.config.common.ConfigManager;
+import fathertoast.crust.api.config.common.field.*;
+import fathertoast.crust.api.config.common.value.BlockEntry;
+import fathertoast.crust.api.config.common.value.BlockList;
+import fathertoast.crust.api.config.common.value.EntityEntry;
+import fathertoast.crust.api.config.common.value.EntityList;
 import net.minecraft.block.*;
 import net.minecraft.entity.EntityType;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class IdleConfig extends Config.AbstractConfig {
+public class IdleConfig extends AbstractConfigFile {
     
     public final IdleGeneral GENERAL;
     public final Griefing GRIEFING;
     public final Fiddling FIDDLING;
     
     /** Builds the config spec that should be used for this config. */
-    IdleConfig( File dir, String fileName ) {
-        super( dir, fileName,
+    IdleConfig( ConfigManager cfgManager, String cfgName ) {
+        super( cfgManager, cfgName,
                 "This config contains options for idle behaviors - actions taken by mobs when they are bored."
         );
         
@@ -32,12 +33,12 @@ public class IdleConfig extends Config.AbstractConfig {
         SPEC.newLine();
         SPEC.describeBlockList();
         
-        GENERAL = new IdleGeneral( SPEC );
-        GRIEFING = new Griefing( SPEC );
-        FIDDLING = new Fiddling( SPEC );
+        GENERAL = new IdleGeneral( this );
+        GRIEFING = new Griefing( this );
+        FIDDLING = new Fiddling( this );
     }
     
-    public static class IdleGeneral extends Config.AbstractCategory {
+    public static class IdleGeneral extends AbstractConfigCategory<IdleConfig> {
         
         public final DoubleField reach;
         
@@ -48,11 +49,11 @@ public class IdleConfig extends Config.AbstractConfig {
         public final IntField scanCount;
         public final IntField scanCountGlobal;
         
-        IdleGeneral( ToastConfigSpec parent ) {
+        IdleGeneral( IdleConfig parent ) {
             super( parent, "idle_general",
                     "Options that affect all idle behaviors for monsters (griefing and fiddling)." );
             
-            reach = SPEC.define( new DoubleField( "reach", 3.5, DoubleField.Range.POSITIVE,
+            reach = SPEC.define( new DoubleField( "reach", 3.5, DoubleField.Range.NON_NEGATIVE,
                     "Mobs' reach (from eye height) when targeting blocks. Player reach is about 4.5." ) );
             
             SPEC.newLine();
@@ -72,7 +73,7 @@ public class IdleConfig extends Config.AbstractConfig {
         }
     }
     
-    public static class Griefing extends Config.AbstractCategory {
+    public static class Griefing extends AbstractConfigCategory<IdleConfig> {
         
         public final EntityListField.Combined entityList;
         
@@ -90,7 +91,7 @@ public class IdleConfig extends Config.AbstractConfig {
         public final BlockListField targetWhitelistLootable;
         public final BlockListField targetBlacklist;
         
-        Griefing( ToastConfigSpec parent ) {
+        Griefing( IdleConfig parent ) {
             super( parent, "idle_griefing",
                     "Options to customize monsters' idle block breaking behavior." );
             
@@ -119,7 +120,7 @@ public class IdleConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.5, DoubleField.Range.POSITIVE,
+            breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.5, DoubleField.Range.NON_NEGATIVE,
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", true,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
@@ -179,7 +180,7 @@ public class IdleConfig extends Config.AbstractConfig {
         }
     }
     
-    public static class Fiddling extends Config.AbstractCategory {
+    public static class Fiddling extends AbstractConfigCategory<IdleConfig> {
         
         public final EntityListField.Combined entityList;
         
@@ -187,7 +188,7 @@ public class IdleConfig extends Config.AbstractConfig {
         public final BooleanField targetDoors;
         public final BlockListField.Combined targetList;
         
-        Fiddling( ToastConfigSpec parent ) {
+        Fiddling( IdleConfig parent ) {
             super( parent, "idle_fiddling",
                     "Options to customize monsters' idle fiddling behavior (block interaction)." );
             

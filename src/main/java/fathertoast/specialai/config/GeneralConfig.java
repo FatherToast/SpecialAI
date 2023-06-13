@@ -1,15 +1,18 @@
 package fathertoast.specialai.config;
 
-import fathertoast.specialai.config.field.*;
-import fathertoast.specialai.config.file.ToastConfigSpec;
-import fathertoast.specialai.config.util.BlockList;
-import fathertoast.specialai.config.util.EntityEntry;
-import fathertoast.specialai.config.util.EntityList;
+import fathertoast.crust.api.config.common.AbstractConfigCategory;
+import fathertoast.crust.api.config.common.AbstractConfigFile;
+import fathertoast.crust.api.config.common.ConfigManager;
+import fathertoast.crust.api.config.common.field.BlockListField;
+import fathertoast.crust.api.config.common.field.BooleanField;
+import fathertoast.crust.api.config.common.field.DoubleField;
+import fathertoast.crust.api.config.common.field.EntityListField;
+import fathertoast.crust.api.config.common.value.BlockList;
+import fathertoast.crust.api.config.common.value.EntityEntry;
+import fathertoast.crust.api.config.common.value.EntityList;
 import net.minecraft.entity.EntityType;
 
-import java.io.File;
-
-public class GeneralConfig extends Config.AbstractConfig {
+public class GeneralConfig extends AbstractConfigFile {
     
     public final Animals ANIMALS;
     public final Reactions REACTIONS;
@@ -17,8 +20,8 @@ public class GeneralConfig extends Config.AbstractConfig {
     public final DoorBreaking DOOR_BREAKING;
     
     /** Builds the config spec that should be used for this config. */
-    GeneralConfig( File dir, String fileName ) {
-        super( dir, fileName,
+    GeneralConfig( ConfigManager cfgManager, String cfgName ) {
+        super( cfgManager, cfgName,
                 "This config contains options for several miscellaneous features in the mod, such as:",
                 "animals, reactions, jockeys, and door breaking."
         );
@@ -28,13 +31,13 @@ public class GeneralConfig extends Config.AbstractConfig {
         SPEC.newLine();
         SPEC.describeBlockList();
         
-        ANIMALS = new Animals( SPEC );
-        REACTIONS = new Reactions( SPEC );
-        JOCKEYS = new Jockeys( SPEC );
-        DOOR_BREAKING = new DoorBreaking( SPEC );
+        ANIMALS = new Animals( this );
+        REACTIONS = new Reactions( this );
+        JOCKEYS = new Jockeys( this );
+        DOOR_BREAKING = new DoorBreaking( this );
     }
     
-    public static class Animals extends Config.AbstractCategory {
+    public static class Animals extends AbstractConfigCategory<GeneralConfig> {
         
         public final EntityListField.Combined depacifyList;
         
@@ -43,7 +46,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         public final BooleanField eatBreedingItems;
         public final BooleanField eatingHeals;
         
-        Animals( ToastConfigSpec parent ) {
+        Animals( GeneralConfig parent ) {
             super( parent, "animals",
                     "Options to customize mobs that are typically passive." );
             
@@ -89,7 +92,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         }
     }
     
-    public static class Reactions extends Config.AbstractCategory {
+    public static class Reactions extends AbstractConfigCategory<GeneralConfig> {
         
         public final EntityListField.Combined avoidExplosionsList;
         
@@ -98,7 +101,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         
         public final EntityListField.Combined dodgeArrowsList;
         
-        Reactions( ToastConfigSpec parent ) {
+        Reactions( GeneralConfig parent ) {
             super( parent, "reaction_ai",
                     "Options to customize reactive behaviors." );
             
@@ -146,7 +149,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         }
     }
     
-    public static class Jockeys extends Config.AbstractCategory {
+    public static class Jockeys extends AbstractConfigCategory<GeneralConfig> {
         
         public final EntityListField mountWhitelist;
         public final EntityListField mountWhitelistSmall;
@@ -156,7 +159,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         public final EntityListField riderWhitelistSmall;
         public final EntityListField riderBlacklist;
         
-        Jockeys( ToastConfigSpec parent ) {
+        Jockeys( GeneralConfig parent ) {
             super( parent, "jockeys",
                     "Options relating to which mobs should act as riders or mounts." );
             
@@ -204,7 +207,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         }
     }
     
-    public static class DoorBreaking extends Config.AbstractCategory {
+    public static class DoorBreaking extends AbstractConfigCategory<GeneralConfig> {
         
         public final EntityListField.Combined entityList;
         
@@ -219,7 +222,7 @@ public class GeneralConfig extends Config.AbstractConfig {
         public final BooleanField targetDoors;
         public final BlockListField.Combined targetList;
         
-        DoorBreaking( ToastConfigSpec parent ) {
+        DoorBreaking( GeneralConfig parent ) {
             super( parent, "door_breaking",
                     "Options to customize door-breaking behaviors." );
             
@@ -249,7 +252,7 @@ public class GeneralConfig extends Config.AbstractConfig {
             
             SPEC.newLine();
             
-            breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.33, DoubleField.Range.POSITIVE,
+            breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.33, DoubleField.Range.NON_NEGATIVE,
                     "The block breaking speed multiplier for mobs breaking doors, relative to the player's block breaking speed." ) );
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", true,
                     "If true, creepers will resort to what they know best when they meet a door blocking their path." ) );

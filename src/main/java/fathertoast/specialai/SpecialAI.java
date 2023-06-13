@@ -1,5 +1,6 @@
 package fathertoast.specialai;
 
+import fathertoast.specialai.config.Config;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistryEntry;
@@ -81,4 +82,8 @@ public class SpecialAI {
     
     /** @return Returns the resource location as a string, or "null" if it is null. */
     public static String toString( @Nullable ResourceLocation res ) { return res == null ? "null" : res.toString(); }
+    
+    public SpecialAI() {
+        Config.initialize();
+    }
 }
