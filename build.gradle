@@ -82,14 +82,15 @@ repositories {
         url 'https://maven.tterrag.com/'
     }
     flatDir {
-        dir 'path/to_your/folder_with_local/mods'
+        dir 'lib'
     }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
-    implementation fg.deobf("blank:crust-${crust_version}")
+    implementation ":crust-${crust_version}-api"
+    //runtimeOnly fg.deobf(":crust-${crust_version}")
 
     // Add in JEI and TOP to assist debugging during development
     //runtimeOnly fg.deobf("mezz.jei:jei-${jei_version}")
