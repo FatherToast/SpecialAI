@@ -9,16 +9,20 @@ import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.file.ToastConfigFormat;
 import fathertoast.specialai.util.NBTHelper;
-import net.minecraft.entity.*;
+import net.minecraft.entity.CreatureEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.passive.*;
+import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.util.GroundPathHelper;
+import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -183,7 +187,8 @@ public final class AIManager {
     
     /** @param entity Adds door breaking AI to the entity, replacing any pre-existing door breaking AI. */
     private static void addDoorBreakAI( MobEntity entity ) {
-        if( GroundPathHelper.hasGroundPathNavigation( entity ) ) {
+        PathNavigator nav = entity.getNavigation();
+        if( nav instanceof GroundPathNavigator ) {
             int priority = 1;
             // Remove any pre-existing door-breaking ai
             for( PrioritizedGoal task : new ArrayList<>( entity.goalSelector.availableGoals ) ) {
@@ -196,7 +201,7 @@ public final class AIManager {
             }
             
             // Add the new ai
-            ((GroundPathNavigator) entity.getNavigation()).setCanOpenDoors( true );
+            ((GroundPathNavigator) nav).setCanOpenDoors( true );
             entity.goalSelector.addGoal( priority, new SpecialBreakDoorGoal( entity ) );
         }
         else {
