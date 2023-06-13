@@ -1,6 +1,6 @@
 package fathertoast.specialai.config.field;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.file.TomlHelper;
 
 import javax.annotation.Nullable;
@@ -65,12 +65,12 @@ public class DoubleField extends AbstractConfigField {
             // Parse the value
             final double rawValue = ((Number) raw).doubleValue();
             if( rawValue < valueMin ) {
-                ModCore.LOG.warn( "Value for {} \"{}\" is below the minimum ({})! Clamping value. Invalid value: {}",
+                SpecialAI.LOG.warn( "Value for {} \"{}\" is below the minimum ({})! Clamping value. Invalid value: {}",
                         getClass(), getKey(), valueMin, raw );
                 newValue = valueMin;
             }
             else if( rawValue > valueMax ) {
-                ModCore.LOG.warn( "Value for {} \"{}\" is above the maximum ({})! Clamping value. Invalid value: {}",
+                SpecialAI.LOG.warn( "Value for {} \"{}\" is above the maximum ({})! Clamping value. Invalid value: {}",
                         getClass(), getKey(), valueMax, raw );
                 newValue = valueMax;
             }
@@ -80,7 +80,7 @@ public class DoubleField extends AbstractConfigField {
         }
         else if( raw instanceof String ) {
             // Try unboxing the string to another primitive type
-            ModCore.LOG.info( "Unboxing string value for {} \"{}\" to a different primitive.",
+            SpecialAI.LOG.info( "Unboxing string value for {} \"{}\" to a different primitive.",
                     getClass(), getKey() );
             load( TomlHelper.parseRaw( (String) raw ) );
             return;
@@ -88,7 +88,7 @@ public class DoubleField extends AbstractConfigField {
         else {
             // Value cannot be parsed to this field
             if( raw != null ) {
-                ModCore.LOG.warn( "Invalid value for {} \"{}\"! Falling back to default. Invalid value: {}",
+                SpecialAI.LOG.warn( "Invalid value for {} \"{}\"! Falling back to default. Invalid value: {}",
                         getClass(), getKey(), raw );
             }
             newValue = valueDefault;
@@ -153,7 +153,7 @@ public class DoubleField extends AbstractConfigField {
                 return getMin() + random.nextDouble() * delta;
             }
             if( delta < 0.0 ) {
-                ModCore.LOG.warn( "Value for range \"({},{})\" is invalid ({} > {})! Ignoring maximum value.",
+                SpecialAI.LOG.warn( "Value for range \"({},{})\" is invalid ({} > {})! Ignoring maximum value.",
                         MINIMUM.getKey(), MAXIMUM.getKey(), getMin(), getMax() );
             }
             return getMin();

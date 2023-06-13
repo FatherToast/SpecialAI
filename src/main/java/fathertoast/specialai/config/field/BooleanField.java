@@ -1,6 +1,6 @@
 package fathertoast.specialai.config.field;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.file.TomlHelper;
 
 import javax.annotation.Nullable;
@@ -48,13 +48,13 @@ public class BooleanField extends AbstractConfigField {
         else if( raw instanceof Number ) {
             // Convert the value
             final double rawValue = ((Number) raw).doubleValue();
-            ModCore.LOG.warn( "Value for {} \"{}\" is numerical! Converting value. Invalid value: {}",
+            SpecialAI.LOG.warn( "Value for {} \"{}\" is numerical! Converting value. Invalid value: {}",
                     getClass(), getKey(), raw );
             newValue = rawValue != 0.0; // 0 is false, anything else is true
         }
         else if( raw instanceof String ) {
             // Try unboxing the string to another primitive type
-            ModCore.LOG.info( "Unboxing string value for {} \"{}\" to a different primitive.",
+            SpecialAI.LOG.info( "Unboxing string value for {} \"{}\" to a different primitive.",
                     getClass(), getKey() );
             load( TomlHelper.parseRaw( (String) raw ) );
             return;
@@ -62,7 +62,7 @@ public class BooleanField extends AbstractConfigField {
         else {
             // Value cannot be parsed to this field
             if( raw != null ) {
-                ModCore.LOG.warn( "Invalid value for {} \"{}\"! Falling back to default. Invalid value: {}",
+                SpecialAI.LOG.warn( "Invalid value for {} \"{}\"! Falling back to default. Invalid value: {}",
                         getClass(), getKey(), raw );
             }
             newValue = valueDefault;

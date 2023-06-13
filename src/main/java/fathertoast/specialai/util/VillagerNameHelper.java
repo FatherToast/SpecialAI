@@ -1,10 +1,9 @@
 package fathertoast.specialai.util;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
 
 import java.util.*;
 
@@ -24,7 +23,7 @@ public final class VillagerNameHelper {
     private static final Map<String, List<String>> NAME_POOLS = new HashMap<>();
     
     private static String getKey( VillagerProfession profession ) {
-        return ModCore.toString( profession );
+        return SpecialAI.toString( profession );
     }
     
     //    private static String getKey( VillagerCareer career, VillagerProfession profession /* because parent profession is private in career */ ) {
@@ -58,7 +57,7 @@ public final class VillagerNameHelper {
         // Get the pool of job titles
         String[] titles = CAREER_TITLES.get( careerKey );
         if( titles == null ) {
-            ModCore.LOG.warn( "Naming villager with unknown profession#career '{}'", careerKey );
+            SpecialAI.LOG.warn( "Naming villager with unknown profession#career '{}'", careerKey );
             List<String[]> values = new ArrayList<>( CAREER_TITLES.values() );
             titles = values.get( random.nextInt( values.size() ) );
         }

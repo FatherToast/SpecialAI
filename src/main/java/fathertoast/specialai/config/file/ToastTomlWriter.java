@@ -2,7 +2,7 @@ package fathertoast.specialai.config.file;
 
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.io.*;
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.AbstractConfigField;
 
 import java.io.Writer;
@@ -42,7 +42,7 @@ public class ToastTomlWriter implements ConfigWriter {
      */
     @Override
     public void write( UnmodifiableConfig config, Writer writer ) {
-        ModCore.LOG.debug( "Writing config file! ({}{})", CONFIG_SPEC.NAME, ToastConfigFormat.FILE_EXT );
+        SpecialAI.LOG.debug( "Writing config file! ({}{})", CONFIG_SPEC.NAME, ToastConfigFormat.FILE_EXT );
         CharacterOutput output = new WriterOutput( writer );
         currentIndentLevel = 0;
         CONFIG_SPEC.write( this, output );

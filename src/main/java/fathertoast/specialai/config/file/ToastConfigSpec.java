@@ -3,7 +3,7 @@ package fathertoast.specialai.config.file;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileConfigBuilder;
 import com.electronwill.nightconfig.core.io.CharacterOutput;
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.AbstractConfigField;
 import fathertoast.specialai.config.field.BlockListField;
 import fathertoast.specialai.config.field.EntityListField;
@@ -43,7 +43,7 @@ public class ToastConfigSpec {
         
         // Make sure the directory exists
         if( !dir.exists() && !dir.mkdirs() ) {
-            ModCore.LOG.error( "Failed to make config folder! Things will likely explode. " +
+            SpecialAI.LOG.error( "Failed to make config folder! Things will likely explode. " +
                     "Create the folder manually to avoid this problem in the future: {}", dir );
         }
         
@@ -56,7 +56,7 @@ public class ToastConfigSpec {
     
     /** Loads the config from disk. */
     public void initialize() {
-        ModCore.LOG.info( "First-time loading config file {}", CONFIG_FILE.getFile() );
+        SpecialAI.LOG.info( "First-time loading config file {}", CONFIG_FILE.getFile() );
         firstLoad = true;
         CONFIG_FILE.load();
     }
@@ -161,7 +161,7 @@ public class ToastConfigSpec {
         /** Called when the config is saved. */
         @Override
         public void write( ToastTomlWriter writer, CharacterOutput output ) {
-            writer.writeComment( ModCore.MOD_ID + ":" + PARENT.NAME + ToastConfigFormat.FILE_EXT, output );
+            writer.writeComment( SpecialAI.MOD_ID + ":" + PARENT.NAME + ToastConfigFormat.FILE_EXT, output );
             writer.writeComment( COMMENT, output );
             
             writer.increaseIndentLevel();

@@ -1,8 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -20,7 +19,7 @@ import net.minecraft.util.text.TranslationTextComponent;
  */
 public final class EliteAIHelper {
     /** The base lang key for translating text for elite AIs. */
-    private static final String LANG_KEY = ModCore.LANG_KEY + "elite.";
+    private static final String LANG_KEY = SpecialAI.LANG_KEY + "elite.";
     
     /** The lang key for translating a specific line of text. */
     static String getLangKey( EliteAIType ai, String subKey ) { return LANG_KEY + ai.getKey() + "." + subKey; }
@@ -116,7 +115,7 @@ public final class EliteAIHelper {
             ModifiableAttributeInstance attributeInstance = entity.getAttribute( attribute );
             if( attributeInstance != null ) {
                 attributeInstance.addPermanentModifier(
-                        new AttributeModifier( ModCore.MOD_ID + ":" + ai.getKey() + " spawn bonus", value, operation ) );
+                        new AttributeModifier( SpecialAI.MOD_ID + ":" + ai.getKey() + " spawn bonus", value, operation ) );
             }
         }
     }
@@ -125,7 +124,7 @@ public final class EliteAIHelper {
     static void addModifier( EliteAIType ai, ItemStack stack, Attribute attribute, double value, AttributeModifier.Operation operation ) {
         if( value != 0.0 ) {
             stack.addAttributeModifier( attribute,
-                    new AttributeModifier( ModCore.MOD_ID + ":" + ai.getKey() + " item bonus", value, operation ),
+                    new AttributeModifier( SpecialAI.MOD_ID + ":" + ai.getKey() + " item bonus", value, operation ),
                     MobEntity.getEquipmentSlotForItem( stack ) );
         }
     }

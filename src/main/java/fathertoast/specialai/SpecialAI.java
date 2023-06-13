@@ -11,8 +11,16 @@ import javax.annotation.Nullable;
 /**
  * The core of the mod. Contains basic info about the mod, initializes configs, and hooks into FML.
  */
-@Mod( ModCore.MOD_ID )
-public class ModCore {
+@Mod( SpecialAI.MOD_ID )
+public class SpecialAI {
+    
+    /* Feature List:
+     * (KEY: - = complete in current version, o = incomplete feature from previous version,
+     *       + = incomplete new feature, ? = feature to consider adding)
+     *  - TODO
+     *      - fill this out
+     */
+    
     /* TODO LIST:
      *  - Re-implement features:
      *      + Villages
@@ -58,7 +66,7 @@ public class ModCore {
     public static final String MOD_ID = "specialai";
     
     /** The base lang key for translating text from this mod. */
-    public static final String LANG_KEY = ModCore.MOD_ID + ".";
+    public static final String LANG_KEY = SpecialAI.MOD_ID + ".";
     
     /** The less than or equal to symbol (<=). */
     public static final String LESS_OR_EQUAL = "\u2264";

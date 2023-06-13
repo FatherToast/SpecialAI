@@ -1,6 +1,6 @@
 package fathertoast.specialai.config.util;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.EntityListField;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -59,7 +59,7 @@ public class EntityEntry {
                 }
             }
             catch( Exception ex ) {
-                ModCore.LOG.warn( "Failed to load class of entity type {}!", TYPE );
+                SpecialAI.LOG.warn( "Failed to load class of entity type {}!", TYPE );
                 ex.printStackTrace();
             }
         }

@@ -1,6 +1,6 @@
 package fathertoast.specialai.util;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.*;
 
@@ -45,10 +45,10 @@ public final class NBTHelper {
      */
     public static CompoundNBT getModTag( Entity entity ) {
         final CompoundNBT data = entity.getPersistentData();
-        if( !data.contains( ModCore.MOD_ID, ID_COMPOUND ) ) {
-            data.put( ModCore.MOD_ID, new CompoundNBT() );
+        if( !data.contains( SpecialAI.MOD_ID, ID_COMPOUND ) ) {
+            data.put( SpecialAI.MOD_ID, new CompoundNBT() );
         }
-        return data.getCompound( ModCore.MOD_ID );
+        return data.getCompound( SpecialAI.MOD_ID );
     }
     
     /** @return Gets a compound tag within the given parent tag; if the compound didn't exist, this will generate it. */

@@ -1,6 +1,6 @@
 package fathertoast.specialai.config;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import fathertoast.specialai.config.field.*;
@@ -399,7 +399,7 @@ public class EliteAIConfig extends Config.AbstractConfig {
                     "The maximum range to avoid players in.",
                     "Note that all changes to the avoidance behavior require reload to take effect on existing entities." ) );
             avoidWalkSpeed = SPEC.define( new DoubleField( "avoid_speed.walk", 1.0, DoubleField.Range.POSITIVE,
-                    "The speed multiplier while avoiding far away players (" + ModCore.GREATER_OR_EQUAL + " 7 blocks away)." ) );
+                    "The speed multiplier while avoiding far away players (" + SpecialAI.GREATER_OR_EQUAL + " 7 blocks away)." ) );
             avoidRunSpeed = SPEC.define( new DoubleField( "avoid_speed.run", 1.2, DoubleField.Range.POSITIVE,
                     "The speed multiplier while avoiding nearby players (< 7 blocks away)." ) );
             

@@ -5,7 +5,7 @@ import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.io.*;
 import com.electronwill.nightconfig.toml.TomlParser;
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 
 import java.io.Reader;
 
@@ -34,7 +34,7 @@ public class ToastTomlParser implements ConfigParser<CommentedConfig> {
      */
     @Override
     public CommentedConfig parse( Reader reader ) {
-        ModCore.LOG.error( "Attempting to parse NEW config file! ({})", CONFIG_SPEC.CONFIG_FILE.getFile() );
+        SpecialAI.LOG.error( "Attempting to parse NEW config file! ({})", CONFIG_SPEC.CONFIG_FILE.getFile() );
         throw new ParsingException( "Attempted to generate new config! This is not supported." );
     }
     
@@ -47,7 +47,7 @@ public class ToastTomlParser implements ConfigParser<CommentedConfig> {
      */
     @Override
     public void parse( Reader reader, Config destination, ParsingMode parsingMode ) {
-        ModCore.LOG.debug( "Parsing config file! ({}{})", CONFIG_SPEC.NAME, ToastConfigFormat.FILE_EXT );
+        SpecialAI.LOG.debug( "Parsing config file! ({}{})", CONFIG_SPEC.NAME, ToastConfigFormat.FILE_EXT );
         WRAPPED_PARSER.parse( reader, destination, parsingMode );
         CONFIG_SPEC.onLoad();
     }

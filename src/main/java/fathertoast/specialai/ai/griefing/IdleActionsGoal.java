@@ -1,6 +1,6 @@
 package fathertoast.specialai.ai.griefing;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.util.BlockHelper;
@@ -12,7 +12,6 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -21,11 +20,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.EntityMobGriefingEvent;
-import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.EnumSet;
@@ -319,7 +314,7 @@ public class IdleActionsGoal extends Goal {
                     fakePlayer.updateWrappedEntityState();
                 }
                 catch( Exception ex ) {
-                    ModCore.LOG.warn( "Failed to fiddle with block '{}'", ForgeRegistries.BLOCKS.getKey( targetBlock.getBlock() ), ex );
+                    SpecialAI.LOG.warn( "Failed to fiddle with block '{}'", ForgeRegistries.BLOCKS.getKey( targetBlock.getBlock() ), ex );
                 }
             }
         }

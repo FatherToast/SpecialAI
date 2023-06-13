@@ -1,6 +1,6 @@
 package fathertoast.specialai.config.util;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.AbstractConfigField;
 import fathertoast.specialai.config.field.IStringArray;
 import fathertoast.specialai.config.file.TomlHelper;
@@ -49,7 +49,7 @@ public class BlockList implements IStringArray {
                 // Add a single block entry
                 BlockEntry entry = new BlockEntry( field, line );
                 if( entry.BLOCK == Blocks.AIR ) {
-                    ModCore.LOG.warn( "Invalid entry for {} \"{}\"! Deleting entry. Invalid entry: {}",
+                    SpecialAI.LOG.warn( "Invalid entry for {} \"{}\"! Deleting entry. Invalid entry: {}",
                             field.getClass(), field.getKey(), line );
                 }
                 else {

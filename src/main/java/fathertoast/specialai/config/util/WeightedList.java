@@ -1,6 +1,6 @@
 package fathertoast.specialai.config.util;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.IntField;
 import fathertoast.specialai.config.file.ToastConfigSpec;
 import fathertoast.specialai.config.file.TomlHelper;
@@ -65,7 +65,7 @@ public class WeightedList<T extends WeightedList.Value> {
             if( choice < 0 ) return entry.getValue();
         }
         
-        ModCore.LOG.error( "Weighting error occurred while rolling random item! " +
+        SpecialAI.LOG.error( "Weighting error occurred while rolling random item! " +
                 "This may have been caused by configs reloading during random roll (comod). Otherwise, it is very bad. :(" );
         return null;
     }

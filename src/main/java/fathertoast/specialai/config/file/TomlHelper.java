@@ -2,7 +2,7 @@ package fathertoast.specialai.config.file;
 
 import com.electronwill.nightconfig.core.NullObject;
 import com.electronwill.nightconfig.core.utils.StringUtils;
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.DoubleField;
 import fathertoast.specialai.config.field.IntField;
 
@@ -184,10 +184,10 @@ public final class TomlHelper {
     private static String fieldRangeNoLimit() { return "Any Value"; }
     
     /** @return A range representation of toml literals with only an upper limit. */
-    private static String fieldRangeUpperLimit( Number max ) { return ModCore.LESS_OR_EQUAL + " " + toLiteral( max ); }
+    private static String fieldRangeUpperLimit( Number max ) { return SpecialAI.LESS_OR_EQUAL + " " + toLiteral( max ); }
     
     /** @return A range representation of toml literals with only a lower limit. */
-    private static String fieldRangeLowerLimit( Number min ) { return ModCore.GREATER_OR_EQUAL + " " + toLiteral( min ); }
+    private static String fieldRangeLowerLimit( Number min ) { return SpecialAI.GREATER_OR_EQUAL + " " + toLiteral( min ); }
     
     /** @return A range representation of toml literals with both a lower and upper limit. */
     private static String fieldRangeInterval( Number min, Number max ) { return toLiteral( min ) + " ~ " + toLiteral( max ); }

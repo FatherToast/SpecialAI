@@ -1,6 +1,6 @@
 package fathertoast.specialai.config;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.field.AbstractConfigField;
 import fathertoast.specialai.config.file.ToastConfigSpec;
 import fathertoast.specialai.config.file.TomlHelper;
@@ -16,7 +16,7 @@ import java.io.File;
  */
 public class Config {
     /** The root folder for config files in this mod. */
-    public static final File CONFIG_DIR = new File( FMLPaths.CONFIGDIR.get().toFile(), "FatherToast/" + ModCore.MOD_ID + "/" );
+    public static final File CONFIG_DIR = new File( FMLPaths.CONFIGDIR.get().toFile(), "FatherToast/" + SpecialAI.MOD_ID + "/" );
     
     public static final GeneralConfig GENERAL = new GeneralConfig( CONFIG_DIR, "general" );
     public static final IdleConfig IDLE = new IdleConfig( CONFIG_DIR, "idle_ai" );

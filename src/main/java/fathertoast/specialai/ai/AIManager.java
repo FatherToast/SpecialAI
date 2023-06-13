@@ -1,7 +1,7 @@
 package fathertoast.specialai.ai;
 
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIHelper;
 import fathertoast.specialai.ai.griefing.EatBreedingItemGoal;
 import fathertoast.specialai.ai.griefing.IdleActionsGoal;
@@ -44,7 +44,7 @@ public final class AIManager {
     private static final String TAG_AVOID_EXPLOSIONS = "avoid_explosions";
     private static final String TAG_CALL_FOR_HELP = "call_for_help";
     private static final String TAG_DODGE_ARROWS = "dodge_arrows";
-    private static final String TAG_ARROW_DODGE_CHECKED = ModCore.MOD_ID + "_dodge_check";
+    private static final String TAG_ARROW_DODGE_CHECKED = SpecialAI.MOD_ID + "_dodge_check";
     
     private static final String TAG_RIDER = "rider";
     
@@ -72,7 +72,7 @@ public final class AIManager {
         if( scansLeft > 0 ) {
             scansLeft--;
             if( scansLeft == 0 ) {
-                ModCore.LOG.warn( "Maximum scans reached. If you are getting spammed by this under normal conditions, " +
+                SpecialAI.LOG.warn( "Maximum scans reached. If you are getting spammed by this under normal conditions, " +
                         "you should change your scan settings in {}{}.", Config.IDLE.SPEC.NAME, ToastConfigFormat.FILE_EXT );
             }
             return true;
@@ -200,8 +200,8 @@ public final class AIManager {
             entity.goalSelector.addGoal( priority, new SpecialBreakDoorGoal( entity ) );
         }
         else {
-            ModCore.LOG.warn( "Attempted to add door-breaking ai to entity '{}' with incompatible navigator '{}'",
-                    ModCore.toString( entity.getType() ), entity.getNavigation().getClass().getSimpleName() );
+            SpecialAI.LOG.warn( "Attempted to add door-breaking ai to entity '{}' with incompatible navigator '{}'",
+                    SpecialAI.toString( entity.getType() ), entity.getNavigation().getClass().getSimpleName() );
         }
     }
     

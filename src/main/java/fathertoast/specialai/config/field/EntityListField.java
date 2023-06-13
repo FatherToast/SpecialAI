@@ -1,6 +1,6 @@
 package fathertoast.specialai.config.field;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.file.TomlHelper;
 import fathertoast.specialai.config.util.EntityEntry;
 import fathertoast.specialai.config.util.EntityList;
@@ -119,7 +119,7 @@ public class EntityListField extends GenericField<EntityList> {
             // Normal entry
             final ResourceLocation regKey = new ResourceLocation( args[0].trim() );
             if( !ForgeRegistries.ENTITIES.containsKey( regKey ) ) {
-                ModCore.LOG.warn( "Invalid entry for {} \"{}\"! Deleting entry. Invalid entry: {}",
+                SpecialAI.LOG.warn( "Invalid entry for {} \"{}\"! Deleting entry. Invalid entry: {}",
                         getClass(), getKey(), line );
                 return null;
             }
@@ -132,7 +132,7 @@ public class EntityListField extends GenericField<EntityList> {
         // Variable-value; just needs at least one value
         if( reqValues < 0 ) {
             if( actualValues < 1 ) {
-                ModCore.LOG.warn( "Entry has too few values for {} \"{}\"! Expected at least one value. " +
+                SpecialAI.LOG.warn( "Entry has too few values for {} \"{}\"! Expected at least one value. " +
                                 "Replacing missing value with 0. Invalid entry: {}",
                         getClass(), getKey(), line );
                 valuesList.add( 0.0 );
@@ -147,12 +147,12 @@ public class EntityListField extends GenericField<EntityList> {
         // Specified value; must have the exact number of values
         else {
             if( reqValues > actualValues ) {
-                ModCore.LOG.warn( "Entry has too few values for {} \"{}\"! " +
+                SpecialAI.LOG.warn( "Entry has too few values for {} \"{}\"! " +
                                 "Expected {} values, but detected {}. Replacing missing values with 0. Invalid entry: {}",
                         getClass(), getKey(), reqValues, actualValues, line );
             }
             else if( reqValues < actualValues ) {
-                ModCore.LOG.warn( "Entry has too many values for {} \"{}\"! " +
+                SpecialAI.LOG.warn( "Entry has too many values for {} \"{}\"! " +
                                 "Expected {} values, but detected {}. Deleting additional values. Invalid entry: {}",
                         getClass(), getKey(), reqValues, actualValues, line );
             }
@@ -185,18 +185,18 @@ public class EntityListField extends GenericField<EntityList> {
         }
         catch( NumberFormatException ex ) {
             // This is thrown if the string is not a parsable number
-            ModCore.LOG.warn( "Invalid value for {} \"{}\"! Falling back to 0. Invalid entry: {}",
+            SpecialAI.LOG.warn( "Invalid value for {} \"{}\"! Falling back to 0. Invalid entry: {}",
                     getClass(), getKey(), line );
             value = 0.0;
         }
         // Verify value is within range
         if( value < valueDefault.getMinValue() ) {
-            ModCore.LOG.warn( "Value for {} \"{}\" is below the minimum ({})! Clamping value. Invalid value: {}",
+            SpecialAI.LOG.warn( "Value for {} \"{}\" is below the minimum ({})! Clamping value. Invalid value: {}",
                     getClass(), getKey(), valueDefault.getMinValue(), value );
             value = valueDefault.getMinValue();
         }
         else if( value > valueDefault.getMaxValue() ) {
-            ModCore.LOG.warn( "Value for {} \"{}\" is above the maximum ({})! Clamping value. Invalid value: {}",
+            SpecialAI.LOG.warn( "Value for {} \"{}\" is above the maximum ({})! Clamping value. Invalid value: {}",
                     getClass(), getKey(), valueDefault.getMaxValue(), value );
             value = valueDefault.getMaxValue();
         }

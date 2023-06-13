@@ -3,10 +3,8 @@ package fathertoast.specialai;
 
 import fathertoast.specialai.ai.AIManager;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,7 +14,7 @@ import net.minecraftforge.fml.common.Mod;
  * Each event passes itself off to interested sub-mods.
  */
 @SuppressWarnings( "unused" )
-@Mod.EventBusSubscriber( modid = ModCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE )
+@Mod.EventBusSubscriber( modid = SpecialAI.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE )
 public final class GameEventHandler {
     /**
      * Called for the server at the start and end of each tick.

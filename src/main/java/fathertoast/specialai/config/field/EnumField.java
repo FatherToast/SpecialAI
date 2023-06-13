@@ -1,17 +1,9 @@
 package fathertoast.specialai.config.field;
 
-import fathertoast.specialai.ModCore;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.config.file.TomlHelper;
-import fathertoast.specialai.config.util.EntityEntry;
-import fathertoast.specialai.config.util.EntityList;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,7 +46,7 @@ public class EnumField<T extends Enum<T>> extends GenericField<T> {
         if( newValue == null ) {
             // Value cannot be parsed to this field
             if( raw != null ) {
-                ModCore.LOG.warn( "Invalid value for {} \"{}\"! Falling back to default. Invalid value: {}",
+                SpecialAI.LOG.warn( "Invalid value for {} \"{}\"! Falling back to default. Invalid value: {}",
                         getClass(), getKey(), raw );
             }
             newValue = valueDefault;
