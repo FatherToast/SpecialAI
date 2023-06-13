@@ -1,3 +1,5 @@
+1.16.5-1.1.0
+    - Implemented and now requires Crust.
 1.16.5-1.0.2
     - World load deadlock fixed.
     - No longer delays AI initialization until the first server tick.
