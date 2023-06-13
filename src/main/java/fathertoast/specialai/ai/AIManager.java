@@ -206,7 +206,7 @@ public final class AIManager {
         }
         else {
             SpecialAI.LOG.warn( "Attempted to add door-breaking ai to entity '{}' with incompatible navigator '{}'",
-                    SpecialAI.toString( entity.getType() ), entity.getNavigation().getClass().getSimpleName() );
+                    SpecialAI.toString( entity.getType() ), nav.getClass().getSimpleName() );
         }
     }
     
