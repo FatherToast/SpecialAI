@@ -3,7 +3,7 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.ConfigManager;
 
 /**
- * The initial loading for this is done in the mod's constructor.
+ * The initial loading for this is done during the common setup event.
  */
 public class Config {
     
