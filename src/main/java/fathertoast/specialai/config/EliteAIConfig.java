@@ -9,11 +9,11 @@ import fathertoast.crust.api.config.common.file.TomlHelper;
 import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
 import fathertoast.crust.api.config.common.value.WeightedList;
-import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,14 +36,16 @@ public class EliteAIConfig extends AbstractConfigFile {
     /** Builds the config spec that should be used for this config. */
     EliteAIConfig( ConfigManager cfgManager, String cfgName ) {
         super( cfgManager, cfgName,
-                "This config contains options for elite AI patterns. Elite AI patterns bestow stat boosts, specific",
-                "equipment, and allow these 'elite' mobs to perform actions in combat that can pose a great threat.",
-                "See the appendix at the bottom of this file for more information on the elite AI patterns available.",
-                "In general; changing options for elite AIs granted, attributes, and equipment only affects new entities.",
-                "All other option changes affect existing entities (even in a running client) unless otherwise stated."
+                "This config contains options for elite AI patterns. Elite AI patterns bestow stat boosts, " +
+                        "specific equipment, and allow these 'elite' mobs to perform actions in combat that can pose a great threat.",
+                "In general; changing options for elite AIs granted, attributes, and equipment only affects new entities. " +
+                        "All other option changes affect existing entities (even in a running client) unless otherwise stated."
         );
         
         SPEC.newLine();
+        SPEC.comment( "See the appendix at the bottom of this file for more information on the elite AI patterns available." );
+        
+        SPEC.fileOnlyNewLine();
         SPEC.describeEntityList();
         
         GENERAL = new EliteGeneral( this );
@@ -61,20 +63,17 @@ public class EliteAIConfig extends AbstractConfigFile {
         // Print description for each elite AI pattern
         SPEC.decreaseIndent();
         SPEC.newLine( 2 );
-        SPEC.comment( "Appendix:",
+        SPEC.titledComment( TextFormatting.YELLOW + "Appendix",
                 "Below is a description for each elite AI pattern.",
-                "Note that the qualitative descriptions (high, low, etc.) are based on default values and therefore may not be valid",
-                "in an edited config. All equipment and attribute modifiers can be disabled and all attribute modifiers can be changed.",
-                "Other values that can be changed by config are noted with an asterisk (*)." );
+                "Note that the qualitative descriptions (high, low, etc.) are based on default values and therefore may not " +
+                        "be valid in an edited config. All equipment and attribute modifiers can be disabled and all attribute " +
+                        "modifiers can be changed. Other values that can be changed by config are noted with an asterisk (*)." );
         SPEC.increaseIndent();
         for( EliteAIType ai : EliteAIType.values() ) {
-            SPEC.newLine();
-            SPEC.comment( String.format( "%s:", ai.getKey() ) );
-            SPEC.increaseIndent();
+            SPEC.fileOnlyNewLine();
             List<String> description = new ArrayList<>();
             ai.describe( description );
-            SPEC.comment( description );
-            SPEC.decreaseIndent();
+            SPEC.titledComment( ai.getKey(), description );
         }
     }
     
@@ -103,31 +102,32 @@ public class EliteAIConfig extends AbstractConfigFile {
                             new EntityEntry( EntityType.PIGLIN_BRUTE, 0.5, 0.01, 0.01 )
                     ).setRange0to1(),
                             "List of mobs that can gain elite AI patterns and their chances to gain those patterns.",
-                            "Additional values after the entity type are the chances (0.0 to 1.0) for entities of that type to spawn with elite AI.",
-                            "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack." ) ),
+                            "Additional values after the entity type are the chances (0.0 to 1.0) for entities of that type to spawn with elite AI. " +
+                                    "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack." ) ),
                     SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
             );
             
             SPEC.newLine();
             
             eliteAIWeights = new WeightedList<>( SPEC, "weight", EliteAIType.values(),
-                    "The following options are the weights for each elite AI pattern to be chosen when assigning an elite AI",
-                    "to entities in the above list. The higher an AI's weight, the more common it will be compared to the others.",
+                    "The following options are the weights for each elite AI pattern to be chosen when assigning " +
+                            "an elite AI to entities in the above list. The higher an AI's weight, the more common it will be " +
+                            "compared to the others.",
                     "Elite AIs given a weight of 0 are effectively disabled (though they can still be NBT-edited onto mobs)." );
             
             SPEC.newLine();
             
             enablePreferMelee = SPEC.define( new BooleanField( "prefer_melee_enabled", true,
-                    "When true, elite AI patterns that \"prefer melee\" will replace any shooting item held by the entity",
-                    "with a golden sword, in the hopes they will use melee attacks (instead of bow/crossbow attacks).",
+                    "When true, elite AI patterns that \"prefer melee\" will replace any shooting item held by the " +
+                            "entity with a golden sword, in the hopes they will use melee attacks (instead of bow/crossbow attacks).",
                     "Note that this can be enabled or disabled for each AI pattern individually (see categories below)." ) );
             enableAttributeMods = SPEC.define( new BooleanField( "attribute_modifiers_enabled", true,
                     "When true, elite AI patterns will be allowed to apply attribute modifiers to entities.",
                     "Note that each modifier can be disabled or changed individually (see categories below)." ) );
             enableEquipmentReplace = SPEC.define( new BooleanField( "equipment_replacement_enabled", true,
-                    "When true, elite AI patterns will be allowed to overwrite existing entity equipment (aside from melee preference).",
-                    "This equipment is designed to visually distinguish the elite AI pattern(s) on entities, so disabling",
-                    "this may make it more difficult for players to understand what they are fighting.",
+                    "When true, elite AI patterns will be allowed to overwrite existing entity equipment (aside from " +
+                            "melee preference). This equipment is designed to visually distinguish the elite AI pattern(s) on " +
+                            "entities, so disabling this may make it more difficult for players to understand what they are fighting.",
                     "Note that each equipment item can be disabled individually and some can be modified (see categories below)." ) );
         }
     }
@@ -153,8 +153,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             cooldown = new IntField.RandomRange(
                     SPEC.define( new IntField( "cooldown.min", 20, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after",
-                            "completion, in ticks (20 ticks = 1 second)." ) ),
+                            "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
                     SPEC.define( new IntField( "cooldown.max", 40, IntField.Range.NON_NEGATIVE ) )
             );
             
@@ -163,8 +163,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             jumpSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.forward", 16.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the entity in its target's direction when this AI activates, in blocks per second (m/s)." ) );
             jumpSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.upward", 8.0, DoubleField.Range.ANY,
-                    "The vertical speed given to the entity when this AI activates, in blocks per second (m/s).",
-                    "For reference, normal jumping speed is 8.4 m/s." ) );
+                    "The vertical speed given to the entity when this AI activates, in blocks per second (m/s). " +
+                            "For reference, normal jumping speed is 8.4 m/s." ) );
         }
     }
     
@@ -192,8 +192,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             cooldown = new IntField.RandomRange(
                     SPEC.define( new IntField( "cooldown.min", 60, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after",
-                            "completion, in ticks (20 ticks = 1 second)." ) ),
+                            "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
                     SPEC.define( new IntField( "cooldown.max", 100, IntField.Range.NON_NEGATIVE ) )
             );
             
@@ -202,14 +202,14 @@ public class EliteAIConfig extends AbstractConfigFile {
             jumpSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.forward", 28.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the entity in its target's direction when this AI activates, in blocks per second (m/s)." ) );
             jumpSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "jump_speed.upward", 20.0, DoubleField.Range.ANY,
-                    "The vertical speed given to the entity when this AI activates, in blocks per second (m/s).",
-                    "For reference, normal jumping speed is 8.4 m/s." ) );
+                    "The vertical speed given to the entity when this AI activates, in blocks per second (m/s). " +
+                            "For reference, normal jumping speed is 8.4 m/s." ) );
             
             SPEC.newLine();
             
             featherBootsDropChance = SPEC.define( new DoubleField( "feather_boots.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
-                    "The drop chance for Feather Boots (0 to 1). The item will drop damaged randomly, like normal equipment.",
-                    "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
+                    "The drop chance for Feather Boots (0 to 1). The item will drop damaged randomly, like normal equipment. " +
+                            "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
             featherBootsEnchant = SPEC.define( new IntField( "feather_boots.enchant", Enchantments.FALL_PROTECTION.getMaxLevel(), IntField.Range.NON_NEGATIVE,
                     "Level of the feather falling enchantment on Feather Boots. 0 disables the enchant." ) );
         }
@@ -247,8 +247,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             runningBootsDropChance = SPEC.define( new DoubleField( "running_boots.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
-                    "The drop chance for Running Boots (0 to 1). The item will drop damaged randomly, like normal equipment.",
-                    "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
+                    "The drop chance for Running Boots (0 to 1). The item will drop damaged randomly, like normal equipment. " +
+                            "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
             runningBootsModifier = SPEC.define( new DoubleField( "running_boots.modifier", 0.15, DoubleField.Range.ANY,
                     "The movement speed modifier on Running Boots (uses 'multiply base' operation). 0 disables the modifier." ) );
         }
@@ -281,16 +281,16 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             cooldown = new IntField.RandomRange(
                     SPEC.define( new IntField( "cooldown.min", 100, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after",
-                            "completion, in ticks (20 ticks = 1 second)." ) ),
+                            "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
                     SPEC.define( new IntField( "cooldown.max", 160, IntField.Range.NON_NEGATIVE ) )
             );
             
             SPEC.newLine();
             
             arrowDamage = SPEC.define( new DoubleField( "arrow_damage", 3.0, 0.25, Double.POSITIVE_INFINITY,
-                    "The base damage dealt by arrows. Note this varies \u00b10.25, gains +0.11 per difficulty level,",
-                    "and final damage is scaled by total velocity (this is the normal behavior for monster-fired arrows)." ) );
+                    "The base damage dealt by arrows. Note this varies \u00b10.25, gains +0.11 per difficulty level, " +
+                            "and final damage is scaled by total velocity (this is the normal behavior for monster-fired arrows)." ) );
             arrowVariance = SPEC.define( new DoubleField( "arrow_variance", 20.0, DoubleField.Range.NON_NEGATIVE,
                     "The direction variance for fired arrows. The higher this value, the less accurate arrows are." ) );
             shotTime = SPEC.define( new IntField( "shot_time", 5, IntField.Range.POSITIVE,
@@ -340,8 +340,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             cooldown = new IntField.RandomRange(
                     SPEC.define( new IntField( "cooldown.min", 80, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after",
-                            "activation, in ticks (20 ticks = 1 second)." ) ),
+                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
                     SPEC.define( new IntField( "cooldown.max", 140, IntField.Range.NON_NEGATIVE ) )
             );
             
@@ -366,8 +366,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             chargersHelmetDropChance = SPEC.define( new DoubleField( "charger_helmet.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
-                    "The drop chance for Charger's Helmets (0 to 1). The item will drop damaged randomly, like normal equipment.",
-                    "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
+                    "The drop chance for Charger's Helmets (0 to 1). The item will drop damaged randomly, like normal equipment. " +
+                            "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
             chargersHelmetEnchantLevel = SPEC.define( new IntField( "charger_helmet.enchant_level", 30, IntField.Range.NON_NEGATIVE,
                     "Levels to enchant Charger's Helmets. 0 disables the enchant." ) );
             chargersHelmetAllowTreasure = SPEC.define( new BooleanField( "charger_helmet.allow_treasure_enchants", true,
@@ -400,8 +400,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             avoidRange = SPEC.define( new DoubleField( "avoid_range", 16.0, DoubleField.Range.NON_NEGATIVE,
-                    "The maximum range to avoid players in.",
-                    "Note that all changes to the avoidance behavior require reload to take effect on existing entities." ) );
+                    "The maximum range to avoid players in. Note that all changes to the avoidance behavior require " +
+                            "reload to take effect on existing entities." ) );
             avoidWalkSpeed = SPEC.define( new DoubleField( "avoid_speed.walk", 1.0, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while avoiding far away players (" + ConfigUtil.GREATER_OR_EQUAL + " 7 blocks away)." ) );
             avoidRunSpeed = SPEC.define( new DoubleField( "avoid_speed.run", 1.2, DoubleField.Range.NON_NEGATIVE,
@@ -411,8 +411,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             validSlots = SPEC.define( new EnumField<>( "valid_slots", ThiefEliteGoal.ValidSlots.HOTBAR_AND_ARMOR,
                     "The inventory slots that can be stolen from by entities with this AI.",
-                    "For this purpose, the armor inventory is your head, chest, legs, and feet slots, the main inventory is",
-                    "the big 3x9 inventory space, and the hotbar inventory is everything else (bottom 9 + offhand slots)." ) );
+                    "For this purpose, the armor inventory is your head, chest, legs, and feet slots, the main inventory is " +
+                            "the big 3x9 inventory space, and the hotbar inventory is everything else (bottom 9 + offhand slots)." ) );
             stealDamage = SPEC.define( new DoubleField( "steal_damage", 1.0, DoubleField.Range.NON_NEGATIVE,
                     "The damage dealt to the player when stealing an item." ) );
             invisibilityDuration = SPEC.define( new IntField( "invisibility_duration", 60, IntField.Range.NON_NEGATIVE,
@@ -421,11 +421,11 @@ public class EliteAIConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             emptyHand = SPEC.define( new BooleanField( "empty_hand", true,
-                    "When true, the mob will always have its main hand item cleared when given this AI.",
-                    "Keep in mind, if this is disabled and the mob spawns with a held item, it will just avoid players." ) );
+                    "When true, the mob will always have its main hand item cleared when given this AI. " +
+                            "Keep in mind, if this is disabled and the mob spawns with a held item, it will just avoid players." ) );
             thiefCapDropChance = SPEC.define( new DoubleField( "thief_helmet.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
-                    "The drop chance for Thief's Caps (0 to 1). The item will drop damaged randomly, like normal equipment.",
-                    "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
+                    "The drop chance for Thief's Caps (0 to 1). The item will drop damaged randomly, like normal equipment. " +
+                            "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
             thiefCapModifier = SPEC.define( new DoubleField( "thief_helmet.modifier", 0.15, DoubleField.Range.ANY,
                     "The movement speed modifier on Thief's Caps (uses 'multiply base' operation). 0 disables the modifier." ) );
         }
@@ -523,8 +523,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             spawnRange = SPEC.define( new IntField( "spawn_range", 4, IntField.Range.NON_NEGATIVE,
                     "The maximum distance entities can spawn from the spawner entity, in blocks (meters)." ) );
             maxNearby = SPEC.define( new IntField( "max_nearby_entities", 6, IntField.Range.POSITIVE,
-                    "The spawner will not create any new entities while the number of similar entities within spawn range",
-                    "is at or above this limit." ) );
+                    "The spawner will not create any new entities while the number of similar entities within spawn " +
+                            "range is at or above this limit." ) );
             
             SPEC.newLine();
             
@@ -564,8 +564,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             cooldown = new IntField.RandomRange(
                     SPEC.define( new IntField( "cooldown.min", 60, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after",
-                            "activation, in ticks (20 ticks = 1 second)." ) ),
+                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
                     SPEC.define( new IntField( "cooldown.max", 100, IntField.Range.NON_NEGATIVE ) )
             );
             
@@ -581,8 +581,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             throwSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.forward", 20.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the thrown entity in its target's direction, in blocks per second (m/s)." ) );
             throwSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.upward", 8.4, DoubleField.Range.ANY,
-                    "The vertical speed given to the thrown entity, in blocks per second (m/s).",
-                    "For reference, normal jumping speed is 8.4 m/s." ) );
+                    "The vertical speed given to the thrown entity, in blocks per second (m/s). " +
+                            "For reference, normal jumping speed is 8.4 m/s." ) );
         }
     }
     
@@ -612,15 +612,15 @@ public class EliteAIConfig extends AbstractConfigFile {
                     "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
             throwRangeSqrMax = SPEC.define( new SqrDoubleField( "throw_range.max", 10.0, DoubleField.Range.NON_NEGATIVE ) );
             carryRange = SPEC.define( new DoubleField( "carry_range", 8.0, DoubleField.Range.NON_NEGATIVE,
-                    "The maximum range the entity will plan on carrying its target before throwing.",
-                    "Note that this only affects the search radius when finding allies to throw to." ) );
+                    "The maximum range the entity will plan on carrying its target before throwing. " +
+                            "Note that this only affects the search radius when finding allies to throw to." ) );
             
             SPEC.newLine();
             
             cooldown = new IntField.RandomRange(
                     SPEC.define( new IntField( "cooldown.min", 100, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after",
-                            "activation, in ticks (20 ticks = 1 second)." ) ),
+                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
                     SPEC.define( new IntField( "cooldown.max", 160, IntField.Range.NON_NEGATIVE ) )
             );
             
@@ -635,8 +635,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             reGrabs = new IntField.RandomRange(
                     SPEC.define( new IntField( "re_grabs.min", 0, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) number of times an entity will attempt to re-grab its",
-                            "target if it escapes the grab before being thrown. Re-rolls each time the AI activates.",
+                            "The minimum and maximum (inclusive) number of times an entity will attempt to re-grab " +
+                                    "its target if it escapes the grab before being thrown. Re-rolls each time the AI activates.",
                             "This AI goes into cooldown if the target escapes and the entity has no remaining re-grabs." ) ),
                     SPEC.define( new IntField( "re_grabs.max", 3, IntField.Range.NON_NEGATIVE ) )
             );
@@ -646,14 +646,14 @@ public class EliteAIConfig extends AbstractConfigFile {
             throwSpeedForward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.forward", 20.0, DoubleField.Range.ANY,
                     "The horizontal speed given to the thrown entity in its target's direction, in blocks per second (m/s)." ) );
             throwSpeedUpward = SPEC.define( new ScaledDoubleField.Rate( "throw_speed.upward", 8.4, DoubleField.Range.ANY,
-                    "The vertical speed given to the thrown entity, in blocks per second (m/s).",
-                    "For reference, normal jumping speed is 8.4 m/s." ) );
+                    "The vertical speed given to the thrown entity, in blocks per second (m/s). " +
+                            "For reference, normal jumping speed is 8.4 m/s." ) );
             
             SPEC.newLine();
             
             strengthHelmetDropChance = SPEC.define( new DoubleField( "helmet_of_strength.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
-                    "The drop chance for Helmets of Strength (0 to 1). The item will drop damaged randomly, like normal equipment.",
-                    "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
+                    "The drop chance for Helmets of Strength (0 to 1). The item will drop damaged randomly, like normal equipment. " +
+                            "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
             strengthHelmetModifier = SPEC.define( new DoubleField( "helmet_of_strength.modifier", 1.0, DoubleField.Range.ANY,
                     "The attack damage modifier on Helmets of Strength (uses 'addition' operation). 0 disables the modifier." ) );
         }
@@ -692,19 +692,21 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            SPEC.comment( "Attribute modifiers applied to entities with this AI on spawn, if possible. Modifiers are disabled if set to 0.",
-                    "Notably, most passive mobs do not have damage or knockback attributes, so those modifiers cannot apply to them.",
-                    "Added modifiers use the 'addition' operation and increased modifiers use the 'multiply base' operation.",
-                    TomlHelper.multiFieldInfo( DoubleField.Range.ANY ) );
-            followRange = SPEC.define( new DoubleField( "modifier.added_follow_range", attributes.followRange, DoubleField.Range.ANY,(String[]) null ) );
-            addedMaxHealth = SPEC.define( new DoubleField( "modifier.added_max_health", attributes.addedMaxHealth,DoubleField.Range.ANY, (String[]) null ) );
-            increasedMaxHealth = SPEC.define( new DoubleField( "modifier.increased_max_health", attributes.increasedMaxHealth,DoubleField.Range.ANY, (String[]) null ) );
-            knockbackResist = SPEC.define( new DoubleField( "modifier.added_knockback_resistance", attributes.knockbackResist,DoubleField.Range.ANY, (String[]) null ) );
+            SPEC.titledComment( "Attribute Modifiers",
+                    "Attribute modifiers applied to entities with this AI on spawn, if possible. Modifiers are " +
+                            "disabled if set to 0. Notably, most passive mobs do not have damage or knockback attributes, " +
+                            "so those modifiers cannot apply to them. Added modifiers use the 'addition' operation and " +
+                            "increased modifiers use the 'multiply base' operation.",
+                    TextFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.ANY ) );
+            followRange = SPEC.define( new DoubleField( "modifier.added_follow_range", attributes.followRange, DoubleField.Range.ANY, (String[]) null ) );
+            addedMaxHealth = SPEC.define( new DoubleField( "modifier.added_max_health", attributes.addedMaxHealth, DoubleField.Range.ANY, (String[]) null ) );
+            increasedMaxHealth = SPEC.define( new DoubleField( "modifier.increased_max_health", attributes.increasedMaxHealth, DoubleField.Range.ANY, (String[]) null ) );
+            knockbackResist = SPEC.define( new DoubleField( "modifier.added_knockback_resistance", attributes.knockbackResist, DoubleField.Range.ANY, (String[]) null ) );
             armor = SPEC.define( new DoubleField( "modifier.added_armor", attributes.armor, DoubleField.Range.ANY, (String[]) null ) );
-            armorToughness = SPEC.define( new DoubleField( "modifier.added_armor_toughness", attributes.armorToughness, DoubleField.Range.ANY,(String[]) null ) );
-            addedDamage = SPEC.define( new DoubleField( "modifier.added_damage", attributes.addedDamage,DoubleField.Range.ANY, (String[]) null ) );
-            increasedDamage = SPEC.define( new DoubleField( "modifier.increased_damage", attributes.increasedDamage,DoubleField.Range.ANY, (String[]) null ) );
-            knockback = SPEC.define( new DoubleField( "modifier.added_knockback", attributes.knockback, DoubleField.Range.ANY,(String[]) null ) );
+            armorToughness = SPEC.define( new DoubleField( "modifier.added_armor_toughness", attributes.armorToughness, DoubleField.Range.ANY, (String[]) null ) );
+            addedDamage = SPEC.define( new DoubleField( "modifier.added_damage", attributes.addedDamage, DoubleField.Range.ANY, (String[]) null ) );
+            increasedDamage = SPEC.define( new DoubleField( "modifier.increased_damage", attributes.increasedDamage, DoubleField.Range.ANY, (String[]) null ) );
+            knockback = SPEC.define( new DoubleField( "modifier.added_knockback", attributes.knockback, DoubleField.Range.ANY, (String[]) null ) );
             speed = SPEC.define( new DoubleField( "modifier.increased_speed", attributes.speed, DoubleField.Range.ANY, (String[]) null ) );
             
             SPEC.newLine();

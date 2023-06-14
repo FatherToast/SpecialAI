@@ -22,13 +22,13 @@ public class GeneralConfig extends AbstractConfigFile {
     /** Builds the config spec that should be used for this config. */
     GeneralConfig( ConfigManager cfgManager, String cfgName ) {
         super( cfgManager, cfgName,
-                "This config contains options for several miscellaneous features in the mod, such as:",
-                "animals, reactions, jockeys, and door breaking."
+                "This config contains options for several miscellaneous features in the mod, such as: " +
+                        "animals, reactions, jockeys, and door breaking."
         );
-    
-        SPEC.newLine();
+        
+        SPEC.fileOnlyNewLine();
         SPEC.describeEntityList();
-        SPEC.newLine();
+        SPEC.fileOnlyNewLine();
         SPEC.describeBlockList();
         
         ANIMALS = new Animals( this );
@@ -87,8 +87,8 @@ public class GeneralConfig extends AbstractConfigFile {
             eatBreedingItems = SPEC.define( new BooleanField( "eat_breeding_items", true,
                     "If true, passive mobs will seek out and eat the items used to breed them laying on the floor." ) );
             eatingHeals = SPEC.define( new BooleanField( "eating_heals", true,
-                    "If true, when mobs eat breeding items off the floor, they will regain health (like wolves).",
-                    "The option \"eat_breeding_items\" needs to be enabled for this to have any effect." ) );
+                    "If true, when mobs eat breeding items off the floor, they will regain health (like " +
+                            "wolves). The option \"eat_breeding_items\" needs to be enabled for this to have any effect." ) );
         }
     }
     
@@ -120,8 +120,8 @@ public class GeneralConfig extends AbstractConfigFile {
                     SPEC.define( new EntityListField( "call_for_help.whitelist", new EntityList(
                             new EntityEntry( 1.0 )
                     ).setSinglePercent(),
-                            "List of mobs that will call for help from nearby mobs of the same type when struck.",
-                            "This does not trigger from killing blows (see below).",
+                            "List of mobs that will call for help from nearby mobs of the same type when " +
+                                    "struck. This does not trigger from killing blows (see below).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
                     SPEC.define( new EntityListField( "call_for_help.blacklist", new EntityList().setNoValues() ) )
             );
@@ -142,8 +142,9 @@ public class GeneralConfig extends AbstractConfigFile {
                             new EntityEntry( EntityType.WITHER_SKELETON, 1.0, 0.5 )
                     ).setMultiValue( 2 ).setRange0to1(),
                             "List of mobs that will try to sidestep an arrow fired in their direction.",
-                            "Additional values after the entity type are the chance (0.0 to 1.0) for entities of that type to spawn with the AI,",
-                            "followed by the chance for entities of that type with the AI to attempt to dodge (rolled for each arrow)." ) ),
+                            "Additional values after the entity type are the chance (0.0 to 1.0) for entities of that type " +
+                                    "to spawn with the AI, followed by the chance for entities of that type with the AI to " +
+                                    "attempt to dodge (rolled for each arrow)." ) ),
                     SPEC.define( new EntityListField( "dodge_arrows.blacklist", new EntityList().setNoValues() ) )
             );
         }
@@ -183,8 +184,8 @@ public class GeneralConfig extends AbstractConfigFile {
                     new EntityEntry( EntityType.CHICKEN ), new EntityEntry( EntityType.RABBIT ),
                     new EntityEntry( EntityType.CAVE_SPIDER )
             ).setNoValues(),
-                    "List of mobs that can be ridden on by small riders or normal-sized riders that are babies",
-                    "(not all entities can be controlled by their rider)." ) );
+                    "List of mobs that can be ridden on by small riders or normal-sized riders that are babies " +
+                            "(not all entities can be controlled by their rider)." ) );
             mountBlacklist = SPEC.define( new EntityListField( "mount_entities.blacklist", new EntityList().setNoValues() ) );
             
             SPEC.newLine();
@@ -197,11 +198,11 @@ public class GeneralConfig extends AbstractConfigFile {
                     // Nether
                     new EntityEntry( EntityType.PIGLIN, 0.1 ), new EntityEntry( EntityType.PIGLIN_BRUTE, 0.1 )
             ).setSinglePercent(),
-                    "List of mobs that can ride normal-sized mounts and the chance for them to gain the rider AI.",
-                    "Note that the entity must have task-based AI enabled." ) );
+                    "List of mobs that can ride normal-sized mounts and the chance for them to gain the rider AI. " +
+                            "Note that the entity must have task-based AI enabled." ) );
             riderWhitelistSmall = SPEC.define( new EntityListField( "rider_entities.small_list", new EntityList().setSinglePercent(),
-                    "List of mobs that can only ride small mounts or normal-sized mounts that are babies and the",
-                    "chance for them to gain the rider AI. Note that the entity must have task-based AI enabled." ) );
+                    "List of mobs that can only ride small mounts or normal-sized mounts that are babies and the " +
+                            "chance for them to gain the rider AI. Note that the entity must have task-based AI enabled." ) );
             riderBlacklist = SPEC.define( new EntityListField( "rider_entities.blacklist", new EntityList().setNoValues() ) );
             
         }
@@ -238,9 +239,9 @@ public class GeneralConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             requiresTarget = SPEC.define( new BooleanField( "require_target", true,
-                    "If true, mobs will only break doors while they are chasing an attack target.",
-                    "Disabling this typically leads to mobs smashing into your house to get to blocks they are targeting",
-                    "as part of an idle griefing or fiddling behavior, such as torches or chests." ) );
+                    "If true, mobs will only break doors while they are chasing an attack target. " +
+                            "Disabling this typically leads to mobs smashing into your house to get to blocks they are targeting " +
+                            "as part of an idle griefing or fiddling behavior, such as torches or chests." ) );
             requiresTools = SPEC.define( new BooleanField( "require_tools", true,
                     "If true, mobs will only break doors they have the tools to harvest.",
                     "For example, they will only break iron doors if they have a pickaxe." ) );
@@ -260,8 +261,8 @@ public class GeneralConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             targetDoors = SPEC.define( new BooleanField( "targets.auto_target_doors", true,
-                    "If true, door breaking AI will automatically target all blocks that derive from the",
-                    "vanilla doors, fence gates, and trapdoors." ) );
+                    "If true, door breaking AI will automatically target all blocks that derive from the " +
+                            "vanilla doors, fence gates, and trapdoors." ) );
             targetList = new BlockListField.Combined(
                     SPEC.define( new BlockListField( "targets.whitelist", new BlockList(),
                             "List of blocks that that can be broken by the door breaking AI." ) ),

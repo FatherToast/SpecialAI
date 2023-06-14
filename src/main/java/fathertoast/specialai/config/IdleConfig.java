@@ -25,12 +25,12 @@ public class IdleConfig extends AbstractConfigFile {
     /** Builds the config spec that should be used for this config. */
     IdleConfig( ConfigManager cfgManager, String cfgName ) {
         super( cfgManager, cfgName,
-                "This config contains options for idle behaviors - actions taken by mobs when they are bored."
+                "This config contains options for idle behaviors; actions taken by mobs when they are bored."
         );
         
-        SPEC.newLine();
+        SPEC.fileOnlyNewLine();
         SPEC.describeEntityList();
-        SPEC.newLine();
+        SPEC.fileOnlyNewLine();
         SPEC.describeBlockList();
         
         GENERAL = new IdleGeneral( this );
@@ -115,8 +115,8 @@ public class IdleConfig extends AbstractConfigFile {
             leaveDrops = SPEC.define( new BooleanField( "leaves_drops", true,
                     "If true, blocks griefed by mobs will leave item drops." ) );
             breakSound = SPEC.define( new BooleanField( "break_sound", false,
-                    "If true, a loud snapping sound (the vanilla door break sound) will be played when a block",
-                    "is broken, which is audible regardless of distance." ) );
+                    "If true, a loud snapping sound (the vanilla door break sound) will be played when a " +
+                            "block is broken, which is audible regardless of distance." ) );
             
             SPEC.newLine();
             
@@ -128,8 +128,8 @@ public class IdleConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             targetLights = SPEC.define( new BooleanField( "targets.auto_target_lights", true,
-                    "If true, idle griefing AI will automatically target all light sources (light value > 1).",
-                    "This will do its best to avoid natural sources such as fire and redstone ore." ) );
+                    "If true, idle griefing AI will automatically target all light sources (light value > 1). " +
+                            "This will do its best to avoid natural sources such as fire and redstone ore." ) );
             targetBeds = SPEC.define( new BooleanField( "targets.auto_target_beds", true,
                     "If true, idle griefing AI will automatically target all blocks that derive from the vanilla beds." ) );
             targetWhitelist = SPEC.define( new BlockListField( "targets.whitelist", buildDefaultGriefTargets(),
@@ -214,8 +214,7 @@ public class IdleConfig extends AbstractConfigFile {
             targetList = new BlockListField.Combined(
                     SPEC.define( new BlockListField( "targets.whitelist", new BlockList(
                             new BlockEntry( Blocks.REPEATER ), new BlockEntry( Blocks.COMPARATOR ),
-                            new BlockEntry( Blocks.TNT ), new BlockEntry( Blocks.CAKE )
-                    ),
+                            new BlockEntry( Blocks.TNT ), new BlockEntry( Blocks.CAKE ) ),
                             "List of blocks that can be interacted with by the idle fiddling AI." ) ),
                     SPEC.define( new BlockListField( "targets.blacklist", new BlockList() ) )
             );
