@@ -1,13 +1,14 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
-import fathertoast.specialai.util.BlockHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -125,7 +126,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
         }
         
         // Play green particle effects
-        BlockHelper.LevelEvent.BONEMEAL_PARTICLES.play( ally );
+        LevelEventHelper.BONE_MEAL_USE.play( ally.level, null, ally.blockPosition() );
     }
     
     /** Searches for a nearby ally (targeting the same entity) to follow. Returns true if one is found. */
@@ -152,7 +153,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     }
     
     /** @return Returns true if the entity is in range and an ally (targeting the same entity). */
-    private boolean isInRangeAlly( LivingEntity target, Entity entity ) {
+    private boolean isInRangeAlly( @Nullable LivingEntity target, Entity entity ) {
         return entity instanceof MobEntity && mob.distanceToSqr( entity ) <= Config.ELITE_AI.SHAMAN.auraRangeSqr.get() &&
                 target == ((MobEntity) entity).getTarget();
     }

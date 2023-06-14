@@ -1,7 +1,8 @@
 package fathertoast.specialai.ai.griefing;
 
-import fathertoast.specialai.util.BlockHelper;
+import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.util.BlockHelper;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.MobEntity;
@@ -14,7 +15,6 @@ import net.minecraft.util.GroundPathHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
-import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.function.Predicate;
 
@@ -167,10 +167,10 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         // Play hit effects
         if( hitCounter == 0 ) {
             if( targetBlock.getMaterial() == Material.METAL || targetBlock.getMaterial() == Material.HEAVY_METAL ) {
-                BlockHelper.LevelEvent.ATTACK_DOOR_IRON.play( mob, doorPos );
+                LevelEventHelper.ZOMBIE_ATTACK_IRON_DOOR.play( mob.level, doorPos );
             }
             else {
-                BlockHelper.LevelEvent.ATTACK_DOOR_WOOD.play( mob, doorPos );
+                LevelEventHelper.ZOMBIE_ATTACK_WOODEN_DOOR.play( mob.level, doorPos );
             }
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
@@ -186,8 +186,8 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         if( blockDamage >= 1.0F ) {
             // Block is broken
             world.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
-            BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play( mob, doorPos );
-            BlockHelper.LevelEventMeta.playBreakBlock( mob, doorPos );
+            LevelEventHelper.ZOMBIE_BREAK_WOODEN_DOOR.play( mob.level, doorPos );
+            LevelEventHelper.BLOCK_BREAK_FX.play( mob.level, null, doorPos, targetBlock );
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
             }

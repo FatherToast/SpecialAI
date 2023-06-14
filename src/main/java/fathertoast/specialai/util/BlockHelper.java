@@ -1,9 +1,7 @@
 package fathertoast.specialai.util;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -13,9 +11,10 @@ import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
+
+import javax.annotation.Nullable;
 
 /**
  * Contains helper methods and info needed for block-breaking logic.
@@ -91,8 +90,11 @@ public final class BlockHelper {
         return Math.max( digSpeed, 0.0F );
     }
     
-    /** @return Returns the dig speed multiplier based on the given dig slowdown (mining fatigue) effect. */
-    private static float getDigSpeedSlowdown( EffectInstance effect ) {
+    /**
+     * @return Returns the dig speed multiplier based on the given dig slowdown (mining fatigue) effect.
+     * @see PlayerEntity#getDigSpeed(BlockState, BlockPos)
+     */
+    private static float getDigSpeedSlowdown( @Nullable EffectInstance effect ) {
         if( effect == null ) return 1.0F;
         switch( effect.getAmplifier() ) {
             case 0:
@@ -106,62 +108,4 @@ public final class BlockHelper {
                 return 8.1E-4F;
         }
     }
-    
-    /**
-     * This class plays various 'level effect' events of interest and stores data needed to communicate the event to the client.
-     * These level events do not use metadata. For the events that do, see LevelEventMeta.
-     *
-     * @see net.minecraft.client.renderer.WorldRenderer#levelEvent(PlayerEntity, int, BlockPos, int)
-     */
-    public enum LevelEvent {
-        /** @see net.minecraft.util.SoundEvents#DISPENSER_LAUNCH */
-        DISPENSER_LAUNCH( 1002 ),
-        /** @see net.minecraft.util.SoundEvents#ZOMBIE_ATTACK_WOODEN_DOOR */
-        ATTACK_DOOR_WOOD( 1019 ),
-        /** @see net.minecraft.util.SoundEvents#ZOMBIE_ATTACK_IRON_DOOR */
-        ATTACK_DOOR_IRON( 1020 ),
-        /** @see net.minecraft.util.SoundEvents#ZOMBIE_BREAK_WOODEN_DOOR */
-        BREAK_DOOR_WOOD( 1021 ),
-        /** Spawns a burst of smoke and flame particles. */
-        SPAWNER_PARTICLES( 2004 ),
-        /** @see net.minecraft.item.BoneMealItem#addGrowthParticles(IWorld, BlockPos, int) */
-        BONEMEAL_PARTICLES( 2005 );
-        
-        /** The event id, as it appears in WorldRenderer#levelEvent(). */
-        private final int EVENT_ID;
-        
-        LevelEvent( int eventId ) { EVENT_ID = eventId; }
-        
-        /** Plays the event for an entity at that entity's position. */
-        public final void play( Entity entity ) { play( entity.level, entity.blockPosition() ); }
-        
-        /** Plays the event for an entity at a specified position. */
-        public final void play( Entity entity, BlockPos pos ) { play( entity.level, pos ); }
-        
-        /** Plays the event in the world at a specified position. */
-        public final void play( World world, BlockPos pos ) { world.levelEvent( EVENT_ID, pos, 0 ); }
-    }
-    
-    /**
-     * This class contains ids for various 'level effect' events of interest and helper methods to play those events.
-     *
-     * @see net.minecraft.client.renderer.WorldRenderer#levelEvent(PlayerEntity, int, BlockPos, int)
-     */
-    public static final class LevelEventMeta {
-        /** Plays the break sound and spawns a burst of block particles for the block. Metadata is block state id. */
-        private static final int BREAK_BLOCK = 2001;
-        
-        /** Plays the event for an entity at a specified position. */
-        public static void playBreakBlock( Entity entity, BlockPos pos ) { playBreakBlock( entity.level, pos ); }
-        
-        /** Plays the event in the world at a specified position. */
-        public static void playBreakBlock( World world, BlockPos pos ) { play( BREAK_BLOCK, world, pos, Block.getId( world.getBlockState( pos ) ) ); }
-        
-        /** Plays the event in the world at a specified position with metadata. */
-        @SuppressWarnings( "SameParameterValue" )
-        private static void play( int eventId, World world, BlockPos pos, int meta ) { world.levelEvent( eventId, pos, meta ); }
-    }
-    
-    // This is a static-only helper class.
-    private BlockHelper() {}
 }

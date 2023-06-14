@@ -3,6 +3,7 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
+import fathertoast.crust.api.config.common.ConfigUtil;
 import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.file.TomlHelper;
 import fathertoast.crust.api.config.common.value.EntityEntry;
@@ -402,7 +403,7 @@ public class EliteAIConfig extends AbstractConfigFile {
                     "The maximum range to avoid players in.",
                     "Note that all changes to the avoidance behavior require reload to take effect on existing entities." ) );
             avoidWalkSpeed = SPEC.define( new DoubleField( "avoid_speed.walk", 1.0, DoubleField.Range.NON_NEGATIVE,
-                    "The speed multiplier while avoiding far away players (" + SpecialAI.GREATER_OR_EQUAL + " 7 blocks away)." ) );
+                    "The speed multiplier while avoiding far away players (" + ConfigUtil.GREATER_OR_EQUAL + " 7 blocks away)." ) );
             avoidRunSpeed = SPEC.define( new DoubleField( "avoid_speed.run", 1.2, DoubleField.Range.NON_NEGATIVE,
                     "The speed multiplier while avoiding nearby players (< 7 blocks away)." ) );
             

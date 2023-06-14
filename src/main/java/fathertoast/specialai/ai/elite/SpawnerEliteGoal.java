@@ -1,10 +1,11 @@
 package fathertoast.specialai.ai.elite;
 
 import com.google.common.collect.Lists;
+import fathertoast.crust.api.lib.LevelEventHelper;
+import fathertoast.crust.api.lib.NBTHelper;
+import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
-import fathertoast.specialai.util.BlockHelper;
-import fathertoast.specialai.util.NBTHandler;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.*;
 import net.minecraft.nbt.CompoundNBT;
@@ -229,14 +230,14 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                 final MobEntity newMob = newEntity instanceof MobEntity ? (MobEntity) newEntity : null;
                 if( newMob != null ) {
                     // Create the elite AI compound to prevent any elite AIs from generating on the spawned entity
-                    NBTHandler.getOrCreateTag( NBTHandler.getModTag( newMob ), AIManager.TAG_ELITE_AI );
+                    NBTHelper.getForgeData( newMob, SpecialAI.MOD_ID, AIManager.TAG_ELITE_AI );
                     
                     // Fire the Forge can spawn event
                     if( !ForgeEventFactory.canEntitySpawnSpawner( newMob, world, (float) newEntity.getX(), (float) newEntity.getY(), (float) newEntity.getZ(), this ) )
                         continue;
                     
                     // If needed, perform the standard entity spawn initialization
-                    if( nextSpawnData.getTag().size() == 1 && nextSpawnData.getTag().contains( TAG_ENTITY_ID, NBTHandler.ID_STRING ) &&
+                    if( nextSpawnData.getTag().size() == 1 && NBTHelper.containsString( nextSpawnData.getTag(), TAG_ENTITY_ID ) &&
                             !ForgeEventFactory.doSpecialSpawn( newMob, world, (float) newEntity.getX(), (float) newEntity.getY(), (float) newEntity.getZ(), this, SpawnReason.SPAWNER ) ) {
                         newMob.finalizeSpawn( world, world.getCurrentDifficultyAt( newEntity.blockPosition() ),
                                 SpawnReason.SPAWNER, null, null );
@@ -245,7 +246,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                 if( !world.tryAddFreshEntityWithPassengers( newEntity ) ) break;
                 
                 // This spawn was successful
-                BlockHelper.LevelEvent.SPAWNER_PARTICLES.play( mob, headPos );
+                LevelEventHelper.SMOKE_AND_FLAME.play( world, headPos );
                 if( newMob != null ) {
                     newMob.spawnAnim();
                     
@@ -290,29 +291,29 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         public void load( CompoundNBT tag ) {
             spawnDelay = tag.getShort( TAG_DELAY );
             spawnPotentials.clear();
-            if( tag.contains( TAG_SPAWN_POTENTIALS, NBTHandler.ID_LIST ) ) {
-                ListNBT listnbt = tag.getList( TAG_SPAWN_POTENTIALS, NBTHandler.ID_COMPOUND );
+            if( NBTHelper.containsList( tag, TAG_SPAWN_POTENTIALS ) ) {
+                ListNBT listnbt = tag.getList( TAG_SPAWN_POTENTIALS, NBTHelper.ID_COMPOUND );
                 
                 for( int i = 0; i < listnbt.size(); ++i ) {
                     spawnPotentials.add( new WeightedSpawnerEntity( listnbt.getCompound( i ) ) );
                 }
             }
-            if( tag.contains( TAG_SPAWN_DATA, NBTHandler.ID_COMPOUND ) ) {
+            if( NBTHelper.containsCompound( tag, TAG_SPAWN_DATA ) ) {
                 setNextSpawnData( new WeightedSpawnerEntity( 1, tag.getCompound( TAG_SPAWN_DATA ) ) );
             }
             else if( !spawnPotentials.isEmpty() ) {
                 setNextSpawnData( WeightedRandom.getRandomItem( mob.getRandom(), spawnPotentials ) );
             }
-            if( tag.contains( TAG_MIN_DELAY, NBTHandler.ID_NUMERICAL ) ) {
+            if( NBTHelper.containsNumber( tag, TAG_MIN_DELAY ) ) {
                 minSpawnDelay = tag.getShort( TAG_MIN_DELAY );
                 maxSpawnDelay = tag.getShort( TAG_MAX_DELAY );
                 spawnCount = tag.getShort( TAG_SPAWN_COUNT );
             }
-            if( tag.contains( TAG_MAX_NEARBY, NBTHandler.ID_NUMERICAL ) ) {
+            if( NBTHelper.containsNumber( tag, TAG_MAX_NEARBY ) ) {
                 maxNearbyEntities = tag.getShort( TAG_MAX_NEARBY );
                 requiredPlayerRange = tag.getShort( TAG_ACTIVATION_RANGE );
             }
-            if( tag.contains( TAG_SPAWN_RANGE, NBTHandler.ID_NUMERICAL ) ) {
+            if( NBTHelper.containsNumber( tag, TAG_SPAWN_RANGE ) ) {
                 spawnRange = tag.getShort( TAG_SPAWN_RANGE );
             }
         }

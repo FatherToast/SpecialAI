@@ -1,7 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
-import fathertoast.specialai.util.BlockHelper;
 import net.minecraft.command.arguments.EntityAnchorArgument;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -124,7 +124,7 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
             }
             arrow.shoot( attackVec.x, attackVec.y, attackVec.z, 1.8F, (float) Config.ELITE_AI.BARRAGE.arrowVariance.get() );
             
-            BlockHelper.LevelEvent.DISPENSER_LAUNCH.play( mob );
+            LevelEventHelper.DISPENSER_LAUNCH.play( mob );
             mob.level.addFreshEntity( arrow );
         }
         else if( this.attackTime <= 0 ) {

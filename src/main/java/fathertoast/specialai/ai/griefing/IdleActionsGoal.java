@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai.griefing;
 
+import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
@@ -23,6 +24,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nullable;
 import java.util.EnumSet;
 
 /**
@@ -276,9 +278,9 @@ public class IdleActionsGoal extends Goal {
             else {
                 world.destroyBlock( targetPos, Config.IDLE.GRIEFING.leaveDrops.get() );
                 if( Config.IDLE.GRIEFING.breakSound.get() ) {
-                    BlockHelper.LevelEvent.BREAK_DOOR_WOOD.play( mob, targetPos );
+                    LevelEventHelper.ZOMBIE_BREAK_WOODEN_DOOR.play( mob.level, targetPos );
                 }
-                BlockHelper.LevelEventMeta.playBreakBlock( mob, targetPos );
+                LevelEventHelper.BLOCK_BREAK_FX.play( mob.level, null, targetPos, targetBlock );
             }
             
             // Play animation; goal complete
