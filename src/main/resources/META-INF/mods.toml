@@ -8,10 +8,10 @@ logoFile = "banner.png"
 authors = "Father Toast"
 credits = "Mother Toast & Baby Toast"
 version = "${file.jarVersion}"
+#displayTest = "IGNORE_SERVER_VERSION" #TODO un-comment for 1.19.2+
 displayName = "Special AI"
 modId = "specialai"
 description = '''
-
 Special AI modifies the behaviors of entities to create new challenges and make the world feel more alive.
 
 This mod is highly configurable and each feature has at least one config option associated with it.
@@ -26,18 +26,25 @@ Discussion: https://discord.gg/GFTzTdX
 '''
 
 [[dependencies.specialai]]
-modId="forge"
-mandatory=true
-versionRange="[36,)"
-ordering="NONE"
-side="BOTH"
+modId = "forge"
+mandatory = true
+versionRange = "[36,)"
+ordering = "NONE"
+side = "BOTH"
 
 [[dependencies.specialai]]
-modId="minecraft"
-mandatory=true
-versionRange="[1.16.3,)"
-ordering="NONE"
-side="BOTH"
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.16.3,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.specialai]]
+modId = "crust"
+mandatory = true
+versionRange = "[1.0.0,)"
+ordering = "NONE"
+side = "BOTH"
 
 # A URL to query for updates for this mod. See the JSON update specification https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
