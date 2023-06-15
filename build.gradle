@@ -72,27 +72,35 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    // Repos for mods to include during development
     maven {
-        name 'prog'
-        url 'http://dvs1.progwml6.com/files/maven'
+        name 'CurseMaven'
+        url 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
     }
-    maven {
+
+    //maven { // JEI
+    //    name 'prog'
+    //    url 'http://dvs1.progwml6.com/files/maven'
+    //}
+    maven { // TOP
         name 'tterrag'
         url 'https://maven.tterrag.com/'
     }
 
     // For local api testing
-    flatDir { dir 'lib' }
+    //flatDir { dir 'lib' }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
     // For local api testing
-    implementation ":crust-${crust_version}-src"
+    //implementation ":crust-${mc_version}-1.0.0-src"
 
-    //runtimeOnly fg.deobf(":crust-${crust_version}")
+    implementation "curse.maven:crust-873570:${crust_api_version}"
+    runtimeOnly "curse.maven:crust-873570:${crust_src_version}"
 
     // Add in JEI and TOP to assist debugging during development
     //runtimeOnly fg.deobf("mezz.jei:jei-${jei_version}")

@@ -1,7 +1,6 @@
 package fathertoast.specialai.client;
 
 import fathertoast.crust.api.config.client.ClientConfigUtil;
-import fathertoast.crust.client.KeyBindingEvents;
 import fathertoast.specialai.SpecialAI;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
