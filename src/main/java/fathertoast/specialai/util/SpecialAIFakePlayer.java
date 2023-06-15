@@ -42,15 +42,16 @@ public class SpecialAIFakePlayer extends FakePlayer {
         super( (ServerWorld) entity.level, FAKE_PLAYER_PROFILE );
         wrappedEntity = entity;
         foodData = new FakeFoodStats( this );
-        
-        absMoveTo( entity.getX(), entity.getY(), entity.getZ(), entity.yRot, entity.xRot );
-        setDeltaMovement( entity.getDeltaMovement() );
     }
     
-    /**
-     * Call this method when you are done using this fake player.
-     * After this is called, you should probably throw away all references to this player.
-     */
+    /** Call this method before using the fake player reference. */
+    public void updateFakePlayerState() {
+        absMoveTo( wrappedEntity.getX(), wrappedEntity.getY(), wrappedEntity.getZ(),
+                wrappedEntity.yRot, wrappedEntity.xRot );
+        setDeltaMovement( wrappedEntity.getDeltaMovement() );
+    }
+    
+    /** Call this method after using the fake player reference. */
     public void updateWrappedEntityState() {
         wrappedEntity.absMoveTo( getX(), getY(), getZ(), yRot, xRot );
         wrappedEntity.setDeltaMovement( getDeltaMovement() );

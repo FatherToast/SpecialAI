@@ -24,7 +24,6 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
 import java.util.EnumSet;
 
 /**
@@ -71,6 +70,8 @@ public class IdleActionsGoal extends Goal {
     
     /** Used to prevent mobs from spamming right click on things. */
     private int fiddleDelay;
+    /** The entity wrapped as a player. Required to perform the 'right-click block' action. */
+    private SpecialAIFakePlayer fiddleWrapper;
     
     /**
      * @param entity   The owner of this AI.
@@ -309,14 +310,30 @@ public class IdleActionsGoal extends Goal {
             }
             // Otherwise, interact like a player right-clicking the block
             else {
-                // Surrounded with try/catch in case the fake player interaction causes issues
-                try {
-                    SpecialAIFakePlayer fakePlayer = new SpecialAIFakePlayer( mob );
-                    targetBlock.use( mob.level, fakePlayer, Hand.MAIN_HAND, targetHitResult );
-                    fakePlayer.updateWrappedEntityState();
+                if( fiddleWrapper == null ) {
+                    // Surrounded with try/catch in case the fake player creation causes issues
+                    try {
+                        fiddleWrapper = new SpecialAIFakePlayer( mob );
+                    }
+                    catch( Exception ex ) {
+                        SpecialAI.LOG.error( "Failed to create fake player wrapper for entity '{}'",
+                                mob.getType().getRegistryName(), ex );
+                        // Forcibly disable fiddling for this entity until reload; also disables special cases, but oh well
+                        stopFiddling();
+                        fiddleDelay = Integer.MAX_VALUE;
+                        currentActivity = Activity.NONE;
+                    }
                 }
-                catch( Exception ex ) {
-                    SpecialAI.LOG.warn( "Failed to fiddle with block '{}'", ForgeRegistries.BLOCKS.getKey( targetBlock.getBlock() ), ex );
+                if( fiddleWrapper != null ) {
+                    // Surrounded with try/catch in case the fake player interaction causes issues
+                    try {
+                        fiddleWrapper.updateFakePlayerState();
+                        targetBlock.use( mob.level, fiddleWrapper, Hand.MAIN_HAND, targetHitResult );
+                        fiddleWrapper.updateWrappedEntityState();
+                    }
+                    catch( Exception ex ) {
+                        SpecialAI.LOG.warn( "Failed to fiddle with block '{}'", ForgeRegistries.BLOCKS.getKey( targetBlock.getBlock() ), ex );
+                    }
                 }
             }
         }
