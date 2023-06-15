@@ -11,6 +11,7 @@ import net.minecraft.util.EntityPredicates;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * This AI causes the entity to search for and mount valid entities.
@@ -76,7 +77,7 @@ public class RiderGoal extends Goal {
         mob.getLookControl().setLookAt( targetMount, 30.0F, 30.0F );
         
         if( !targetMount.isVehicle() && mob.distanceToSqr( targetMount ) <= mob.getBbWidth() * mob.getBbWidth() * 4.0F + targetMount.getBbWidth() ) {
-            mob.startRiding( targetMount, true );
+            AIManager.queue( new StartRiding( mob, targetMount ) );
             targetMount = null;
         }
         else if( mob.getNavigation().isDone() ) {
@@ -131,5 +132,28 @@ public class RiderGoal extends Goal {
     /** @return Returns true if the rider is a small rider, and false if the rider is normal-sized. */
     private boolean isSmallRider() {
         return isSmall || mob.isBaby() || mob instanceof SlimeEntity && ((SlimeEntity) mob).isTiny();
+    }
+    
+    /**
+     * Used to connect a rider to its target mount, so it can start riding.
+     * This strategy is used because mounting during the AI tick can potentially cause issues.
+     */
+    private static class StartRiding implements Supplier<Boolean> {
+        /** The entity that wants to ride. */
+        private final MobEntity RIDER;
+        /** The target entity to be ridden. */
+        private final LivingEntity MOUNT;
+        
+        StartRiding( MobEntity rider, LivingEntity mount ) {
+            RIDER = rider;
+            MOUNT = mount;
+        }
+        
+        /** Called to actually start riding. */
+        @Override
+        public Boolean get() {
+            RIDER.startRiding( MOUNT, true );
+            return true;
+        }
     }
 }

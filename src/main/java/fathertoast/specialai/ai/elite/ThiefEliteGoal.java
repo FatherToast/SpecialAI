@@ -176,6 +176,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     }
     
     /** Allows the user to choose which inventory slots that can be stolen from through the config file. */
+    @SuppressWarnings( "unused" )
     public enum ValidSlots {
         ANY( true, true, true ),
         HOTBAR_ONLY( true, false, false ),

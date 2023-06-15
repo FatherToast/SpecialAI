@@ -63,7 +63,7 @@ public final class AIManager {
     /** All actions currently waiting to be performed at the end of the server tick. */
     private static final List<Supplier<Boolean>> TICK_END_ACTIONS = new ArrayList<>();
     
-    /** Queues an action to perform at the end of the server tick. */
+    /** Queues an action to perform at the end of the server tick. Will be called at the end of each tick until it returns 'true'. */
     public static void queue( Supplier<Boolean> action ) { TICK_END_ACTIONS.add( action ); }
     
     /** The number of remaining global block scans that can be performed this server tick. */
