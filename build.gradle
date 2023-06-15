@@ -97,6 +97,21 @@ dependencies {
     runtimeOnly fg.deobf("mcjty.theoneprobe:TheOneProbe-${top_version}")
 }
 
+jar {
+    manifest {
+        attributes([
+                "Specification-Title"     : "Special AI",
+                "Specification-Vendor"    : "FatherToast",
+                "Specification-Version"   : "1", // We are version 1 of ourselves
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${version}",
+                "Implementation-Vendor"   : "FatherToast",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                //"MixinConfigs"            : "specialai.mixins.json"
+        ])
+    }
+}
+
 jar.finalizedBy('reobfJar')
 
 publishing {
