@@ -81,15 +81,17 @@ repositories {
         name 'tterrag'
         url 'https://maven.tterrag.com/'
     }
-    flatDir {
-        dir 'lib'
-    }
+
+    // For local api testing
+    flatDir { dir 'lib' }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
-    implementation ":crust-${crust_version}-api"
+    // For local api testing
+    implementation ":crust-${crust_version}-src"
+
     //runtimeOnly fg.deobf(":crust-${crust_version}")
 
     // Add in JEI and TOP to assist debugging during development
