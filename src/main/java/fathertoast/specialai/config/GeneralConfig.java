@@ -44,6 +44,7 @@ public class GeneralConfig extends AbstractConfigFile {
         public final EntityListField.Combined aggressiveList;
         
         public final BooleanField eatBreedingItems;
+        public final DoubleField eatingReach;
         public final BooleanField eatingHeals;
         
         Animals( GeneralConfig parent ) {
@@ -86,6 +87,9 @@ public class GeneralConfig extends AbstractConfigFile {
             
             eatBreedingItems = SPEC.define( new BooleanField( "eat_breeding_items", true,
                     "If true, passive mobs will seek out and eat the items used to breed them laying on the floor." ) );
+            eatingReach = SPEC.define( new DoubleField( "eating_reach", 2.0, DoubleField.Range.NON_NEGATIVE,
+                    "Mobs' reach (from foot position) when targeting breeding items to eat. Player reach is about 4.5. " +
+                            "When in range, the item will be slowly 'vacuumed' toward the passive mob." ) );
             eatingHeals = SPEC.define( new BooleanField( "eating_heals", true,
                     "If true, when mobs eat breeding items off the floor, they will regain health (like " +
                             "wolves). The option \"eat_breeding_items\" needs to be enabled for this to have any effect." ) );

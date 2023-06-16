@@ -68,6 +68,7 @@ public class EatBreedingItemGoal extends Goal {
     /** Called each tick while this AI is active. */
     @Override
     public void tick() {
+        if( target == null ) return; // Shouldn't happen, but just in case
         mob.getLookControl().setLookAt( target, 30.0F, 30.0F );
         
         List<Entity> list = mob.level.getEntities( mob, mob.getBoundingBox().inflate( 0.2, 0.0, 0.2 ) );
@@ -87,8 +88,17 @@ public class EatBreedingItemGoal extends Goal {
                 target.remove();
             }
         }
-        else if( mob.getNavigation().isDone() ) {
-            mob.getNavigation().moveTo( target.position().x, target.position().y, target.position().z, 1.0 );
+        else {
+            // Small magnet effect
+            double reach = Config.GENERAL.ANIMALS.eatingReach.get();
+            if( reach > 0.0 && mob.distanceToSqr( target ) < reach * reach ) {
+                target.setDeltaMovement( mob.position().subtract( target.position() )
+                        .normalize().scale( 0.05 ).add( 0.0, 0.04, 0.0 ) );
+            }
+            
+            if( mob.getNavigation().isDone() ) {
+                mob.getNavigation().moveTo( target.position().x, target.position().y, target.position().z, 1.0 );
+            }
         }
     }
     
