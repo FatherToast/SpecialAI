@@ -1,5 +1,8 @@
 1.16.5-1.1.0
-    - Implemented and now requires Crust.
+    - Implemented and now requires Crust (improved configs).
+    - Fixed issues #26 and #27 - minor bugs
+    - Possibly fixed issue #9 - serious fiddle ai performance issue
+    - Possibly fixed issues #13 and #16 - EpicFightMod incompat
 1.16.5-1.0.2
     - World load deadlock fixed.
     - No longer delays AI initialization until the first server tick.
