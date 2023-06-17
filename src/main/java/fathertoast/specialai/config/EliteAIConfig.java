@@ -8,7 +8,7 @@ import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.file.TomlHelper;
 import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
-import fathertoast.crust.api.config.common.value.WeightedList;
+import fathertoast.crust.api.config.common.value.EnvironmentList;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import net.minecraft.enchantment.Enchantments;
@@ -16,12 +16,14 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class EliteAIConfig extends AbstractConfigFile {
     
     public final EliteGeneral GENERAL;
     
+    private final List<EliteAICategory> ELITE_AI_CATEGORIES = new ArrayList<>();
     public final Leap LEAP;
     public final Jump JUMP;
     public final Sprint SPRINT;
@@ -49,6 +51,9 @@ public class EliteAIConfig extends AbstractConfigFile {
         SPEC.describeEntityList();
         
         GENERAL = new EliteGeneral( this );
+        
+        SPEC.newLine();
+        
         LEAP = new Leap( this );
         JUMP = new Jump( this );
         SPRINT = new Sprint( this );
@@ -77,11 +82,14 @@ public class EliteAIConfig extends AbstractConfigFile {
         }
     }
     
+    /** @return A list of all elite ai categories. */
+    public List<EliteAICategory> getEliteAICategories() { return Collections.unmodifiableList( ELITE_AI_CATEGORIES ); }
+    
     public static class EliteGeneral extends AbstractConfigCategory<EliteAIConfig> {
         
         public final EntityListField.Combined entityList;
         
-        public final WeightedList<EliteAIType> eliteAIWeights;
+        public final DoubleField.EnvironmentSensitiveWeightedList<EliteAIType> eliteAIWeights;
         
         public final BooleanField enablePreferMelee;
         public final BooleanField enableAttributeMods;
@@ -101,19 +109,47 @@ public class EliteAIConfig extends AbstractConfigFile {
                             new EntityEntry( EntityType.PIGLIN, 0.04, 0.04, 0.02 ), new EntityEntry( EntityType.ZOMBIFIED_PIGLIN, 0.04, 0.04, 0.02 ),
                             new EntityEntry( EntityType.PIGLIN_BRUTE, 0.5, 0.01, 0.01 )
                     ).setRange0to1(),
-                            "List of mobs that can gain elite AI patterns and their chances to gain those patterns.",
+                            "List of mobs that can gain random elite AI patterns and their chances to gain those AIs.",
                             "Additional values after the entity type are the chances (0.0 to 1.0) for entities of that type to spawn with elite AI. " +
-                                    "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack." ) ),
+                                    "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack.",
+                            "AI patterns applied this way are in addition to any that you have applied directly in the specific categories below." ) ),
                     SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
             );
             
             SPEC.newLine();
             
-            eliteAIWeights = new WeightedList<>( SPEC, "weight", EliteAIType.values(),
+            final EliteAIType[] aiTypes = EliteAIType.values();
+            final DoubleField[] baseWeights = new DoubleField[aiTypes.length];
+            final EnvironmentListField[] weightExceptions = new EnvironmentListField[aiTypes.length];
+            
+            SPEC.titledComment( "Weights",
                     "The following options are the weights for each elite AI pattern to be chosen when assigning " +
-                            "an elite AI to entities in the above list. The higher an AI's weight, the more common it will be " +
-                            "compared to the others.",
-                    "Elite AIs given a weight of 0 are effectively disabled (though they can still be NBT-edited onto mobs)." );
+                            "a random elite AI to entities in the above list. Higher weight is more common.",
+                    "Elite AIs given a weight of 0 will never be selected, though they can still be applied directly " +
+                            "by the entity list in their specific category below and can still be NBT-edited onto mobs.",
+                    TextFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.NON_NEGATIVE ) );
+            for( int i = 0; i < aiTypes.length; i++ ) {
+                baseWeights[i] = SPEC.define( new DoubleField(
+                        "weight." + aiTypes[i].getKey() + ".base", aiTypes[i].getDefaultWeight(),
+                        DoubleField.Range.NON_NEGATIVE, (String[]) null ) );
+            }
+            
+            SPEC.newLine();
+            
+            SPEC.titledComment( "Weight Exceptions",
+                    "The following options are the weights for each elite AI pattern to be chosen when assigning " +
+                            "a random elite AI to entities in the above list when specific environmental conditions are met. " +
+                            "See above for the weights used when none of the conditions are met.",
+                    TextFormatting.GRAY + TomlHelper.fieldInfoFormat( "Environment List", new ArrayList<>(),
+                            "[ \"value condition1 state1 & condition2 state2 & ...\", ... ]" ),
+                    TextFormatting.GRAY + "   Range for Values: " + TomlHelper.fieldRange( DoubleField.Range.NON_NEGATIVE.MIN, DoubleField.Range.NON_NEGATIVE.MAX ) );
+            for( int i = 0; i < aiTypes.length; i++ ) {
+                weightExceptions[i] = SPEC.define( new EnvironmentListField(
+                        "weight." + aiTypes[i].getKey() + ".exceptions", new EnvironmentList()
+                        .setRange( DoubleField.Range.NON_NEGATIVE ), (String[]) null ) );
+            }
+            
+            eliteAIWeights = new DoubleField.EnvironmentSensitiveWeightedList<>( aiTypes, baseWeights, weightExceptions );
             
             SPEC.newLine();
             
@@ -664,6 +700,10 @@ public class EliteAIConfig extends AbstractConfigFile {
      */
     public abstract static class EliteAICategory extends AbstractConfigCategory<EliteAIConfig> {
         
+        public final EliteAIType TYPE;
+        
+        public final EntityListField.Combined entityList;
+        
         public final BooleanField preferMelee;
         
         public final DoubleField followRange;
@@ -686,6 +726,18 @@ public class EliteAIConfig extends AbstractConfigFile {
         EliteAICategory( EliteAIConfig parent, EliteAIType ai, boolean defaultPreferMelee, AttributeMods attributes ) {
             super( parent, ai.getKey(),
                     "Options for customizing the " + ai.getDisplayName() + " elite AI pattern." );
+            TYPE = ai;
+            parent.ELITE_AI_CATEGORIES.add( this );
+            
+            entityList = new EntityListField.Combined(
+                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList().setSinglePercent(),
+                            "List of mobs (by entity type registry id) that are given this AI directly " +
+                                    "(separate from the general entity list chances and AI weights).",
+                            "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with this AI." ) ),
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+            );
+            
+            SPEC.newLine();
             
             preferMelee = SPEC.define( new BooleanField( "prefer_melee", defaultPreferMelee,
                     "When true, entities given this AI will prefer melee weapons. See the general category for more info." ) );
@@ -709,7 +761,7 @@ public class EliteAIConfig extends AbstractConfigFile {
             knockback = SPEC.define( new DoubleField( "modifier.added_knockback", attributes.knockback, DoubleField.Range.ANY, (String[]) null ) );
             speed = SPEC.define( new DoubleField( "modifier.increased_speed", attributes.speed, DoubleField.Range.ANY, (String[]) null ) );
             
-            SPEC.newLine();
+            SPEC.newLine(); // Assume each implementing category will add at least one field
         }
     }
     

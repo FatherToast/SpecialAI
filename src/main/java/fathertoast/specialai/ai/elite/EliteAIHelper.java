@@ -14,6 +14,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import javax.annotation.Nullable;
+
 /**
  * This class contains several helper methods for managing elite AI.
  */
@@ -31,11 +33,16 @@ public final class EliteAIHelper {
      * @param entity Applies a random elite AI to this mob.
      * @param aiTag  The mob's save data.
      */
-    public static void saveEliteAI( MobEntity entity, CompoundNBT aiTag ) {
-        EliteAIType eliteAI = Config.ELITE_AI.GENERAL.eliteAIWeights.next( entity.getRandom() );
-        if( eliteAI != null && !eliteAI.isSaved( aiTag ) ) {
-            eliteAI.saveTo( aiTag );
-        }
+    public static void saveEliteAI( CompoundNBT aiTag, MobEntity entity ) {
+        saveEliteAI( aiTag, Config.ELITE_AI.GENERAL.eliteAIWeights.next( entity.getRandom(), entity.level, entity.blockPosition() ) );
+    }
+    
+    /**
+     * @param aiTag   The mob's save data.
+     * @param eliteAI The AI pattern to apply.
+     */
+    public static void saveEliteAI( CompoundNBT aiTag, @Nullable EliteAIType eliteAI ) {
+        if( eliteAI != null && !eliteAI.isSaved( aiTag ) ) eliteAI.saveTo( aiTag );
     }
     
     /**
@@ -130,5 +137,5 @@ public final class EliteAIHelper {
     }
     
     // This is a static-only helper class.
-    private EliteAIHelper() {}
+    private EliteAIHelper() { }
 }

@@ -9,6 +9,7 @@ import fathertoast.specialai.ai.griefing.EatBreedingItemGoal;
 import fathertoast.specialai.ai.griefing.IdleActionsGoal;
 import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.config.EliteAIConfig;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -367,30 +368,41 @@ public final class AIManager {
         }
         
         // Elite AI
-        final CompoundNBT eliteTag;
-        if( !NBTHelper.containsCompound( tag, TAG_ELITE_AI ) ) {
-            eliteTag = NBTHelper.getOrCreateCompound( tag, TAG_ELITE_AI );
-            
-            // Apply new AI(s), if needed
-            final double[] chances = Config.ELITE_AI.GENERAL.entityList.getValues( entity );
-            if( chances != null ) {
-                for( double chance : chances ) {
-                    if( chance > 0.0 && entity.getRandom().nextDouble() < chance ) {
-                        EliteAIHelper.saveEliteAI( entity, eliteTag );
-                    }
-                }
-            }
-            
-            // Mark this entity to init, if not already forced
-            if( !NBTHelper.containsNumber( tag, TAG_FORCE_INIT ) ) {
-                tag.putBoolean( TAG_FORCE_INIT, true );
-            }
-        }
-        else {
-            eliteTag = tag.getCompound( TAG_ELITE_AI );
-        }
+        final CompoundNBT eliteTag = NBTHelper.containsCompound( tag, TAG_ELITE_AI ) ?
+                tag.getCompound( TAG_ELITE_AI ) : initializeEliteAIData( tag, entity );
         EliteAIHelper.loadEliteAI( entity, eliteTag, tag.getBoolean( TAG_FORCE_INIT ) );
         tag.remove( TAG_FORCE_INIT );
+    }
+    
+    /**
+     * Picks the elite AIs a new entity should have, saves all decisions to the entity data,
+     * and marks the entity for attribute/equipment/etc. initialization.
+     */
+    private static CompoundNBT initializeEliteAIData( CompoundNBT tag, MobEntity entity ) {
+        CompoundNBT eliteTag = NBTHelper.getOrCreateCompound( tag, TAG_ELITE_AI );
+        
+        // Apply random-weighted AI selection
+        final double[] chances = Config.ELITE_AI.GENERAL.entityList.getValues( entity );
+        if( chances != null ) {
+            for( double chance : chances ) {
+                if( chance > 0.0 && entity.getRandom().nextDouble() < chance ) {
+                    EliteAIHelper.saveEliteAI( eliteTag, entity );
+                }
+            }
+        }
+        
+        // Apply specific AI selection
+        for( EliteAIConfig.EliteAICategory ai : Config.ELITE_AI.getEliteAICategories() ) {
+            if( ai.entityList.rollChance( entity ) ) {
+                EliteAIHelper.saveEliteAI( eliteTag, ai.TYPE );
+            }
+        }
+        
+        // Mark this entity to init, if not already forced
+        if( !NBTHelper.containsNumber( tag, TAG_FORCE_INIT ) ) {
+            tag.putBoolean( TAG_FORCE_INIT, true );
+        }
+        return eliteTag;
     }
     
     /**
