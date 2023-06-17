@@ -54,10 +54,10 @@ public class SpecialAI {
      * IDLE BEHAVIORS
      *  - griefing (break blocks)
      *  - fiddling (right-click blocks)
+     *  + creepers hide in chests
      *  ? walk into portals
      *
      * ELITE AI
-     *  ? extra whitelist for each elite ai to apply it directly
      *  - leap
      *  - jump
      *  - sprint
@@ -86,7 +86,7 @@ public class SpecialAI {
      *      + equipped, guaranteed drop
      *      + has a special enchantment/modifier (may be otherwise unobtainable, may have drawback)
      *      + named based on boss and special (prefixed by "<boss_name>'s")
-     *  ? Nemesis system
+     *  ? nemesis system
      *
      * AI EDITOR
      *  ? enable complete (as possible) editing of pre-existing ai
