@@ -84,6 +84,7 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final DoubleField breakSpeed;
         public final BooleanField madCreepers;
+        public final DoubleField chestHideChance;
         
         public final BooleanField targetLights;
         public final BooleanField targetBeds;
@@ -124,6 +125,10 @@ public class IdleConfig extends AbstractConfigFile {
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", true,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
+
+            chestHideChance = SPEC.define( new DoubleField("chest_hide_chance", 0.25, DoubleField.Range.PERCENT,
+                    "If 'mad_creepers' is enabled, this field's value determines the chance for a creeper to hide inside a chest rather than blow it up. When a creeper hides in a chest, " +
+                            "it will pop back out when the chest is either opened or destroyed." ) );
             
             SPEC.newLine();
             

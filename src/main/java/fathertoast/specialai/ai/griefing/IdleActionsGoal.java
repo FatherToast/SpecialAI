@@ -4,6 +4,7 @@ import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.config.IdleConfig;
 import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.util.SpecialAIFakePlayer;
 import net.minecraft.block.*;
@@ -12,6 +13,9 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.tags.Tag;
+import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -21,19 +25,26 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nullable;
 import java.util.EnumSet;
+import java.util.Random;
 
 /**
  * This AI causes the entity to seek out blocks to either destroy or interact with (usually right click),
  * depending on which actions are enabled.
  */
 public class IdleActionsGoal extends Goal {
+
+    public static final String HIDDEN_MOB_TAG = "SAIHasHiddenMob";
+
+
     /** Differentiates between the different actions that can be taken by this AI. */
     private enum Activity { NONE, GRIEFING, FIDDLING }
-    
+
     /** The owner of this AI. */
     protected final MobEntity mob;
     /** Whether this should perform idle griefing. */
@@ -65,6 +76,8 @@ public class IdleActionsGoal extends Goal {
     private float blockDamage;
     /** Previous block damage int sent to clients. */
     private int lastBlockDamage = -1;
+    /** Whether this mob will try to hide in a chest. */
+    private boolean chestHider;
     
     // Fiddling only
     
@@ -82,6 +95,7 @@ public class IdleActionsGoal extends Goal {
         mob = entity;
         griefingEnabled = griefing;
         fiddlingEnabled = fiddling;
+        chestHider = false;
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
     
@@ -159,7 +173,9 @@ public class IdleActionsGoal extends Goal {
         hitCounter = 0;
         blockDamage = 0.0F;
         lastBlockDamage = -1;
-        
+
+        chestHider = Config.IDLE.GRIEFING.chestHideChance.rollChance( mob.getRandom() );
+
         pathToTarget();
     }
     
@@ -244,6 +260,15 @@ public class IdleActionsGoal extends Goal {
         // Stop moving while attacking the target
         if( mob.getNavigation().isInProgress() ) {
             mob.getNavigation().stop();
+        }
+
+        if ( chestHider ) {
+            ChestTileEntity chest = getFreeChest(mob.level, targetPos);
+
+            if (chest != null) {
+                hide(chest);
+                return;
+            }
         }
         
         if( madCreeper() ) {
@@ -485,11 +510,47 @@ public class IdleActionsGoal extends Goal {
      * @return Returns true if the specified block is not a container with a loot table tag.
      * @see net.minecraft.tileentity.LockableLootTileEntity#tryLoadLootTable(CompoundNBT)
      */
+    @SuppressWarnings("JavadocReference")
     private boolean isLootContainerTargetable( BlockPos pos ) {
         TileEntity container = mob.level.getBlockEntity( pos );
         if( container == null ) return true;
         
         return !container.save( new CompoundNBT() ).contains( "LootTable", 8 );
+    }
+
+    /**
+     * @return The ChestTileEntity at the given BlockPos if the target block has a ChestTileEntity and
+     *         the chest does not already have a creeper hiding in it. Returns null if not.
+     */
+    @Nullable
+    private ChestTileEntity getFreeChest( World world, BlockPos pos ) {
+        TileEntity tileEntity = world.getBlockEntity( pos );
+
+        if ( tileEntity instanceof ChestTileEntity ) {
+            ChestTileEntity chest = (ChestTileEntity) tileEntity;
+
+            if ( chest.getTileData().contains( HIDDEN_MOB_TAG, Constants.NBT.TAG_COMPOUND)
+                && !chest.getTileData().getCompound( HIDDEN_MOB_TAG ).isEmpty() ) {
+                return null;
+            }
+            else {
+                return chest;
+            }
+        }
+        return null;
+    }
+
+    /** Writes the creeper entity to the chest's NBT and displays some smoke particles. */
+    private void hide( ChestTileEntity chest ) {
+        chest.getTileData().put( HIDDEN_MOB_TAG, mob.saveWithoutId( new CompoundNBT() ) );
+
+        Random random = mob.level.random;
+        BlockPos mobPos = mob.blockPosition();
+
+        if (mob.level instanceof ServerWorld) {
+            ((ServerWorld) mob.level).sendParticles(ParticleTypes.CLOUD, mobPos.getX() + 0.5D, mobPos.getY() + 0.5D, mobPos.getZ() + 0.5D, 10, random.nextGaussian(), random.nextGaussian(), random.nextGaussian(), 0.1D);
+        }
+        mob.remove();
     }
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the block. */
