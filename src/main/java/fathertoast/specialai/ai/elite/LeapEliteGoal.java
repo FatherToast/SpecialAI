@@ -3,6 +3,7 @@ package fathertoast.specialai.ai.elite;
 import fathertoast.specialai.config.Config;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.vector.Vector3d;
 
 import java.util.EnumSet;
@@ -14,8 +15,8 @@ public class LeapEliteGoal extends AbstractEliteGoal {
     /** Ticks until the AI can activate again. */
     private int cooldownTimer;
     
-    LeapEliteGoal( MobEntity entity ) {
-        super( entity );
+    LeapEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         setFlags( EnumSet.of( Flag.JUMP ) );
     }
     

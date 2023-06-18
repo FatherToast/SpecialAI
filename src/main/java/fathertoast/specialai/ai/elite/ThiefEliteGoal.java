@@ -11,6 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
@@ -28,8 +29,8 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     /** The avoidance AI to be used after an item was stolen. */
     private final AvoidEntityGoal<PlayerEntity> aiAvoid;
     
-    ThiefEliteGoal( MobEntity entity ) {
-        super( entity );
+    ThiefEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         if( entity instanceof CreatureEntity ) {
             aiAvoid = new AvoidEntityGoal<>( (CreatureEntity) entity, PlayerEntity.class, (float) Config.ELITE_AI.THIEF.avoidRange.get(),
                     Config.ELITE_AI.THIEF.avoidWalkSpeed.get(), Config.ELITE_AI.THIEF.avoidRunSpeed.get() );

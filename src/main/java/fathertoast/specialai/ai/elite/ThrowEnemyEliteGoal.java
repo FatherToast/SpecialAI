@@ -5,6 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.vector.Vector3d;
@@ -31,8 +32,8 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
     /** Number of times the entity will re-grab escaping players before giving up. */
     private int extraGrabAttempts;
     
-    ThrowEnemyEliteGoal( MobEntity entity ) {
-        super( entity );
+    ThrowEnemyEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
     

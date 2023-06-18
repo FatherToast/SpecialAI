@@ -42,7 +42,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
     private int saveTicks;
     
     SpawnerEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
-        super( entity );
+        super( entity, aiTag );
         spawnerLogic = new SpawnerLogic( this );
         
         final boolean initialized = EliteAIType.SPAWNER.hasTag( aiTag );

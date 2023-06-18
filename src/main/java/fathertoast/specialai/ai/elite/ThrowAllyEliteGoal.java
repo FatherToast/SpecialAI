@@ -4,6 +4,7 @@ import fathertoast.specialai.config.Config;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.vector.Vector3d;
 
@@ -21,8 +22,8 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal {
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     
-    ThrowAllyEliteGoal( MobEntity entity ) {
-        super( entity );
+    ThrowAllyEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
     
