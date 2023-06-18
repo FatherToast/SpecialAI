@@ -5,6 +5,7 @@ import fathertoast.specialai.config.Config;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 
@@ -27,8 +28,8 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     /** Ticks until next aura pulse. */
     private int pulseTime;
     
-    ShamanEliteGoal( MobEntity entity ) {
-        super( entity );
+    ShamanEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
     

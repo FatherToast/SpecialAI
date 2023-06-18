@@ -23,7 +23,7 @@ import java.util.List;
  */
 public enum EliteAIType implements WeightedList.Value {
     
-    LEAP( "Leap", 150 ) {
+    LEAP( "Leap", 200, LeapEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.LEAP; }
@@ -36,15 +36,9 @@ public enum EliteAIType implements WeightedList.Value {
             list.add( TextFormatting.GRAY + "Attributes: Added Knockback, Increased Movement Speed" );
             list.add( TextFormatting.GRAY + "Equipment: Prefer Melee" );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new LeapEliteGoal( entity ) );
-        }
     },
     
-    JUMP( "Jump", 100 ) {
+    JUMP( "Jump", 100, JumpEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.JUMP; }
@@ -70,15 +64,9 @@ public enum EliteAIType implements WeightedList.Value {
             ((IDyeableArmorItem) boots.getItem()).setColor( boots, 0x9664B4 );
             EliteAIHelper.equip( entity, boots, Config.ELITE_AI.JUMP.featherBootsDropChance.get() );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new JumpEliteGoal( entity ) );
-        }
     },
     
-    SPRINT( "Sprint", 150 ) {
+    SPRINT( "Sprint", 200, SprintEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.SPRINT; }
@@ -103,15 +91,36 @@ public enum EliteAIType implements WeightedList.Value {
             ((IDyeableArmorItem) boots.getItem()).setColor( boots, 0xFF0000 );
             EliteAIHelper.equip( entity, boots, Config.ELITE_AI.SPRINT.runningBootsDropChance.get() );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
+    },
+    
+    SLAM( "Slam", 50, SlamEliteGoal::new ) {
+        /** @return Returns this AI type's config category. */
         @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new SprintEliteGoal( entity ) );
+        public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.SLAM; }
+        
+        /** Adds a description of what this AI type does to the list, using default values. */
+        @Override
+        public void describe( List<String> list ) {
+            list.add( "The " + getDisplayName() + " elite AI causes an entity to periodically retaliate with an explosive slam attack." );
+            list.add( TextFormatting.GRAY + "Activation Range: Short*, Cooldown: Medium*, Damage: Explosion" );
+            list.add( TextFormatting.GRAY + "Attributes: Added Knockback Resistance, Added Armor" );
+            list.add( TextFormatting.GRAY + "Equipment: Axe" );
+        }
+        
+        /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
+        @Override
+        public void initialize( MobEntity entity, CompoundNBT aiTag ) {
+            // Axe
+            ItemStack axe = new ItemStack( Config.ELITE_AI.SLAM.axeType.get().ITEM );
+            if( Config.ELITE_AI.SLAM.axeEnchantLevel.get() > 0 && Config.ELITE_AI.SLAM.axeEnchantChance.rollChance( entity.getRandom() ) ) {
+                EnchantmentHelper.enchantItem( entity.getRandom(), axe, Config.ELITE_AI.SLAM.axeEnchantLevel.get(),
+                        Config.ELITE_AI.SLAM.axeAllowTreasure.get() );
+            }
+            EliteAIHelper.equip( entity, axe, Config.ELITE_AI.SLAM.axeDropChance.get() );
         }
     },
     
-    BARRAGE( "Barrage", 50 ) {
+    BARRAGE( "Barrage", 50, BarrageEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.BARRAGE; }
@@ -132,15 +141,9 @@ public enum EliteAIType implements WeightedList.Value {
             EliteAIHelper.equip( entity, new ItemStack( Items.DISPENSER ), Config.ELITE_AI.BARRAGE.dispenserDropChance.get(),
                     EquipmentSlotType.HEAD );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new BarrageEliteGoal( entity ) );
-        }
     },
     
-    CHARGE( "Charge", 100 ) {
+    CHARGE( "Charge", 100, ChargeEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.CHARGE; }
@@ -169,15 +172,9 @@ public enum EliteAIType implements WeightedList.Value {
             ((IDyeableArmorItem) helmet.getItem()).setColor( helmet, 0xFFFF00 );
             EliteAIHelper.equip( entity, helmet, Config.ELITE_AI.CHARGE.chargersHelmetDropChance.get() );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new ChargeEliteGoal( entity ) );
-        }
     },
     
-    THIEF( "Thief", 50 ) {
+    THIEF( "Thief", 25, ThiefEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.THIEF; }
@@ -209,15 +206,9 @@ public enum EliteAIType implements WeightedList.Value {
             ((IDyeableArmorItem) helmet.getItem()).setColor( helmet, 0x102024 );
             EliteAIHelper.equip( entity, helmet, Config.ELITE_AI.THIEF.thiefCapDropChance.get() );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new ThiefEliteGoal( entity ) );
-        }
     },
     
-    SHAMAN( "Shaman", 50 ) {
+    SHAMAN( "Shaman", 50, ShamanEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.SHAMAN; }
@@ -243,15 +234,9 @@ public enum EliteAIType implements WeightedList.Value {
             EliteAIHelper.equip( entity, new ItemStack( Items.JACK_O_LANTERN ), Config.ELITE_AI.SHAMAN.jackOLanternDropChance.get(),
                     EquipmentSlotType.HEAD );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new ShamanEliteGoal( entity ) );
-        }
     },
     
-    SPAWNER( "Spawner", 50 ) {
+    SPAWNER( "Spawner", 25, SpawnerEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.SPAWNER; }
@@ -274,15 +259,9 @@ public enum EliteAIType implements WeightedList.Value {
                 EliteAIHelper.equip( entity, new ItemStack( Items.SPAWNER ), 0.0, EquipmentSlotType.HEAD );
             }
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new SpawnerEliteGoal( entity, aiTag ) );
-        }
     },
     
-    THROW_ALLY( "Throw Ally", 100 ) {
+    THROW_ALLY( "Throw Ally", 100, ThrowAllyEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.THROW_ALLY; }
@@ -295,15 +274,9 @@ public enum EliteAIType implements WeightedList.Value {
             list.add( TextFormatting.GRAY + "Attributes: Increased Movement Speed" );
             list.add( TextFormatting.GRAY + "Equipment: n/a" );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new ThrowAllyEliteGoal( entity ) );
-        }
     },
     
-    THROW_ENEMY( "Throw Enemy", 50 ) {
+    THROW_ENEMY( "Throw Enemy", 25, ThrowEnemyEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.THROW_ENEMY; }
@@ -328,15 +301,9 @@ public enum EliteAIType implements WeightedList.Value {
             ((IDyeableArmorItem) helmet.getItem()).setColor( helmet, 0xFF0000 );
             EliteAIHelper.equip( entity, helmet, Config.ELITE_AI.THROW_ENEMY.strengthHelmetDropChance.get() );
         }
-        
-        /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-        @Override
-        public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
-            entity.goalSelector.addGoal( 0, new ThrowEnemyEliteGoal( entity ) );
-        }
     };
     
-    /** The suffix to append to ai type keys to generate the extra data tag name. */
+    /** The suffix to append to AI type keys to generate the extra data tag name. */
     private static final String TAG_SUFFIX = "_data";
     
     /** The display name for this elite AI type. */
@@ -345,18 +312,22 @@ public enum EliteAIType implements WeightedList.Value {
     private final String KEY;
     /** The default weight for this elite AI type in the config. */
     private final int DEFAULT_WEIGHT;
+    /** Creates a new elite AI goal instance for an entity. */
+    protected final IFactory FACTORY;
     
-    EliteAIType( String name, int defaultWeight ) {
-        this( name, name.toLowerCase().replace( " ", "_" ), defaultWeight );
+    EliteAIType( String name, int defaultWeight, IFactory factory ) {
+        this( name, name.toLowerCase().replace( " ", "_" ), defaultWeight, factory );
     }
     
-    EliteAIType( String name, String key, int defaultWeight ) {
+    EliteAIType( String name, String key, int defaultWeight, IFactory factory ) {
         NAME = name;
         KEY = key;
         DEFAULT_WEIGHT = defaultWeight;
+        FACTORY = factory;
     }
     
     /** @return Returns this AI type's config category. */
+    // Note: We can't store a reference to the config at construction time because we use these types to make the config
     public abstract EliteAIConfig.EliteAICategory getConfigCategory();
     
     /** Adds a description of what this AI type does to the list, using default values. */
@@ -391,6 +362,12 @@ public enum EliteAIType implements WeightedList.Value {
     /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
     public void initialize( MobEntity entity, CompoundNBT aiTag ) { }
     
-    /** Adds the AI goal corresponding to this type to the given entity, with any additional values needed loaded from the entity tag. */
-    abstract void loadTo( MobEntity entity, CompoundNBT aiTag );
+    /** Adds the AI goal corresponding to this type to the given entity, with any additional values loaded from the entity tag as needed. */
+    public void loadTo( MobEntity entity, CompoundNBT aiTag ) {
+        entity.goalSelector.addGoal( 0, FACTORY.create( entity, aiTag ) );
+    }
+    
+    private interface IFactory {
+        AbstractEliteGoal create( MobEntity entity, CompoundNBT aiTag );
+    }
 }

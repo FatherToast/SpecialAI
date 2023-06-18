@@ -1,9 +1,8 @@
 package fathertoast.specialai.ai.elite;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.vector.Vector3d;
 
 /**
@@ -16,7 +15,7 @@ public abstract class AbstractPathingEliteGoal extends AbstractEliteGoal {
     /** Time until the entity can update its path. */
     private int ticksUntilNextPathRecalculation;
     
-    AbstractPathingEliteGoal( MobEntity entity ) { super( entity ); }
+    AbstractPathingEliteGoal( MobEntity entity, CompoundNBT aiTag ) { super( entity, aiTag ); }
     
     /** Called to path to a target; should only be directly called when starting to path to a new target. */
     public void startPathing( Entity entity, double speed ) {

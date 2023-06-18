@@ -257,8 +257,10 @@ public class IdleActionsGoal extends Goal {
         // Play hit effects
         if( hitCounter == 0 ) {
             SoundType sound = targetBlock.getBlock().getSoundType( targetBlock, world, targetPos, mob );
-            world.playSound( null, targetPos, sound.getBreakSound(), mob.getSoundSource(),
-                    sound.getVolume(), sound.getPitch() * 0.8F );
+            if( !mob.isSilent() ) {
+                world.playSound( null, targetPos, sound.getBreakSound(), mob.getSoundSource(),
+                        sound.getVolume(), sound.getPitch() * 0.8F );
+            }
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
             }

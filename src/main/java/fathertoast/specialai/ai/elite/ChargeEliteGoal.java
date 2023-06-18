@@ -7,9 +7,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.vector.Vector3d;
 
 import java.util.EnumSet;
@@ -37,8 +39,8 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     /** The mob's original step height. */
     private float stepHeight = Float.NaN;
     
-    ChargeEliteGoal( MobEntity entity ) {
-        super( entity );
+    ChargeEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK, Flag.JUMP ) );
     }
     
@@ -65,6 +67,8 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         currentActivity = Activity.CHARGE_UP;
         mob.swing( Hand.OFF_HAND );
         mob.setDeltaMovement( mob.getDeltaMovement().add( 0.0, 0.3, 0.0 ) );
+        mob.playSound( SoundEvents.ARMOR_EQUIP_LEATHER,
+                1.0F, 1.0F / (mob.getRandom().nextFloat() * 0.4F + 0.8F) );
     }
     
     /** @return Called each update while active and returns true if this AI can remain active. */

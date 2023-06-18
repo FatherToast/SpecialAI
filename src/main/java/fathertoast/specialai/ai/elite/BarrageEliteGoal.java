@@ -6,6 +6,7 @@ import net.minecraft.command.arguments.EntityAnchorArgument;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.vector.Vector3d;
@@ -27,8 +28,8 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
     /** The direction of this mob's current attack. */
     private Vector3d attackVec;
     
-    BarrageEliteGoal( MobEntity entity ) {
-        super( entity );
+    BarrageEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+        super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK, Flag.JUMP ) );
     }
     
@@ -54,7 +55,7 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
         attackTime = Config.ELITE_AI.BARRAGE.chargeUpDuration.get();
         currentActivity = Activity.CHARGE_UP;
         mob.swing( Hand.OFF_HAND );
-        mob.level.playSound( null, mob.blockPosition(), SoundEvents.STONE_BUTTON_CLICK_ON, mob.getSoundSource(),
+        mob.playSound( SoundEvents.STONE_BUTTON_CLICK_ON,
                 1.0F, 1.0F / (mob.getRandom().nextFloat() * 0.4F + 0.8F) );
     }
     

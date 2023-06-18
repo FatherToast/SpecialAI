@@ -100,7 +100,9 @@ public final class EliteAIHelper {
     }
     
     /** Unequips the entity of any equipped item in the specified slot. */
-    static void unequip( MobEntity entity, EquipmentSlotType slot ) { equip( entity, ItemStack.EMPTY, 0.085, slot ); }
+    static void unequip( MobEntity entity, @SuppressWarnings( "SameParameterValue" ) EquipmentSlotType slot ) {
+        equip( entity, ItemStack.EMPTY, 0.085, slot );
+    }
     
     /** Equips the entity with an item in its natural slot, overwriting any currently equipped item. */
     static void equip( MobEntity entity, ItemStack item, double dropChance ) {
@@ -109,7 +111,6 @@ public final class EliteAIHelper {
     
     /** Equips the entity with an item in the specified slot, optionally overwriting any currently equipped item. */
     static void equip( MobEntity entity, ItemStack item, double dropChance, EquipmentSlotType slot ) {
-        if( slot == null ) slot = EquipmentSlotType.MAINHAND;
         if( dropChance >= 0.0 && (Config.ELITE_AI.GENERAL.enableEquipmentReplace.get() || !entity.hasItemInSlot( slot )) ) {
             entity.setItemSlot( slot, item );
             entity.setDropChance( slot, (float) dropChance );
@@ -135,7 +136,4 @@ public final class EliteAIHelper {
                     MobEntity.getEquipmentSlotForItem( stack ) );
         }
     }
-    
-    // This is a static-only helper class.
-    private EliteAIHelper() { }
 }

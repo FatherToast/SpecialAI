@@ -61,6 +61,7 @@ public class SpecialAI {
      *  - leap
      *  - jump
      *  - sprint
+     *  - slam
      *  - barrage
      *  - charge
      *  - thief
@@ -68,7 +69,6 @@ public class SpecialAI {
      *  - spawner
      *  - throw ally
      *  - throw enemy
-     *  + slam (wields an axe, performs knockback slam "explosion" when damaged in close range)
      *  + fishing (wields a fishing rod and uses it against its target)
      *  + grappling (similar to fishing, but pulls the mob to target instead, mob may mount the target?)
      *

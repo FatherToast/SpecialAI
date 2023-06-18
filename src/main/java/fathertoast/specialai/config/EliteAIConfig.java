@@ -13,6 +13,8 @@ import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public class EliteAIConfig extends AbstractConfigFile {
     public final Leap LEAP;
     public final Jump JUMP;
     public final Sprint SPRINT;
+    public final Slam SLAM;
     public final Barrage BARRAGE;
     public final Charge CHARGE;
     public final Thief THIEF;
@@ -49,6 +52,8 @@ public class EliteAIConfig extends AbstractConfigFile {
         
         SPEC.fileOnlyNewLine();
         SPEC.describeEntityList();
+        SPEC.fileOnlyNewLine();
+        SPEC.describeEnvironmentListPart1of2();
         
         GENERAL = new EliteGeneral( this );
         
@@ -57,6 +62,7 @@ public class EliteAIConfig extends AbstractConfigFile {
         LEAP = new Leap( this );
         JUMP = new Jump( this );
         SPRINT = new Sprint( this );
+        SLAM = new Slam( this );
         BARRAGE = new Barrage( this );
         CHARGE = new Charge( this );
         THIEF = new Thief( this );
@@ -80,6 +86,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             ai.describe( description );
             SPEC.titledComment( ai.getKey(), description );
         }
+        
+        SPEC.fileOnlyNewLine( 2 );
+        SPEC.describeEnvironmentListPart2of2();
     }
     
     /** @return A list of all elite ai categories. */
@@ -287,6 +296,76 @@ public class EliteAIConfig extends AbstractConfigFile {
                             "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
             runningBootsModifier = SPEC.define( new DoubleField( "running_boots.modifier", 0.15, DoubleField.Range.ANY,
                     "The movement speed modifier on Running Boots (uses 'multiply base' operation). 0 disables the modifier." ) );
+        }
+    }
+    
+    public static class Slam extends EliteAICategory {
+        
+        public final SqrDoubleField rangeSqrMin;
+        public final SqrDoubleField rangeSqrMax;
+        
+        public final IntField.RandomRange cooldown;
+        
+        public final DoubleField power;
+        
+        public final IntField chargeUpDuration;
+        
+        public final EnumField<AxeType> axeType;
+        public final DoubleField axeDropChance;
+        public final DoubleField axeEnchantChance;
+        public final IntField axeEnchantLevel;
+        public final BooleanField axeAllowTreasure;
+        
+        Slam( EliteAIConfig parent ) {
+            super( parent, EliteAIType.SLAM, false, new AttributeMods().knockbackResist( 0.5 ).armor( 10.0 ) );
+            
+            rangeSqrMin = SPEC.define( new SqrDoubleField( "range.min", 0.0, DoubleField.Range.NON_NEGATIVE,
+                    "The minimum and maximum distance the entity must be from its target for this AI to activate, in blocks (meters)." ) );
+            rangeSqrMax = SPEC.define( new SqrDoubleField( "range.max", 4.0, DoubleField.Range.NON_NEGATIVE ) );
+            
+            SPEC.newLine();
+            
+            cooldown = new IntField.RandomRange(
+                    SPEC.define( new IntField( "cooldown.min", 60, IntField.Range.NON_NEGATIVE,
+                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                                    "in ticks (20 ticks = 1 second)." ) ),
+                    SPEC.define( new IntField( "cooldown.max", 100, IntField.Range.NON_NEGATIVE ) )
+            );
+            
+            SPEC.newLine();
+            
+            power = SPEC.define( new DoubleField( "slam_power", 2.25, DoubleField.Range.NON_NEGATIVE,
+                    "The explosion power of the slam. The entity-damaging radius for an explosion is double its power.",
+                    "For reference, ghast fireballs have a power of 1, creepers have a power of 3, and TNT has a power of 4." ) );
+            
+            SPEC.newLine();
+            
+            chargeUpDuration = SPEC.define( new IntField( "charge_up_duration", 20, IntField.Range.POSITIVE,
+                    "The time the entity pauses for after this AI activates before starting the slam attack (20 ticks = 1 second)." ) );
+            
+            SPEC.newLine();
+            
+            axeDropChance = SPEC.define( new DoubleField( "axe.drop_chance", 0.085, DoubleField.Range.DROP_CHANCE,
+                    "The drop chance for the held axe (0 to 1). The item will drop damaged randomly, like normal equipment. " +
+                            "A negative value disables the item entirely, while a value over 1 prevents the item from being damaged on drop." ) );
+            axeType = SPEC.define( new EnumField<>( "axe.type", AxeType.IRON,
+                    "The type of axe (material) the entity will have equipped." ) );
+            axeEnchantChance = SPEC.define( new DoubleField( "axe.enchant_chance", 0.1, DoubleField.Range.PERCENT,
+                    "The chance for the held axe to be enchanted (0 to 1)." ) );
+            axeEnchantLevel = SPEC.define( new IntField( "axe.enchant_level", 30, IntField.Range.NON_NEGATIVE,
+                    "Levels to enchant the held axe. 0 disables the enchant." ) );
+            axeAllowTreasure = SPEC.define( new BooleanField( "axe.allow_treasure_enchants", true,
+                    "If true, treasure enchantments will be able to appear on the held axe." ) );
+        }
+        
+        @SuppressWarnings( "unused" )
+        public enum AxeType {
+            GOLD( Items.GOLDEN_AXE ), WOOD( Items.WOODEN_AXE ), STONE( Items.STONE_AXE ),
+            IRON( Items.IRON_AXE ), DIAMOND( Items.DIAMOND_AXE ), NETHERITE( Items.NETHERITE_AXE );
+            
+            public final Item ITEM;
+            
+            AxeType( Item axe ) { ITEM = axe; }
         }
     }
     
