@@ -40,7 +40,6 @@ public class SpecialAI {
      *  - call for help (on death)
      *  - dodge arrows
      *      ? dodge fireballs (including reflected ghast ones)
-     *  + aggro when sniped (enable revenge targeting beyond follow range)
      *  ? reactive potions (potion drinking from a small "inventory" - similar to witch logic)
      *      ? how the heck to animate this?
      *      ? chance to drop potions

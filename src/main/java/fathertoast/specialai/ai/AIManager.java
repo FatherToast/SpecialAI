@@ -17,7 +17,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -119,11 +118,10 @@ public final class AIManager {
         entity.goalSelector.addGoal( -1, new AvoidExplosionsGoal( entity, speedMulti ) );
     }
     
-    /** @param entity Adds defend village AI to the entity, as well as attack AI if needed. */
-    private static void addDefendVillageTargetAI( VillagerEntity entity ) {
-        // TODO
-        //entity.targetSelector.addGoal( 0, new VillagerDefendVillageGoal( entity ) );
-    }
+    //    /** @param entity Adds defend village AI to the entity, as well as attack AI if needed. */
+    //    private static void addDefendVillageTargetAI( VillagerEntity entity ) {
+    //        entity.targetSelector.addGoal( 0, new VillagerDefendVillageGoal( entity ) );
+    //    }
     
     /** @param entity Adds hurt by target AI to the entity, as well as attack AI if needed. */
     private static void addHurtByTargetAI( CreatureEntity entity ) {
@@ -295,10 +293,10 @@ public final class AIManager {
             }
             
             // Defend village
-            if( entity instanceof VillagerEntity ) {
-                addDefendVillageTargetAI( (VillagerEntity) entity );
-                needsAttackAI = true;
-            }
+            //            if( entity instanceof VillagerEntity ) {
+            //                addDefendVillageTargetAI( (VillagerEntity) entity );
+            //                needsAttackAI = true;
+            //            }
             
             // Depacify
             if( !NBTHelper.containsNumber( tag, TAG_DEPACIFY ) ) {
