@@ -21,6 +21,7 @@ public class IdleConfig extends AbstractConfigFile {
     public final IdleGeneral GENERAL;
     public final Griefing GRIEFING;
     public final Fiddling FIDDLING;
+    public final Hiding HIDING;
     
     /** Builds the config spec that should be used for this config. */
     IdleConfig( ConfigManager cfgManager, String cfgName ) {
@@ -36,6 +37,7 @@ public class IdleConfig extends AbstractConfigFile {
         GENERAL = new IdleGeneral( this );
         GRIEFING = new Griefing( this );
         FIDDLING = new Fiddling( this );
+        HIDING = new Hiding( this );
     }
     
     public static class IdleGeneral extends AbstractConfigCategory<IdleConfig> {
@@ -84,7 +86,6 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final DoubleField breakSpeed;
         public final BooleanField madCreepers;
-        public final DoubleField chestHideChance;
         
         public final BooleanField targetLights;
         public final BooleanField targetBeds;
@@ -125,10 +126,6 @@ public class IdleConfig extends AbstractConfigFile {
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", true,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
-
-            chestHideChance = SPEC.define( new DoubleField("chest_hide_chance", 0.25, DoubleField.Range.PERCENT,
-                    "If 'mad_creepers' is enabled, this field's value determines the chance for a creeper to hide inside a chest rather than blow it up. When a creeper hides in a chest, " +
-                            "it will pop back out when the chest is either opened or destroyed." ) );
             
             SPEC.newLine();
             
@@ -223,6 +220,53 @@ public class IdleConfig extends AbstractConfigFile {
                             "List of blocks that can be interacted with by the idle fiddling AI." ) ),
                     SPEC.define( new BlockListField( "targets.blacklist", new BlockList() ) )
             );
+        }
+    }
+    
+    public static class Hiding extends AbstractConfigCategory<IdleConfig> {
+        
+        public final EntityListField.Combined entityList;
+        
+        public final BooleanField avoidLootableTargets;
+        public final BlockListField.Combined targetList;
+        
+        Hiding( IdleConfig parent ) {
+            super( parent, "idle_hiding",
+                    "Options to customize monsters' idle hiding behavior. This causes the mob to crawl " +
+                            "inside a container block and pop out when the container is opened (or destroyed)." );
+            
+            entityList = new EntityListField.Combined(
+                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
+                            new EntityEntry( EntityType.CREEPER, 1.0 ), new EntityEntry( EntityType.SPIDER, 1.0 )
+                    ).setSinglePercent(),
+                            "List of mobs that can gain passive hiding AI (note that the entity must have task-based AI enabled).",
+                            "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+            );
+            
+            SPEC.newLine();
+            
+            avoidLootableTargets = SPEC.define( new BooleanField( "targets.avoid_lootable", true,
+                    "If true, blocks will not be targeted if they have a loot table tag.",
+                    "For example, unopened dungeon chests will not be targeted." ) );
+            targetList = new BlockListField.Combined(
+                    SPEC.define( new BlockListField( "targets.whitelist", buildDefaultHideTargets(),
+                            "List of blocks that can be hidden in by the idle hiding AI. " +
+                                    "Note that only blocks with tile entities are able to be hidden in." ) ),
+                    SPEC.define( new BlockListField( "targets.blacklist", new BlockList() ) )
+            );
+        }
+        
+        /** Build a list of chest blocks. */
+        private static BlockList buildDefaultHideTargets() {
+            List<BlockEntry> targets = new ArrayList<>();
+            for( Block block : ForgeRegistries.BLOCKS ) {
+                // Non-ender chest blocks
+                if( block instanceof AbstractChestBlock && !(block instanceof EnderChestBlock) || block instanceof BarrelBlock ) {
+                    targets.add( new BlockEntry( block ) );
+                }
+            }
+            return new BlockList( targets.toArray( new BlockEntry[0] ) );
         }
     }
 }

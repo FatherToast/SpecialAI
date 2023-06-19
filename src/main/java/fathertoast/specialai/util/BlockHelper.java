@@ -1,25 +1,39 @@
 package fathertoast.specialai.util;
 
+import fathertoast.crust.api.lib.NBTHelper;
+import fathertoast.specialai.SpecialAI;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeHooks;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
+import java.util.Random;
 
 /**
  * Contains helper methods and info needed for block-breaking logic.
  */
 public final class BlockHelper {
+    
+    private static final String TAG_HIDDEN_MOB = SpecialAI.MOD_ID + "_hiding";
     
     /** @return Returns true if the entity can target the block. */
     public static boolean shouldDamage( BlockState block, MobEntity entity, boolean needsTool, World world, BlockPos pos ) {
@@ -107,5 +121,75 @@ public final class BlockHelper {
             default:
                 return 8.1E-4F;
         }
+    }
+    
+    /**
+     * Checks whether a mob can be hidden in a block.
+     *
+     * @param world The world we live in. Absolutely mad.
+     * @param pos   Position to hide at.
+     * @return True if a mob can be hidden here.
+     */
+    public static boolean canHideMob( IWorld world, BlockPos pos ) {
+        TileEntity tileEntity = world.getBlockEntity( pos );
+        return tileEntity != null && !NBTHelper.containsCompound( tileEntity.getTileData(), TAG_HIDDEN_MOB );
+    }
+    
+    /**
+     * Hides a mob in a block. Prior to calling this, make sure the mob can be hidden here
+     * via {@link #canHideMob(IWorld, BlockPos, LivingEntity)}.
+     *
+     * @param world The world we live in. Absolutely mad.
+     * @param pos   Position to hide at.
+     * @param mob   The entity to hide.
+     */
+    public static void hideMob( IWorld world, BlockPos pos, MobEntity mob ) {
+        TileEntity tileEntity = world.getBlockEntity( pos );
+        if( tileEntity == null ) return;
+        
+        if( mob.saveAsPassenger( NBTHelper.getOrCreateCompound( tileEntity.getTileData(), TAG_HIDDEN_MOB ) ) ) {
+            // Successfully saved, remove the mob and play effects
+            mob.spawnAnim();
+            mob.remove();
+        }
+    }
+    
+    /**
+     * Checks if there is a hiding mob. If so, unhides the mob and targets the entity that disturbed it.
+     *
+     * @param world  The world we live in. Absolutely mad.
+     * @param pos    Position to check for a hidden mob.
+     * @param player The player triggering this check.
+     */
+    public static void spawnHiddenMob( IWorld world, BlockPos pos, @Nullable PlayerEntity player ) {
+        if( !(world instanceof ServerWorld) ) return;
+        TileEntity tileEntity = world.getBlockEntity( pos );
+        if( tileEntity == null ) return;
+        ServerWorld serverWorld = (ServerWorld) world;
+        
+        // Get the tag if it exists
+        CompoundNBT data = tileEntity.getTileData();
+        if( !NBTHelper.containsCompound( data, TAG_HIDDEN_MOB ) ) return;
+        CompoundNBT mobTag = data.getCompound( TAG_HIDDEN_MOB );
+        data.remove( TAG_HIDDEN_MOB );
+        
+        // Validate and load from tag
+        if( mobTag.isEmpty() || !NBTHelper.containsString( mobTag, "id" ) ) return;
+        Optional<Entity> optional = EntityType.create( mobTag, serverWorld );
+        if( !optional.isPresent() ) return;
+        
+        // Load successful, spawn the mob and play effects
+        Entity mob = optional.get();
+        serverWorld.addWithUUID( mob );
+        if( mob instanceof MobEntity ) {
+            if( player != null && !player.isSpectator() && player.isAlive() && ((MobEntity) mob).canAttack( player ) ) {
+                ((MobEntity) mob).setTarget( player );
+            }
+            ((MobEntity) mob).spawnAnim();
+        }
+        Random random = world.getRandom();
+        serverWorld.sendParticles( ParticleTypes.CLOUD,
+                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 10,
+                random.nextGaussian(), random.nextGaussian(), random.nextGaussian(), 0.1 );
     }
 }

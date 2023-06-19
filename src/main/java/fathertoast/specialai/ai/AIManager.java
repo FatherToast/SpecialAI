@@ -10,6 +10,7 @@ import fathertoast.specialai.ai.griefing.IdleActionsGoal;
 import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
+import fathertoast.specialai.util.BlockHelper;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -25,9 +26,15 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.eventbus.api.Event;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +62,7 @@ public final class AIManager {
     
     private static final String TAG_DOOR_BREAK = "door_breaking";
     
+    private static final String TAG_HIDE = "hiding";
     private static final String TAG_GRIEF = "griefing";
     private static final String TAG_FIDDLE = "fiddling";
     
@@ -160,9 +168,9 @@ public final class AIManager {
     }
     
     /** @param entity Adds idle griefing/fiddling AI to the entity, if at least one of the behaviors is enabled. */
-    private static void addIdleAI( MobEntity entity, boolean griefing, boolean fiddling ) {
-        if( griefing || fiddling ) {
-            entity.goalSelector.addGoal( getPassivePriority( entity ), new IdleActionsGoal( entity, griefing, fiddling ) );
+    private static void addIdleAI( MobEntity entity, boolean hiding, boolean griefing, boolean fiddling ) {
+        if( hiding || griefing || fiddling ) {
+            entity.goalSelector.addGoal( getPassivePriority( entity ), new IdleActionsGoal( entity, hiding, griefing, fiddling ) );
         }
     }
     
@@ -252,7 +260,7 @@ public final class AIManager {
     }
     
     /**
-     * Called when any entity is spawned in the world, including by chunk loading and dimension transition.
+     * Called when a mob is spawned in the world, including by chunk loading and dimension transition.
      *
      * @param entity The entity to initialize.
      */
@@ -344,13 +352,16 @@ public final class AIManager {
         }
         
         // Passive griefing
+        if( !NBTHelper.containsNumber( tag, TAG_HIDE ) ) {
+            tag.putBoolean( TAG_HIDE, Config.IDLE.HIDING.entityList.rollChance( entity ) );
+        }
         if( !NBTHelper.containsNumber( tag, TAG_GRIEF ) ) {
             tag.putBoolean( TAG_GRIEF, Config.IDLE.GRIEFING.entityList.rollChance( entity ) );
         }
         if( !NBTHelper.containsNumber( tag, TAG_FIDDLE ) ) {
             tag.putBoolean( TAG_FIDDLE, Config.IDLE.FIDDLING.entityList.rollChance( entity ) );
         }
-        addIdleAI( entity, tag.getBoolean( TAG_GRIEF ), tag.getBoolean( TAG_FIDDLE ) );
+        addIdleAI( entity, tag.getBoolean( TAG_HIDE ), tag.getBoolean( TAG_GRIEF ), tag.getBoolean( TAG_FIDDLE ) );
 
         /* WIP
         // Digging
@@ -436,6 +447,41 @@ public final class AIManager {
         }
     }
     
-    // This is a static-only helper class.
-    private AIManager() { }
+    /**
+     * Called when a player right-clicks while targeting a block.
+     *
+     * @param event The event data.
+     */
+    public static void onRightClickBlock( PlayerInteractEvent.RightClickBlock event ) {
+        if( !event.getWorld().isClientSide() && event.getUseBlock() != Event.Result.DENY ) {
+            BlockHelper.spawnHiddenMob( event.getWorld(), event.getPos(), event.getPlayer() );
+        }
+    }
+    
+    /**
+     * Called right before a block is broken by a player.
+     *
+     * @param event The event data.
+     */
+    public static void onBlockBreak( BlockEvent.BreakEvent event ) {
+        if( !event.getWorld().isClientSide() ) {
+            BlockHelper.spawnHiddenMob( event.getWorld(), event.getPos(), event.getPlayer() );
+        }
+    }
+    
+    /**
+     * Called after an explosion has calculated targets, but before applying effects.
+     *
+     * @param event The event data.
+     */
+    public static void onExplosionDetonate( ExplosionEvent.Detonate event ) {
+        final IWorld world = event.getWorld();
+        if( !world.isClientSide() ) {
+            LivingEntity source = event.getExplosion().getSourceMob();
+            PlayerEntity player = source instanceof PlayerEntity ? (PlayerEntity) source : null;
+            for( BlockPos pos : event.getAffectedBlocks() ) {
+                BlockHelper.spawnHiddenMob( world, pos, player );
+            }
+        }
+    }
 }

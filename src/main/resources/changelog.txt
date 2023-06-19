@@ -1,5 +1,6 @@
 1.16.5-1.1.0
     - Implemented and now requires Crust (improved configs).
+    - New idle AI - hide (taken from Sarinsa's Tomfoolery mod)
     - New elite AI - slam.
     - Added more config customization capability for elite AI.
     - Fixed issues #26 and #27 - minor bugs.
