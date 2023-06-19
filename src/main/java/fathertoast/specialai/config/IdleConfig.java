@@ -4,10 +4,7 @@ import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
 import fathertoast.crust.api.config.common.field.*;
-import fathertoast.crust.api.config.common.value.BlockEntry;
-import fathertoast.crust.api.config.common.value.BlockList;
-import fathertoast.crust.api.config.common.value.EntityEntry;
-import fathertoast.crust.api.config.common.value.EntityList;
+import fathertoast.crust.api.config.common.value.*;
 import net.minecraft.block.*;
 import net.minecraft.entity.EntityType;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -227,7 +224,7 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final EntityListField.Combined entityList;
         
-        public final BooleanField avoidLootableTargets;
+        public final DoubleField.EnvironmentSensitive lootableChance;
         public final BlockListField.Combined targetList;
         
         Hiding( IdleConfig parent ) {
@@ -246,9 +243,15 @@ public class IdleConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            avoidLootableTargets = SPEC.define( new BooleanField( "targets.avoid_lootable", true,
-                    "If true, blocks will not be targeted if they have a loot table tag.",
-                    "For example, unopened dungeon chests will not be targeted." ) );
+            lootableChance = new DoubleField.EnvironmentSensitive(
+                    SPEC.define( new DoubleField( "targets.lootable_chance.base", 0.25, DoubleField.Range.PERCENT,
+                            "The chance for blocks (0.0 to 1.0) that have a loot table tag to be targetable by the idle hiding AI.",
+                            "For example, only 25% of unopened dungeon chests will be targetable at the default setting." ) ),
+                    SPEC.define( new EnvironmentListField( "targets.lootable_chance.exceptions",
+                            new EnvironmentList().setRange( DoubleField.Range.PERCENT ),
+                            "The chance for blocks (0.0 to 1.0) that have a loot table tag to be targetable by the idle hiding " +
+                                    "AI when specific environmental conditions are met." ) )
+            );
             targetList = new BlockListField.Combined(
                     SPEC.define( new BlockListField( "targets.whitelist", buildDefaultHideTargets(),
                             "List of blocks that can be hidden in by the idle hiding AI. " +

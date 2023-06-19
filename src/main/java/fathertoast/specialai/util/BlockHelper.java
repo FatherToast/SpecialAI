@@ -2,6 +2,7 @@ package fathertoast.specialai.util;
 
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.config.Config;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -16,6 +17,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
@@ -34,6 +36,7 @@ import java.util.Random;
 public final class BlockHelper {
     
     private static final String TAG_HIDDEN_MOB = SpecialAI.MOD_ID + "_hiding";
+    private static final String TAG_HIDE_DISABLED = SpecialAI.MOD_ID + "_hide_disabled";
     
     /** @return Returns true if the entity can target the block. */
     public static boolean shouldDamage( BlockState block, MobEntity entity, boolean needsTool, World world, BlockPos pos ) {
@@ -130,20 +133,30 @@ public final class BlockHelper {
      * @param pos   Position to hide at.
      * @return True if a mob can be hidden here.
      */
-    public static boolean canHideMob( IWorld world, BlockPos pos ) {
+    public static boolean canHideMob( World world, BlockPos pos ) {
         TileEntity tileEntity = world.getBlockEntity( pos );
-        return tileEntity != null && !NBTHelper.containsCompound( tileEntity.getTileData(), TAG_HIDDEN_MOB );
+        if( tileEntity == null ) return false;
+        
+        CompoundNBT tag = tileEntity.getTileData();
+        if( NBTHelper.containsNumber( tag, TAG_HIDE_DISABLED ) ) {
+            if( tag.getBoolean( TAG_HIDE_DISABLED ) ) return false;
+        }
+        else if( tileEntity instanceof LockableLootTileEntity ) {
+            tag.putBoolean( TAG_HIDE_DISABLED, !Config.IDLE.HIDING.lootableChance.rollChance( world.getRandom(), world, pos )
+                    && NBTHelper.containsString( tileEntity.save( new CompoundNBT() ), "LootTable" ) );
+        }
+        return !NBTHelper.containsCompound( tag, TAG_HIDDEN_MOB );
     }
     
     /**
      * Hides a mob in a block. Prior to calling this, make sure the mob can be hidden here
-     * via {@link #canHideMob(IWorld, BlockPos, LivingEntity)}.
+     * via {@link #canHideMob(World, BlockPos, LivingEntity)}.
      *
      * @param world The world we live in. Absolutely mad.
      * @param pos   Position to hide at.
      * @param mob   The entity to hide.
      */
-    public static void hideMob( IWorld world, BlockPos pos, MobEntity mob ) {
+    public static void hideMob( World world, BlockPos pos, MobEntity mob ) {
         TileEntity tileEntity = world.getBlockEntity( pos );
         if( tileEntity == null ) return;
         

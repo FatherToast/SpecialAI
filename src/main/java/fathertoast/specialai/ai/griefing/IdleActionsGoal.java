@@ -481,9 +481,6 @@ public class IdleActionsGoal extends Goal {
         if( Config.IDLE.HIDING.targetList.BLACKLIST.get().matches( state ) ) {
             return false;
         }
-        if( Config.IDLE.HIDING.avoidLootableTargets.get() && !isLootContainerTargetable( pos ) ) {
-            return false;
-        }
         return Config.IDLE.HIDING.targetList.WHITELIST.get().matches( state );
     }
     
