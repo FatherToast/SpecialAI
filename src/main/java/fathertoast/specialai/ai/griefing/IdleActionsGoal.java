@@ -300,7 +300,7 @@ public class IdleActionsGoal extends Goal {
             }
             // Otherwise, destroy the block
             else {
-                BlockHelper.spawnHiddenMob( world, targetPos, null );
+                BlockHelper.spawnHiddenMob( world, targetPos, null, true );
                 world.destroyBlock( targetPos, Config.IDLE.GRIEFING.leaveDrops.get() );
                 if( Config.IDLE.GRIEFING.breakSound.get() ) {
                     LevelEventHelper.ZOMBIE_BREAK_WOODEN_DOOR.play( mob.level, targetPos );
@@ -530,7 +530,8 @@ public class IdleActionsGoal extends Goal {
      * @return Returns true if the specified block is not a container with a loot table tag.
      * @see net.minecraft.tileentity.LockableLootTileEntity#tryLoadLootTable(CompoundNBT)
      */
-    private boolean isLootContainerTargetable( BlockPos pos ) {
+    @SuppressWarnings("JavadocReference")
+    private boolean isLootContainerTargetable(BlockPos pos ) {
         TileEntity container = mob.level.getBlockEntity( pos );
         if( container == null ) return true;
         
