@@ -297,6 +297,11 @@ public class IdleActionsGoal extends Goal {
             // Handle special cases
             if( targetBlock.getBlock() == Blocks.FARMLAND ) {
                 world.setBlock( targetPos, Blocks.DIRT.defaultBlockState(), 3 );
+
+                // Help mobs not fall through the farmland they break
+                if ( mob.blockPosition().equals( targetPos ) ) {
+                    mob.setPos( mob.getX(), targetPos.getY() + 1, mob.getZ() );
+                }
             }
             // Otherwise, destroy the block
             else {
@@ -401,7 +406,7 @@ public class IdleActionsGoal extends Goal {
     private boolean checkSight( final Vector3d posVec, double x, double y, double z ) {
         final Vector3d targetVec = new Vector3d( x, y, z );
         BlockRayTraceResult hit = mob.level.clip( new RayTraceContext( posVec, targetVec,
-                RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, mob ) );
+                RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, mob ) );
         
         if( RayTraceResult.Type.MISS.equals( hit.getType() ) ) {
             // A miss is okay; this means the target was unobstructed, but its hitbox is smaller than a full cube - convert to a hit
