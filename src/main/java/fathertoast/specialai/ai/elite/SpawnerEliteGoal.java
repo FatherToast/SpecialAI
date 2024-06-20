@@ -18,6 +18,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.spawner.AbstractSpawner;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import javax.annotation.Nullable;
@@ -292,7 +293,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             spawnDelay = tag.getShort( TAG_DELAY );
             spawnPotentials.clear();
             if( NBTHelper.containsList( tag, TAG_SPAWN_POTENTIALS ) ) {
-                ListNBT listnbt = tag.getList( TAG_SPAWN_POTENTIALS, NBTHelper.ID_COMPOUND );
+                ListNBT listnbt = tag.getList( TAG_SPAWN_POTENTIALS, Constants.NBT.TAG_COMPOUND );
                 
                 for( int i = 0; i < listnbt.size(); ++i ) {
                     spawnPotentials.add( new WeightedSpawnerEntity( listnbt.getCompound( i ) ) );

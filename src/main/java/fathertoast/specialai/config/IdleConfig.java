@@ -144,7 +144,9 @@ public class IdleConfig extends AbstractConfigFile {
             // Start with specific blocks
             final List<BlockEntry> targets = new ArrayList<>( Arrays.asList(
                     // Farm blocks
-                    new BlockEntry( Blocks.FARMLAND ), new BlockEntry( Blocks.BEEHIVE )
+                    new BlockEntry( Blocks.FARMLAND ), new BlockEntry( Blocks.WHEAT ), new BlockEntry( Blocks.POTATOES ),
+                    new BlockEntry( Blocks.CARROTS ), new BlockEntry( Blocks.BEETROOTS ), new BlockEntry( Blocks.PUMPKIN_STEM ),
+                    new BlockEntry( Blocks.MELON_STEM ), new BlockEntry( Blocks.BEEHIVE )
             ) );
             // Add block groups, possibly including mod blocks
             for( Block block : ForgeRegistries.BLOCKS ) {

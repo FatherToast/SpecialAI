@@ -19,16 +19,21 @@ import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.spawner.WorldEntitySpawner;
 import net.minecraftforge.common.ForgeHooks;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Contains helper methods and info needed for block-breaking logic.
@@ -128,7 +133,7 @@ public final class BlockHelper {
     
     /**
      * Checks whether a mob can be hidden in a block.
-     *
+     * <p>
      * @param world The world we live in. Absolutely mad.
      * @param pos   Position to hide at.
      * @return True if a mob can be hidden here.
@@ -150,8 +155,8 @@ public final class BlockHelper {
     
     /**
      * Hides a mob in a block. Prior to calling this, make sure the mob can be hidden here
-     * via {@link #canHideMob(World, BlockPos, LivingEntity)}.
-     *
+     * via {@link #canHideMob(World, BlockPos)}.
+     * <p>
      * @param world The world we live in. Absolutely mad.
      * @param pos   Position to hide at.
      * @param mob   The entity to hide.
@@ -169,12 +174,14 @@ public final class BlockHelper {
     
     /**
      * Checks if there is a hiding mob. If so, unhides the mob and targets the entity that disturbed it.
-     *
+     * <p>
      * @param world  The world we live in. Absolutely mad.
      * @param pos    Position to check for a hidden mob.
      * @param player The player triggering this check.
+     * @param forceUnhide If true and a hidden mob is found, force the mob to spawn even
+     *                    if there isn't really enough space for it.
      */
-    public static void spawnHiddenMob( IWorld world, BlockPos pos, @Nullable PlayerEntity player ) {
+    public static void spawnHiddenMob( IWorld world, BlockPos pos, @Nullable PlayerEntity player, boolean forceUnhide ) {
         if( !(world instanceof ServerWorld) ) return;
         TileEntity tileEntity = world.getBlockEntity( pos );
         if( tileEntity == null ) return;
@@ -184,16 +191,32 @@ public final class BlockHelper {
         CompoundNBT data = tileEntity.getTileData();
         if( !NBTHelper.containsCompound( data, TAG_HIDDEN_MOB ) ) return;
         CompoundNBT mobTag = data.getCompound( TAG_HIDDEN_MOB );
-        data.remove( TAG_HIDDEN_MOB );
         
         // Validate and load from tag
         if( mobTag.isEmpty() || !NBTHelper.containsString( mobTag, "id" ) ) return;
         Optional<Entity> optional = EntityType.create( mobTag, serverWorld );
         if( !optional.isPresent() ) return;
         
-        // Load successful, spawn the mob and play effects
-        Entity mob = optional.get();
+        // Load successful!
+        Entity mob = optional.get();;
+        BlockPos spawnPos = pos.above();
+        mob.setPos( spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D );
+
+        // If we are not forcefully spawning the mob, check if it
+        // has space to be placed above where it is hiding
+        if ( !forceUnhide ) {
+            // Check if the mob has space to unhide
+            if (!world.noCollision(mob.getType().getAABB(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D))) {
+                mob.remove();
+                return;
+            }
+        }
+        // Remove the mob data from tile entity nbt
+        data.remove( TAG_HIDDEN_MOB );
+
+        // Add the mob to the world and play effects
         serverWorld.addWithUUID( mob );
+
         if( mob instanceof MobEntity ) {
             if( player != null && !player.isSpectator() && player.isAlive() && ((MobEntity) mob).canAttack( player ) ) {
                 ((MobEntity) mob).setTarget( player );

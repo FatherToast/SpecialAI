@@ -452,7 +452,7 @@ public final class AIManager {
      */
     public static void onRightClickBlock( PlayerInteractEvent.RightClickBlock event ) {
         if( !event.getWorld().isClientSide() && event.getUseBlock() != Event.Result.DENY ) {
-            BlockHelper.spawnHiddenMob( event.getWorld(), event.getPos(), event.getPlayer() );
+            BlockHelper.spawnHiddenMob( event.getWorld(), event.getPos(), event.getPlayer(), false );
         }
     }
     
@@ -463,7 +463,7 @@ public final class AIManager {
      */
     public static void onBlockBreak( BlockEvent.BreakEvent event ) {
         if( !event.getWorld().isClientSide() ) {
-            BlockHelper.spawnHiddenMob( event.getWorld(), event.getPos(), event.getPlayer() );
+            BlockHelper.spawnHiddenMob( event.getWorld(), event.getPos(), event.getPlayer(), true );
         }
     }
     
@@ -478,7 +478,7 @@ public final class AIManager {
             LivingEntity source = event.getExplosion().getSourceMob();
             PlayerEntity player = source instanceof PlayerEntity ? (PlayerEntity) source : null;
             for( BlockPos pos : event.getAffectedBlocks() ) {
-                BlockHelper.spawnHiddenMob( world, pos, player );
+                BlockHelper.spawnHiddenMob( world, pos, player, true );
             }
         }
     }
