@@ -1,5 +1,8 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.crust.api.config.common.ConfigManager;
+import fathertoast.crust.api.config.common.value.EnvironmentEntry;
+import fathertoast.crust.api.config.common.value.EnvironmentList;
 import fathertoast.crust.api.config.common.value.WeightedList;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.config.Config;
@@ -42,6 +45,12 @@ public enum EliteAIType implements WeightedList.Value {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.JUMP; }
+        
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 8 ).build() );
+        }
         
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
@@ -148,6 +157,12 @@ public enum EliteAIType implements WeightedList.Value {
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.CHARGE; }
         
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 8 ).build() );
+        }
+        
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
         public void describe( List<String> list ) {
@@ -178,6 +193,12 @@ public enum EliteAIType implements WeightedList.Value {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.THIEF; }
+        
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 32 ).build() );
+        }
         
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
@@ -213,6 +234,12 @@ public enum EliteAIType implements WeightedList.Value {
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.SHAMAN; }
         
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 24 ).build() );
+        }
+        
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
         public void describe( List<String> list ) {
@@ -241,6 +268,12 @@ public enum EliteAIType implements WeightedList.Value {
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.SPAWNER; }
         
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 40 ).build() );
+        }
+        
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
         public void describe( List<String> list ) {
@@ -266,6 +299,12 @@ public enum EliteAIType implements WeightedList.Value {
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.THROW_ALLY; }
         
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 16 ).build() );
+        }
+        
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
         public void describe( List<String> list ) {
@@ -280,6 +319,12 @@ public enum EliteAIType implements WeightedList.Value {
         /** @return Returns this AI type's config category. */
         @Override
         public EliteAIConfig.EliteAICategory getConfigCategory() { return Config.ELITE_AI.THROW_ENEMY; }
+        
+        /** @return Returns the default weight exceptions for this object. */
+        @Override
+        public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) {
+            return new EnvironmentList( EnvironmentEntry.builder( manager, 0.0 ).belowApocalypseDifficulty( 56 ).build() );
+        }
         
         /** Adds a description of what this AI type does to the list, using default values. */
         @Override
@@ -343,6 +388,9 @@ public enum EliteAIType implements WeightedList.Value {
     /** @return Returns the default weight for this object. */
     @Override
     public final int getDefaultWeight() { return DEFAULT_WEIGHT; }
+    
+    /** @return Returns the default weight exceptions for this object. */
+    public EnvironmentList makeDefaultWeightExceptions( ConfigManager manager ) { return new EnvironmentList(); }
     
     /** Saves this AI to the entity tag. */
     public final void saveTo( CompoundNBT aiTag ) { aiTag.putBoolean( KEY, true ); }

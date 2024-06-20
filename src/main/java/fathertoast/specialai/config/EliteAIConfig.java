@@ -8,7 +8,6 @@ import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.file.TomlHelper;
 import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
-import fathertoast.crust.api.config.common.value.EnvironmentList;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import net.minecraft.enchantment.Enchantments;
@@ -154,7 +153,7 @@ public class EliteAIConfig extends AbstractConfigFile {
                     TextFormatting.GRAY + "   Range for Values: " + TomlHelper.fieldRange( DoubleField.Range.NON_NEGATIVE.MIN, DoubleField.Range.NON_NEGATIVE.MAX ) );
             for( int i = 0; i < aiTypes.length; i++ ) {
                 weightExceptions[i] = SPEC.define( new EnvironmentListField(
-                        "weight." + aiTypes[i].getKey() + ".exceptions", new EnvironmentList()
+                        "weight." + aiTypes[i].getKey() + ".exceptions", aiTypes[i].makeDefaultWeightExceptions( SPEC.MANAGER )
                         .setRange( DoubleField.Range.NON_NEGATIVE ), (String[]) null ) );
             }
             
