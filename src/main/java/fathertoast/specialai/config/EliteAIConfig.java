@@ -11,11 +11,11 @@ import fathertoast.crust.api.config.common.value.EntityList;
 import fathertoast.crust.api.config.common.value.EnvironmentList;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,7 +74,7 @@ public class EliteAIConfig extends AbstractConfigFile {
         // Print description for each elite AI pattern
         SPEC.decreaseIndent();
         SPEC.newLine( 2 );
-        SPEC.titledComment( TextFormatting.YELLOW + "Appendix",
+        SPEC.titledComment( ChatFormatting.YELLOW + "Appendix",
                 "Below is a description for each elite AI pattern.",
                 "Note that the qualitative descriptions (high, low, etc.) are based on default values and therefore may not " +
                         "be valid in an edited config. All equipment and attribute modifiers can be disabled and all attribute " +
@@ -136,7 +136,7 @@ public class EliteAIConfig extends AbstractConfigFile {
                             "a random elite AI to entities in the above list. Higher weight is more common.",
                     "Elite AIs given a weight of 0 will never be selected, though they can still be applied directly " +
                             "by the entity list in their specific category below and can still be NBT-edited onto mobs.",
-                    TextFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.NON_NEGATIVE ) );
+                    ChatFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.NON_NEGATIVE ) );
             for( int i = 0; i < aiTypes.length; i++ ) {
                 baseWeights[i] = SPEC.define( new DoubleField(
                         "weight." + aiTypes[i].getKey() + ".base", aiTypes[i].getDefaultWeight(),
@@ -149,9 +149,9 @@ public class EliteAIConfig extends AbstractConfigFile {
                     "The following options are the weights for each elite AI pattern to be chosen when assigning " +
                             "a random elite AI to entities in the above list when specific environmental conditions are met. " +
                             "See above for the weights used when none of the conditions are met.",
-                    TextFormatting.GRAY + TomlHelper.fieldInfoFormat( "Environment List", new ArrayList<>(),
+                    ChatFormatting.GRAY + TomlHelper.fieldInfoFormat( "Environment List", new ArrayList<>(),
                             "[ \"value condition1 state1 & condition2 state2 & ...\", ... ]" ),
-                    TextFormatting.GRAY + "   Range for Values: " + TomlHelper.fieldRange( DoubleField.Range.NON_NEGATIVE.MIN, DoubleField.Range.NON_NEGATIVE.MAX ) );
+                    ChatFormatting.GRAY + "   Range for Values: " + TomlHelper.fieldRange( DoubleField.Range.NON_NEGATIVE.MIN, DoubleField.Range.NON_NEGATIVE.MAX ) );
             for( int i = 0; i < aiTypes.length; i++ ) {
                 weightExceptions[i] = SPEC.define( new EnvironmentListField(
                         "weight." + aiTypes[i].getKey() + ".exceptions", new EnvironmentList()
@@ -828,7 +828,7 @@ public class EliteAIConfig extends AbstractConfigFile {
                             "disabled if set to 0. Notably, most passive mobs do not have damage or knockback attributes, " +
                             "so those modifiers cannot apply to them. Added modifiers use the 'addition' operation and " +
                             "increased modifiers use the 'multiply base' operation.",
-                    TextFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.ANY ) );
+                    ChatFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.ANY ) );
             followRange = SPEC.define( new DoubleField( "modifier.added_follow_range", attributes.followRange, DoubleField.Range.ANY, (String[]) null ) );
             addedMaxHealth = SPEC.define( new DoubleField( "modifier.added_max_health", attributes.addedMaxHealth, DoubleField.Range.ANY, (String[]) null ) );
             increasedMaxHealth = SPEC.define( new DoubleField( "modifier.increased_max_health", attributes.increasedMaxHealth, DoubleField.Range.ANY, (String[]) null ) );

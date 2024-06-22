@@ -2,17 +2,16 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.ai.AnimalMeleeAttackGoal;
 import fathertoast.specialai.config.Config;
-import net.minecraft.command.arguments.EntityAnchorArgument;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.play.server.SEntityVelocityPacket;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -31,7 +30,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     /** Ticks until the next attack. */
     private int attackTime;
     /** The direction of this mob's current attack. */
-    private Vector3d attackVec;
+    private Vec3 attackVec;
     
     /** Keeps track of which arm to swing next when 'flailing' during the stunned state. */
     private boolean swingOffhand;
@@ -39,7 +38,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     /** The mob's original step height. */
     private float stepHeight = Float.NaN;
     
-    ChargeEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+    ChargeEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK, Flag.JUMP ) );
     }
@@ -47,14 +46,14 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     /** @return Returns true if this AI can be activated. */
     @Override
     public boolean canUse() {
-        if( --attackTime > 0 || !mob.isOnGround() || mob.isPassenger() || mob.getRandom().nextInt( 10 ) != 0 )
+        if( --attackTime > 0 || !mob.onGround() || mob.isPassenger() || mob.getRandom().nextInt( 10 ) != 0 )
             return false;
         
         final LivingEntity target = mob.getTarget();
         if( target != null ) {
             final double distanceSqr = mob.distanceToSqr( target );
             return distanceSqr <= Config.ELITE_AI.CHARGE.rangeSqrMax.get() && distanceSqr >= Config.ELITE_AI.CHARGE.rangeSqrMin.get()
-                    && mob.canSee( target );
+                    && mob.hasLineOfSight( target );
         }
         return false;
     }
@@ -65,7 +64,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         mob.getNavigation().stop();
         attackTime = Config.ELITE_AI.CHARGE.chargeUpDuration.get();
         currentActivity = Activity.CHARGE_UP;
-        mob.swing( Hand.OFF_HAND );
+        mob.swing( InteractionHand.OFF_HAND );
         mob.setDeltaMovement( mob.getDeltaMovement().add( 0.0, 0.3, 0.0 ) );
         mob.playSound( SoundEvents.ARMOR_EQUIP_LEATHER,
                 1.0F, 1.0F / (mob.getRandom().nextFloat() * 0.4F + 0.8F) );
@@ -112,11 +111,11 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         
         if( attackTime <= 0 ) {
             // Charge up complete, lock in target and transition to charging
-            attackVec = new Vector3d( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() ).normalize();
-            if( mob.maxUpStep < 1.0F ) {
+            attackVec = new Vec3( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() ).normalize();
+            if( mob.maxUpStep() < 1.0F ) {
                 // Force step height to be at least 1 block
-                stepHeight = mob.maxUpStep;
-                mob.maxUpStep = 1.0F;
+                stepHeight = mob.maxUpStep();
+                mob.setMaxUpStep( 1.0F );
             }
             mob.setSprinting( true );
             
@@ -129,7 +128,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     private void tickCharging() {
         final LivingEntity target = mob.getTarget();
         
-        mob.lookAt( EntityAnchorArgument.Type.FEET, mob.position().add( attackVec ) );
+        mob.lookAt( EntityAnchorArgument.Anchor.FEET, mob.position().add( attackVec ) );
         mob.setDeltaMovement(
                 attackVec.x * Config.ELITE_AI.CHARGE.chargingSpeed.get(),
                 mob.getDeltaMovement().y,
@@ -137,7 +136,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         );
         final boolean hit;
         if( target != null ) {
-            List<Entity> list = mob.level.getEntities( mob, mob.getBoundingBox().inflate( 0.2 ) );
+            List<Entity> list = mob.level().getEntities( mob, mob.getBoundingBox().inflate( 0.2 ) );
             hit = list.contains( target );
         }
         else {
@@ -147,7 +146,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         if( hit ) {
             // Has hit the target
             AnimalMeleeAttackGoal.doHurtTarget( mob, target );
-            mob.swing( Hand.MAIN_HAND );
+            mob.swing( InteractionHand.MAIN_HAND );
             
             mob.setDeltaMovement(
                     attackVec.x * -1.2,
@@ -159,19 +158,23 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
                     0.5,
                     attackVec.z * Config.ELITE_AI.CHARGE.knockbackSpeed.get()
             );
-            if( target instanceof ServerPlayerEntity ) {
+            // TODO - is this handled automatically now?
+            /*
+            if( target instanceof ServerPlayer serverPlayer ) {
                 try {
-                    ((ServerPlayerEntity) target).connection.send( new SEntityVelocityPacket( target ) );
+                    serverPlayer.connection.send( new ClientboundMoveEntityPacket( target ) );
                 }
                 catch( Exception ex ) {
                     ex.printStackTrace();
                 }
             }
+
+             */
             currentActivity = Activity.NONE;
         }
         else if( mob.horizontalCollision ) {
             // Has hit a wall
-            mob.hurt( DamageSource.FLY_INTO_WALL, (float) Config.ELITE_AI.CHARGE.selfDamage.get() );
+            mob.hurt( mob.level().damageSources().flyIntoWall(), (float) Config.ELITE_AI.CHARGE.selfDamage.get() );
             mob.setDeltaMovement(
                     attackVec.x * -0.5,
                     0.5,
@@ -191,8 +194,8 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     private void tickStunned() {
         // Perform 'flailing' animation
         if( !mob.swinging ) {
-            if( swingOffhand ) mob.swing( Hand.OFF_HAND );
-            else mob.swing( Hand.MAIN_HAND );
+            if( swingOffhand ) mob.swing( InteractionHand.OFF_HAND );
+            else mob.swing( InteractionHand.MAIN_HAND );
             swingOffhand = !swingOffhand;
         }
         
@@ -212,7 +215,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     /** Turns off the sprinting state and reverts to original step height, if needed. */
     private void cancelCharging() {
         if( !Float.isNaN( stepHeight ) ) {
-            mob.maxUpStep = stepHeight;
+            mob.setMaxUpStep( stepHeight );
             stepHeight = Float.NaN;
         }
         mob.setSprinting( false );

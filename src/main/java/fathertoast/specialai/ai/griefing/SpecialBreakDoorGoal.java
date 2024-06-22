@@ -3,18 +3,21 @@ package fathertoast.specialai.ai.griefing;
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.util.BlockHelper;
-import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.BreakDoorGoal;
-import net.minecraft.entity.monster.CreeperEntity;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.GroundPathHelper;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.BreakDoorGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.util.GoalUtils;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraftforge.common.Tags;
 
 import java.util.function.Predicate;
 
@@ -45,7 +48,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     /**
      * @param entity The owner of this AI.
      */
-    public SpecialBreakDoorGoal( MobEntity entity ) {
+    public SpecialBreakDoorGoal( Mob entity ) {
         super( entity, DIFFICULTY_PREDICATE );
     }
     
@@ -56,7 +59,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
             return false;
         }
         // Try to find a blocking door
-        if( mob.horizontalCollision && GroundPathHelper.hasGroundPathNavigation( mob ) ) {
+        if( mob.horizontalCollision && GoalUtils.hasGroundPathNavigation( mob ) ) {
             findObstructingDoor();
         }
         // Return true if we are allowed to destroy the door
@@ -66,15 +69,15 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     /** Attempt to find an obstructing door and targets it, if possible. */
     private void findObstructingDoor() {
         hasDoor = false;
-        GroundPathNavigator navigator = (GroundPathNavigator) mob.getNavigation();
+        GroundPathNavigation navigator = (GroundPathNavigation) mob.getNavigation();
         Path path = navigator.getPath();
         if( path != null && !path.isDone() && navigator.canOpenDoors() ) {
             // Search along the entity's path
             final int maxPoint = Math.min( path.getNextNodeIndex() + 2, path.getNodeCount() );
             for( int i = 0; i < maxPoint; i++ ) {
-                PathPoint pathpoint = path.getNode( i );
+                Node pathPoint = path.getNode( i );
                 // Start at floor level so we can target shorter doors
-                BlockPos floorPos = new BlockPos( pathpoint.x, pathpoint.y - 1, pathpoint.z );
+                BlockPos floorPos = new BlockPos( pathPoint.x, pathPoint.y - 1, pathPoint.z );
                 if( mob.distanceToSqr( floorPos.getX(), mob.getY(), floorPos.getZ() ) <= 2.25 && tryTargetDoor( floorPos ) ) {
                     return;
                 }
@@ -90,9 +93,9 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         BlockPos pos = floorPos.above( (int) Math.ceil( mob.getBbHeight() ) );
         while( pos.getY() >= floorPos.getY() ) {
             // Check if the block at this position is a valid target
-            BlockState target = mob.level.getBlockState( pos );
+            BlockState target = mob.level().getBlockState( pos );
             if( isValidBlock( target ) && BlockHelper.shouldDamage( target, mob,
-                    Config.GENERAL.DOOR_BREAKING.requiresTools.get() && !madCreeper(), mob.level, pos ) ) {
+                    Config.GENERAL.DOOR_BREAKING.requiresTools.get() && !madCreeper(), mob.level(), pos ) ) {
                 // The target is valid
                 targetBlock = target;
                 doorPos = pos;
@@ -110,8 +113,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
             return false;
         }
         if( Config.GENERAL.DOOR_BREAKING.targetDoors.get() ) {
-            Block block = target.getBlock();
-            if( block instanceof DoorBlock || block instanceof FenceGateBlock || block instanceof TrapDoorBlock ) {
+            if( target.is( BlockTags.DOORS ) || target.is( BlockTags.FENCE_GATES ) || target.is( BlockTags.TRAPDOORS ) ) {
                 return true;
             }
         }
@@ -122,7 +124,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     @Override
     public void start() {
         if( madCreeper() ) {
-            ((CreeperEntity) mob).ignite();
+            ((Creeper) mob).ignite();
             completed = true;
         }
         else {
@@ -139,7 +141,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     /** @return Called each update while active and returns true if this AI can remain active. */
     @Override
     public boolean canContinueToUse() {
-        return !completed && doorPos.closerThan( mob.position(), 2.0 );
+        return !completed && doorPos.closerThan( mob.blockPosition(), 2.0 );
     }
     
     /** Called when this AI is deactivated. */
@@ -148,7 +150,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         blockDamage = 0.0F;
         targetBlock = null;
         hasDoor = false;
-        mob.level.destroyBlockProgress( mob.getId(), doorPos, -1 );
+        mob.level().destroyBlockProgress( mob.getId(), doorPos, -1 );
     }
     
     /** Called each tick while this AI is active. */
@@ -166,11 +168,12 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         
         // Play hit effects
         if( hitCounter == 0 ) {
-            if( targetBlock.getMaterial() == Material.METAL || targetBlock.getMaterial() == Material.HEAVY_METAL ) {
-                LevelEventHelper.ZOMBIE_ATTACK_IRON_DOOR.play( mob.level, doorPos );
+            // TODO - There is no such thing as block material anymore, hard to tell what is metal
+            if( targetBlock.getBlock() == Blocks.IRON_DOOR || targetBlock.getBlock() == Blocks.IRON_TRAPDOOR ) {
+                LevelEventHelper.ZOMBIE_ATTACK_IRON_DOOR.play( mob.level(), doorPos );
             }
             else {
-                LevelEventHelper.ZOMBIE_ATTACK_WOODEN_DOOR.play( mob.level, doorPos );
+                LevelEventHelper.ZOMBIE_ATTACK_WOODEN_DOOR.play( mob.level(), doorPos );
             }
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
@@ -179,15 +182,15 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         if( ++hitCounter >= 16 ) {
             hitCounter = 0;
         }
-        World world = mob.level;
+        Level level = mob.level();
         
         // Perform block breaking
-        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, world, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get();
+        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, level, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get();
         if( blockDamage >= 1.0F ) {
             // Block is broken
-            world.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
-            LevelEventHelper.ZOMBIE_BREAK_WOODEN_DOOR.play( mob.level, doorPos );
-            LevelEventHelper.BLOCK_BREAK_FX.play( mob.level, null, doorPos, targetBlock );
+            level.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
+            LevelEventHelper.ZOMBIE_BREAK_WOODEN_DOOR.play( mob.level(), doorPos );
+            LevelEventHelper.BLOCK_BREAK_FX.play( mob.level(), null, doorPos, targetBlock );
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
             }
@@ -198,11 +201,11 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         // Update block damage
         final int damage = (int) Math.ceil( blockDamage * 10.0F ) - 1;
         if( damage != lastBlockDamage ) {
-            world.destroyBlockProgress( mob.getId(), doorPos, damage );
+            level.destroyBlockProgress( mob.getId(), doorPos, damage );
             lastBlockDamage = damage;
         }
     }
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the door. */
-    private boolean madCreeper() { return Config.GENERAL.DOOR_BREAKING.madCreepers.get() && mob instanceof CreeperEntity; }
+    private boolean madCreeper() { return Config.GENERAL.DOOR_BREAKING.madCreepers.get() && mob instanceof Creeper; }
 }

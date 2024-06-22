@@ -1,10 +1,10 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -15,7 +15,7 @@ public class LeapEliteGoal extends AbstractEliteGoal {
     /** Ticks until the AI can activate again. */
     private int cooldownTimer;
     
-    LeapEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+    LeapEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.JUMP ) );
     }
@@ -23,7 +23,7 @@ public class LeapEliteGoal extends AbstractEliteGoal {
     /** @return Returns true if this AI can be activated. */
     @Override
     public boolean canUse() {
-        if( --cooldownTimer > 0 || !mob.isOnGround() || mob.isPassenger() || mob.getRandom().nextInt( 5 ) != 0 )
+        if( --cooldownTimer > 0 || !mob.onGround() || mob.isPassenger() || mob.getRandom().nextInt( 5 ) != 0 )
             return false;
         
         final LivingEntity target = mob.getTarget();
@@ -43,7 +43,7 @@ public class LeapEliteGoal extends AbstractEliteGoal {
         
         // Perform the jump
         mob.getLookControl().setLookAt( target, 180.0F, 0.0F );
-        final Vector3d jumpXZ = new Vector3d( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() )
+        final Vec3 jumpXZ = new Vec3( target.getX() - mob.getX(), 0.0, target.getZ() - mob.getZ() )
                 .normalize().scale( Config.ELITE_AI.LEAP.jumpSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
         mob.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.LEAP.jumpSpeedUpward.get(), jumpXZ.z );
         

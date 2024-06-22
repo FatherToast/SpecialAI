@@ -10,7 +10,7 @@ import fathertoast.crust.api.config.common.field.EntityListField;
 import fathertoast.crust.api.config.common.value.BlockList;
 import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
 
 public class GeneralConfig extends AbstractConfigFile {
     

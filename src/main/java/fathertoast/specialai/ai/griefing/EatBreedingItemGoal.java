@@ -1,16 +1,17 @@
 package fathertoast.specialai.ai.griefing;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.item.Food;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ItemParticleData;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.particles.ItemParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.Collections;
@@ -26,7 +27,7 @@ public class EatBreedingItemGoal extends Goal {
     private static final Predicate<Entity> ITEM_SELECTOR = entity -> entity instanceof ItemEntity;
     
     /** The owner of this AI. */
-    protected final AnimalEntity mob;
+    protected final Animal mob;
     
     /** The item this entity wants to eat. */
     private ItemEntity target;
@@ -38,7 +39,7 @@ public class EatBreedingItemGoal extends Goal {
     /**
      * @param entity The owner of this AI.
      */
-    public EatBreedingItemGoal( AnimalEntity entity ) {
+    public EatBreedingItemGoal( Animal entity ) {
         mob = entity;
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
@@ -46,7 +47,7 @@ public class EatBreedingItemGoal extends Goal {
     /** @return Returns true if this AI can be activated. */
     @Override
     public boolean canUse() {
-        if( !mob.isPassenger() && ForgeEventFactory.getMobGriefingEvent( mob.level, mob ) && ++checkTime > 30 ) {
+        if( !mob.isPassenger() && ForgeEventFactory.getMobGriefingEvent( mob.level(), mob ) && ++checkTime > 30 ) {
             checkTime = 0;
             return findNearbyFood();
         }
@@ -71,12 +72,12 @@ public class EatBreedingItemGoal extends Goal {
         if( target == null ) return; // Shouldn't happen, but just in case
         mob.getLookControl().setLookAt( target, 30.0F, 30.0F );
         
-        List<Entity> list = mob.level.getEntities( mob, mob.getBoundingBox().inflate( 0.2, 0.0, 0.2 ) );
+        List<Entity> list = mob.level().getEntities( mob, mob.getBoundingBox().inflate( 0.2, 0.0, 0.2 ) );
         if( list.contains( target ) ) {
             // Eat one item out of the stack
             ItemStack item = target.getItem();
             if( Config.GENERAL.ANIMALS.eatingHeals.get() ) {
-                final Food food = item.getItem().getFoodProperties();
+                final FoodProperties food = item.getItem().getFoodProperties( item, mob );
                 final float healAmount = Math.max( food == null ? 0.0F : food.getNutrition(), 1.0F );
                 mob.heal( healAmount );
             }
@@ -85,7 +86,7 @@ public class EatBreedingItemGoal extends Goal {
             
             item.shrink( 1 );
             if( item.isEmpty() ) {
-                target.remove();
+                target.discard();
             }
         }
         else {
@@ -106,22 +107,22 @@ public class EatBreedingItemGoal extends Goal {
     private void triggerEatingEffects( ItemStack item ) {
         // Spawn particles
         for( int i = 0; i < 16; i++ ) {
-            final Vector3d velocity = new Vector3d(
+            final Vec3 velocity = new Vec3(
                     (mob.getRandom().nextFloat() - 0.5) * 0.1,
                     Math.random() * 0.1 + 0.1,
                     0.0 )
-                    .xRot( (float) Math.toRadians( -mob.xRot ) ).yRot( (float) Math.toRadians( -mob.yRot ) )
+                    .xRot( (float) Math.toRadians( -mob.getXRot() ) ).yRot( (float) Math.toRadians( -mob.getYRot() ) )
                     .add( 0.0, 0.05, 0.0 );
             
-            final Vector3d position = new Vector3d(
+            final Vec3 position = new Vec3(
                     ((double) mob.getRandom().nextFloat() - 0.5) * 0.3,
                     -mob.getRandom().nextFloat() * 0.6 - 0.3,
                     0.6 )
-                    .xRot( (float) Math.toRadians( -mob.xRot ) ).yRot( (float) Math.toRadians( -mob.yRot ) )
+                    .xRot( (float) Math.toRadians( -mob.getXRot() ) ).yRot( (float) Math.toRadians( -mob.getYRot() ) )
                     .add( mob.getX(), mob.getEyeY(), mob.getZ() );
             
-            if( mob.level instanceof ServerWorld ) {
-                ((ServerWorld) mob.level).sendParticles( new ItemParticleData( ParticleTypes.ITEM, item ),
+            if( mob.level() instanceof ServerLevel serverLevel ) {
+                serverLevel.sendParticles( new ItemParticleOption( ParticleTypes.ITEM, item ),
                         position.x, position.y, position.z, 1,
                         velocity.x, velocity.y, velocity.z, 0.0 );
             }
@@ -141,7 +142,7 @@ public class EatBreedingItemGoal extends Goal {
     
     /** @return Searches for a nearby food item and targets it. Returns true if a target is found. */
     private boolean findNearbyFood() {
-        List<Entity> list = mob.level.getEntities( mob, mob.getBoundingBox().inflate( 16.0, 8.0, 16.0 ), ITEM_SELECTOR );
+        List<Entity> list = mob.level().getEntities( mob, mob.getBoundingBox().inflate( 16.0, 8.0, 16.0 ), ITEM_SELECTOR );
         Collections.shuffle( list );
         for( Entity entity : list ) {
             ItemStack item = ((ItemEntity) entity).getItem();

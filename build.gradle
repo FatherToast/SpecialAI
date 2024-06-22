@@ -4,28 +4,29 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0,6.2)', changing: true
     }
 }
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+}
 apply plugin: 'net.minecraftforge.gradle'
-// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
 
 // The mod's version and id
 version = "${mc_version}-${mod_version}"
 archivesBaseName = 'specialai'
 group = "fathertoast.${archivesBaseName}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 
 minecraft {
     mappings channel: 'official', version: "${mc_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
-        client {
+        configureEach {
             workingDirectory project.file('run')
 
             property 'forge.logging.markers', 'REGISTRIES'
@@ -36,34 +37,20 @@ minecraft {
                     source sourceSets.main
                 }
             }
+        }
+
+        client {
+            property "mixin.debug.export", "true"
+            property 'mixin.env.disableRefMap', 'true'
         }
 
         server {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                specialai {
-                    source sourceSets.main
-                }
-            }
+            property "mixin.debug.export", "true"
+            property 'mixin.env.disableRefMap', 'true'
         }
 
         data {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
             args '--mod', 'specialai', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-
-            mods {
-                specialai {
-                    source sourceSets.main
-                }
-            }
         }
     }
 }
@@ -79,33 +66,18 @@ repositories {
             includeGroup 'curse.maven'
         }
     }
-
-    //maven { // JEI
-    //    name 'prog'
-    //    url 'http://dvs1.progwml6.com/files/maven'
-    //}
-    maven { // TOP
-        name 'tterrag'
-        url 'https://maven.tterrag.com/'
-    }
-
-    // For local api testing
-    //flatDir { dir 'lib' }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
-
-    // For local api testing
-    //implementation ":crust-${mc_version}-1.0.0-src"
 
     // Crust; only implement the api, but include the entire mod at runtime
     implementation "curse.maven:crust-873570:${crust_api_version}"
     runtimeOnly "curse.maven:crust-873570:${crust_src_version}"
 
     // Add in JEI and TOP to assist debugging during development
-    //runtimeOnly fg.deobf("mezz.jei:jei-${jei_version}")
-    runtimeOnly fg.deobf("mcjty.theoneprobe:TheOneProbe-${top_version}")
+    runtimeOnly fg.deobf("curse.maven:jei-238222:${jei_version}")
+    runtimeOnly fg.deobf("curse.maven:jade-324717:${jade_version}")
 }
 
 jar {

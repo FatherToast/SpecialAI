@@ -1,16 +1,17 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.EffectUtils;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.Explosion;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -28,7 +29,7 @@ public class SlamEliteGoal extends AbstractEliteGoal {
     /** Ticks until the next attack. */
     private int attackTime;
     
-    SlamEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+    SlamEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
@@ -47,7 +48,7 @@ public class SlamEliteGoal extends AbstractEliteGoal {
         if( target == lastHurtBy ) {
             final double distanceSqr = mob.distanceToSqr( target );
             return distanceSqr <= Config.ELITE_AI.SLAM.rangeSqrMax.get() && distanceSqr >= Config.ELITE_AI.SLAM.rangeSqrMin.get()
-                    && mob.canSee( target );
+                    && mob.hasLineOfSight( target );
         }
         return false;
     }
@@ -103,7 +104,7 @@ public class SlamEliteGoal extends AbstractEliteGoal {
         if( attackTime <= 0 ) {
             // Charge up complete, transition to swinging
             mob.setAggressive( false );
-            mob.swing( Hand.MAIN_HAND );
+            mob.swing( InteractionHand.MAIN_HAND );
             attackTime = getSwingDuration();
             currentActivity = Activity.SWINGING;
             mob.playSound( SoundEvents.PLAYER_ATTACK_SWEEP,
@@ -112,11 +113,12 @@ public class SlamEliteGoal extends AbstractEliteGoal {
     }
     
     /** @return The expected swing animation time, calculated the same way as {@link LivingEntity#getCurrentSwingDuration()}. */
+    @SuppressWarnings("JavadocReference")
     private int getSwingDuration() {
-        if( EffectUtils.hasDigSpeed( mob ) ) {
-            return 6 - (1 + EffectUtils.getDigSpeedAmplification( mob ));
+        if( MobEffectUtil.hasDigSpeed( mob ) ) {
+            return 6 - (1 + MobEffectUtil.getDigSpeedAmplification( mob ));
         }
-        EffectInstance miningFatigue = mob.getEffect( Effects.DIG_SLOWDOWN );
+        MobEffectInstance miningFatigue = mob.getEffect( MobEffects.DIG_SLOWDOWN );
         return miningFatigue == null ? 6 : 6 + (1 + miningFatigue.getAmplifier()) * 2;
     }
     
@@ -128,11 +130,11 @@ public class SlamEliteGoal extends AbstractEliteGoal {
             mob.playSound( SoundEvents.AXE_STRIP,
                     1.0F, 1.0F / (mob.getRandom().nextFloat() * 0.4F + 0.8F) );
             
-            Vector3d offset = mob.getViewVector( 1.0F )
+            Vec3 offset = mob.getViewVector( 1.0F )
                     .multiply( 1.0 + mob.getBbWidth(), 0.0, 1.0 + mob.getBbWidth() );
-            mob.level.explode( mob,
+            mob.level().explode( mob,
                     mob.getX() + offset.x, mob.getY() + offset.y, mob.getZ() + offset.z,
-                    (float) Config.ELITE_AI.SLAM.power.get(), false, Explosion.Mode.NONE );
+                    (float) Config.ELITE_AI.SLAM.power.get(), false, Level.ExplosionInteraction.NONE );
             
             currentActivity = Activity.NONE;
         }

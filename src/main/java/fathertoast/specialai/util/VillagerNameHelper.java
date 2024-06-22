@@ -1,9 +1,10 @@
 package fathertoast.specialai.util;
 
 import fathertoast.specialai.SpecialAI;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ public final class VillagerNameHelper {
     private static final Map<String, List<String>> NAME_POOLS = new HashMap<>();
     
     private static String getKey( VillagerProfession profession ) {
-        return SpecialAI.toString( profession );
+        return SpecialAI.toString( ForgeRegistries.VILLAGER_PROFESSIONS.getKey( profession ) );
     }
     
     //    private static String getKey( VillagerCareer career, VillagerProfession profession /* because parent profession is private in career */ ) {
@@ -34,9 +35,9 @@ public final class VillagerNameHelper {
         return profKey + "#" + careerName;
     }
     
-    public static void setVillagerName( Random random, VillagerEntity entity ) {
+    public static void setVillagerName( Random random, Villager entity ) {
         // Get the villager's profession and career (sub-profession)
-        CompoundNBT tag = new CompoundNBT();
+        CompoundTag tag = new CompoundTag();
         entity.save( tag );
         
         //        VillagerProfession prof = entity.getProfessionForge();

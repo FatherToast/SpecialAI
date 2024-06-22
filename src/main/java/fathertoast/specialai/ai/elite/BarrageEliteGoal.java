@@ -2,14 +2,14 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
-import net.minecraft.command.arguments.EntityAnchorArgument;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -26,9 +26,9 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
     /** Ticks until the next attack. */
     private int attackTime;
     /** The direction of this mob's current attack. */
-    private Vector3d attackVec;
+    private Vec3 attackVec;
     
-    BarrageEliteGoal( MobEntity entity, CompoundNBT aiTag ) {
+    BarrageEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK, Flag.JUMP ) );
     }
@@ -36,14 +36,14 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
     /** @return Returns true if this AI can be activated. */
     @Override
     public boolean canUse() {
-        if( --attackTime > 0 || !mob.isOnGround() || mob.getRandom().nextInt( 10 ) != 0 )
+        if( --attackTime > 0 || !mob.onGround() || mob.getRandom().nextInt( 10 ) != 0 )
             return false;
         
         final LivingEntity target = mob.getTarget();
         if( target != null ) {
             final double distanceSqr = mob.distanceToSqr( target );
             return distanceSqr <= Config.ELITE_AI.BARRAGE.rangeSqrMax.get() && distanceSqr >= Config.ELITE_AI.BARRAGE.rangeSqrMin.get()
-                    && mob.canSee( target );
+                    && mob.hasLineOfSight( target );
         }
         return false;
     }
@@ -54,7 +54,7 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
         mob.getNavigation().stop();
         attackTime = Config.ELITE_AI.BARRAGE.chargeUpDuration.get();
         currentActivity = Activity.CHARGE_UP;
-        mob.swing( Hand.OFF_HAND );
+        mob.swing( InteractionHand.OFF_HAND );
         mob.playSound( SoundEvents.STONE_BUTTON_CLICK_ON,
                 1.0F, 1.0F / (mob.getRandom().nextFloat() * 0.4F + 0.8F) );
     }
@@ -97,7 +97,7 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
         
         if( attackTime <= 0 ) {
             // Charge up complete, lock in target and transition to shooting
-            attackVec = new Vector3d(
+            attackVec = new Vec3(
                     target.getX(),
                     target.getY( 0.333 ) - mob.getEyeHeight(),
                     target.getZ()
@@ -113,20 +113,20 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
     
     /** Called each tick while this AI is active and in shooting mode. */
     private void tickShooting() {
-        mob.lookAt( EntityAnchorArgument.Type.FEET, mob.position().add( attackVec ) );
+        mob.lookAt( EntityAnchorArgument.Anchor.FEET, mob.position().add( attackVec ) );
         if( attackTime % Config.ELITE_AI.BARRAGE.shotTime.get() == 0 ) {
             // Fire an arrow
-            ArrowEntity arrow = new ArrowEntity( mob.level, mob.getX(), mob.getY() + mob.getEyeHeight(), mob.getZ() );
+            Arrow arrow = new Arrow( mob.level(), mob.getX(), mob.getY() + mob.getEyeHeight(), mob.getZ() );
             arrow.setOwner( mob );
             arrow.setBaseDamage( Config.ELITE_AI.BARRAGE.arrowDamage.get() +
-                    mob.getRandom().nextGaussian() * 0.25 + mob.level.getDifficulty().getId() * 0.11 );
+                    mob.getRandom().nextGaussian() * 0.25 + mob.level().getDifficulty().getId() * 0.11 );
             if( mob.isOnFire() ) {
                 arrow.setSecondsOnFire( 100 );
             }
             arrow.shoot( attackVec.x, attackVec.y, attackVec.z, 1.8F, (float) Config.ELITE_AI.BARRAGE.arrowVariance.get() );
             
             LevelEventHelper.DISPENSER_LAUNCH.play( mob );
-            mob.level.addFreshEntity( arrow );
+            mob.level().addFreshEntity( arrow );
         }
         else if( this.attackTime <= 0 ) {
             // Shooting complete, transition to end

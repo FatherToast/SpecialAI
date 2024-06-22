@@ -1,8 +1,7 @@
 package fathertoast.specialai;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,9 +101,6 @@ public class SpecialAI {
     
     /** The logger used by this mod. */
     public static final Logger LOG = LogManager.getLogger();
-    
-    /** @return Returns a Forge registry entry as a string, or "null" if it is null. */
-    public static String toString( @Nullable ForgeRegistryEntry<?> regEntry ) { return regEntry == null ? "null" : toString( regEntry.getRegistryName() ); }
     
     /** @return Returns the resource location as a string, or "null" if it is null. */
     public static String toString( @Nullable ResourceLocation res ) { return res == null ? "null" : res.toString(); }

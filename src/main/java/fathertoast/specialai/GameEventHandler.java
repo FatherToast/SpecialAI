@@ -3,12 +3,11 @@ package fathertoast.specialai;
 
 import fathertoast.specialai.ai.AIManager;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -36,7 +35,7 @@ public final class GameEventHandler {
      * @param event The event data.
      */
     @SubscribeEvent( priority = EventPriority.LOW )
-    public static void onJoinWorld( EntityJoinWorldEvent event ) { AIManager.onJoinWorld( event ); }
+    public static void onJoinWorld( EntityJoinLevelEvent event ) { AIManager.onJoinWorld( event ); }
     
     /**
      * Called when a living entity dies for any reason.

@@ -5,8 +5,8 @@ import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
 import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.value.*;
-import net.minecraft.block.*;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.*;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -157,7 +157,7 @@ public class IdleConfig extends AbstractConfigFile {
                         block instanceof StonecutterBlock || block instanceof LoomBlock || block instanceof CartographyTableBlock ||
                         
                         // Equipment reworking blocks
-                        block instanceof EnchantingTableBlock || block instanceof AnvilBlock || block instanceof GrindstoneBlock ||
+                        block instanceof EnchantmentTableBlock || block instanceof AnvilBlock || block instanceof GrindstoneBlock ||
                         
                         // Access blocks
                         block instanceof LadderBlock || block instanceof ScaffoldingBlock

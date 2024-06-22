@@ -1,12 +1,13 @@
 package fathertoast.specialai.ai;
 
 import fathertoast.specialai.config.Config;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.monster.SlimeEntity;
-import net.minecraft.util.EntityPredicates;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.monster.Slime;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -24,7 +25,7 @@ public class RiderGoal extends Goal {
     private static final double SPEED_MULTIPLIER = 1.2;
     
     /** The owner of this AI. */
-    protected final MobEntity mob;
+    protected final Mob mob;
     /** True if the entity is a small rider. */
     private final boolean isSmall;
     
@@ -39,7 +40,7 @@ public class RiderGoal extends Goal {
      * @param entity The owner of this AI.
      * @param small  Whether the entity is a small rider.
      */
-    public RiderGoal( MobEntity entity, boolean small ) {
+    public RiderGoal( Mob entity, boolean small ) {
         mob = entity;
         isSmall = small;
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
@@ -96,8 +97,8 @@ public class RiderGoal extends Goal {
     
     /** @return Searches for a nearby mount and targets it. Returns true if one is found. */
     private boolean findNearbyMount() {
-        List<Entity> list = mob.level.getEntities( mob, mob.getBoundingBox().inflate( 16.0, 8.0, 16.0 ),
-                EntityPredicates.ENTITY_NOT_BEING_RIDDEN );
+        List<Entity> list = mob.level().getEntities( mob, mob.getBoundingBox().inflate( 16.0, 8.0, 16.0 ),
+                EntitySelector.ENTITY_NOT_BEING_RIDDEN );
         Collections.shuffle( list );
         for( Entity entity : list ) {
             if( entity instanceof LivingEntity && isValidMount( (LivingEntity) entity ) ) {
@@ -131,7 +132,7 @@ public class RiderGoal extends Goal {
     
     /** @return Returns true if the rider is a small rider, and false if the rider is normal-sized. */
     private boolean isSmallRider() {
-        return isSmall || mob.isBaby() || mob instanceof SlimeEntity && ((SlimeEntity) mob).isTiny();
+        return isSmall || mob.isBaby() || mob instanceof Slime && ((Slime) mob).isTiny();
     }
     
     /**
@@ -140,11 +141,11 @@ public class RiderGoal extends Goal {
      */
     private static class StartRiding implements Supplier<Boolean> {
         /** The entity that wants to ride. */
-        private final MobEntity RIDER;
+        private final Mob RIDER;
         /** The target entity to be ridden. */
         private final LivingEntity MOUNT;
         
-        StartRiding( MobEntity rider, LivingEntity mount ) {
+        StartRiding( Mob rider, LivingEntity mount ) {
             RIDER = rider;
             MOUNT = mount;
         }

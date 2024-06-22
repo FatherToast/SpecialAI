@@ -1,21 +1,22 @@
 package fathertoast.specialai.ai;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
-import net.minecraft.entity.passive.*;
-import net.minecraft.entity.passive.fish.AbstractFishEntity;
-import net.minecraft.entity.passive.fish.SalmonEntity;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.AxeItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.animal.*;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import javax.annotation.Nullable;
 
@@ -29,43 +30,43 @@ import javax.annotation.Nullable;
 public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
     
     /** @return Returns the pathfinding speed multiplier for the entity while attacking. This is not used for swimming entities. */
-    public static double attackingMoveSpeed( MobEntity entity ) {
-        if( entity instanceof AbstractVillagerEntity ) {
+    public static double attackingMoveSpeed( Mob entity ) {
+        if( entity instanceof AbstractVillager ) {
             return 0.7;
         }
-        if( entity instanceof RabbitEntity ) {
+        if( entity instanceof Rabbit) {
             return 3.3;
         }
-        if( entity instanceof ChickenEntity || entity instanceof AbstractFishEntity ) {
+        if( entity instanceof Chicken || entity instanceof AbstractFish ) {
             return 1.6;
         }
-        if( entity instanceof AnimalEntity ) {
+        if( entity instanceof Animal ) {
             return 1.3;
         }
         return 1.0;
     }
     
     /** @return Returns the fallback attack damage attribute for entities that do not have the attribute registered. */
-    public static float defaultAttackDamage( MobEntity entity ) {
+    public static float defaultAttackDamage( Mob entity ) {
         // Note: Default attack damage is 2.0 and the units are half-hearts, held item damage is added on to this
         // Most animals have 3.0, wolves have 4.0, and large animals have 6.0
-        if( entity instanceof SheepEntity || entity instanceof RabbitEntity || entity instanceof SalmonEntity ) {
+        if( entity instanceof Sheep || entity instanceof Rabbit || entity instanceof Salmon ) {
             return 2.0F;
         }
-        if( entity instanceof ChickenEntity || entity instanceof AbstractFishEntity ) {
+        if( entity instanceof Chicken || entity instanceof AbstractFish ) {
             return 1.0F;
         }
-        if( entity instanceof CowEntity || entity instanceof AbstractHorseEntity ) {
+        if( entity instanceof Cow || entity instanceof AbstractHorse ) {
             return 4.0F;
         }
         return 3.0F;
     }
     
     /** @return Returns the fallback attack knockback attribute for entities that do not have the attribute registered. */
-    public static float defaultAttackKnockback( MobEntity entity ) {
+    public static float defaultAttackKnockback( Mob entity ) {
         // Note: Default attack knockback is 0.0 and the max is 5.0, level of knockback enchant on held item is added on to this
         // Most mobs have 0.0, hoglins/zoglins have 1.0 (but also 'throw' on hit), and ravagers have 1.5
-        if( entity instanceof PigEntity || entity instanceof CowEntity ) {
+        if( entity instanceof Pig || entity instanceof Cow ) {
             return 1.5F;
         }
         return 0.0F;
@@ -75,7 +76,7 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
      * @param entity The owner of this AI.
      * @param memory Whether the owner needs line of sight to follow its target.
      */
-    public AnimalMeleeAttackGoal( CreatureEntity entity, boolean memory ) {
+    public AnimalMeleeAttackGoal( PathfinderMob entity, boolean memory ) {
         super( entity, attackingMoveSpeed( entity ), memory );
     }
     
@@ -89,7 +90,7 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
     protected void checkAndPerformAttack( @Nullable LivingEntity target, double distanceSqr ) {
         if( target != null && distanceSqr <= getAttackReachSqr( target ) && getTicksUntilNextAttack() <= 0 ) {
             resetAttackCooldown();
-            mob.swing( Hand.MAIN_HAND );
+            mob.swing( InteractionHand.MAIN_HAND );
             doHurtTarget( mob, target );
         }
     }
@@ -98,9 +99,9 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
      * An external implementation of a melee attack.
      *
      * @param target The target to attack.
-     * @see MobEntity#doHurtTarget(Entity)
+     * @see Mob#doHurtTarget(Entity)
      */
-    public static void doHurtTarget( MobEntity mob, Entity target ) {
+    public static void doHurtTarget( Mob mob, Entity target ) {
         // Try to perform the attack organically
         try {
             mob.doHurtTarget( target );
@@ -139,20 +140,19 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
         }
         
         // Actually perform the attack
-        if( target.hurt( DamageSource.mobAttack( mob ), damage ) ) {
+        if( target.hurt( mob.level().damageSources().mobAttack( mob ), damage ) ) {
             // Apply knockback
             if( knockback > 0.0F && target instanceof LivingEntity ) {
-                final float yRot = (float) Math.toRadians( mob.yRot );
-                ((LivingEntity) target).knockback( knockback * 0.5F, MathHelper.sin( yRot ), -MathHelper.cos( yRot ) );
+                final float yRot = (float) Math.toRadians( mob.getYRot() );
+                ((LivingEntity) target).knockback( knockback * 0.5F, Mth.sin( yRot ), -Mth.cos( yRot ) );
                 mob.setDeltaMovement( mob.getDeltaMovement().multiply( 0.6, 1.0, 0.6 ) );
             }
             // Handle shield
-            if( target instanceof PlayerEntity ) {
-                PlayerEntity playerentity = (PlayerEntity) target;
-                maybeDisableShield( mob, playerentity, mob.getMainHandItem(), playerentity.isUsingItem() ? playerentity.getUseItem() : ItemStack.EMPTY );
+            if(target instanceof Player player ) {
+                maybeDisableShield( mob, player, mob.getMainHandItem(), player.isUsingItem() ? player.getUseItem() : ItemStack.EMPTY );
             }
             
-            final float effectiveDifficulty = mob.level.getCurrentDifficultyAt( mob.blockPosition() ).getEffectiveDifficulty();
+            final float effectiveDifficulty = mob.level().getCurrentDifficultyAt( mob.blockPosition() ).getEffectiveDifficulty();
             if( mob.getMainHandItem().isEmpty() && mob.isOnFire() && mob.getRandom().nextFloat() < effectiveDifficulty * 0.3F ) {
                 target.setSecondsOnFire( 2 * (int) effectiveDifficulty );
             }
@@ -169,12 +169,12 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
      *
      * @param target The target to attack.
      */
-    private static void maybeDisableShield( MobEntity mob, PlayerEntity target, ItemStack weapon, ItemStack possibleShield ) {
+    private static void maybeDisableShield( Mob mob, Player target, ItemStack weapon, ItemStack possibleShield ) {
         if( !weapon.isEmpty() && !possibleShield.isEmpty() && weapon.getItem() instanceof AxeItem && possibleShield.getItem() == Items.SHIELD ) {
             final float disableChance = 0.25F + (float) EnchantmentHelper.getBlockEfficiency( mob ) * 0.05F;
             if( mob.getRandom().nextFloat() < disableChance ) {
                 target.getCooldowns().addCooldown( Items.SHIELD, 100 );
-                mob.level.broadcastEntityEvent( target, (byte) 30 );
+                mob.level().broadcastEntityEvent( target, (byte) 30 );
             }
         }
     }
