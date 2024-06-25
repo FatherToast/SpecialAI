@@ -68,7 +68,12 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
     public boolean canContinueToUse() {
         return checkSight( true );
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /**
      * @return Performs a sight check to the target, if possible.
      * <p>
@@ -229,7 +234,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                     NBTHelper.getForgeData( newMob, SpecialAI.MOD_ID, AIManager.TAG_ELITE_AI );
                     
                     // Fire the Forge can spawn event
-                    if( !ForgeEventFactory.checkSpawnPositionSpawner( newMob, level, MobSpawnType.SPAWNER, null, this ) )
+                    if( !ForgeEventFactory.checkSpawnPositionSpawner( newMob, level, MobSpawnType.SPAWNER, new SpawnData(), this ) )
                         continue;
                     
                     // If needed, perform the standard entity spawn initialization
@@ -286,7 +291,6 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         @Override
         public void load( @Nullable Level level, BlockPos pos, CompoundTag compoundTag ) {
             spawnDelay = compoundTag.getShort( TAG_DELAY );
-            spawnPotentials.unwrap().clear();
 
             boolean hasSpawnData = compoundTag.contains( TAG_SPAWN_DATA, Tag.TAG_COMPOUND );
 

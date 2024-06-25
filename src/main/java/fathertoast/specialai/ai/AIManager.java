@@ -1,9 +1,7 @@
 package fathertoast.specialai.ai;
 
 
-import fathertoast.crust.api.ICrustApi;
 import fathertoast.crust.api.config.common.ConfigUtil;
-import fathertoast.crust.api.lib.CrustObjects;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIHelper;
@@ -112,7 +110,7 @@ public final class AIManager {
     
     /** @param entity Adds dodge arrows AI to the entity. */
     private static void addDodgeArrowsAI( Mob entity, double dodgeChance ) {
-        entity.goalSelector.addGoal( -1, new DodgeArrowsGoal( entity, dodgeChance ) );
+        entity.goalSelector.addGoal( -1, new DodgeProjectilesGoal( entity, dodgeChance ) );
     }
     
     /** @param entity Adds avoid explosions AI to the entity. */
@@ -251,7 +249,7 @@ public final class AIManager {
         // Check if this is an arrow that can be dodged
         if( event.getEntity() instanceof Projectile && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
             event.getEntity().getPersistentData().putBoolean( TAG_ARROW_DODGE_CHECKED, true );
-            DodgeArrowsGoal.doDodgeCheckForArrow( event.getEntity() );
+            DodgeProjectilesGoal.doDodgeCheckForProjectile( event.getEntity() );
         }
         
         // Only initialize AI on mob entities, where the base AI system is implemented

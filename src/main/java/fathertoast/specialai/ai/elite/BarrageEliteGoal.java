@@ -83,7 +83,12 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
             default:
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called each tick while this AI is active and in charge up mode. */
     private void tickChargeUp() {
         final LivingEntity target = mob.getTarget();

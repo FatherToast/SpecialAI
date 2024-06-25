@@ -75,6 +75,8 @@ public class RiderGoal extends Goal {
     /** Called each tick while this AI is active. */
     @Override
     public void tick() {
+        if ( targetMount == null ) return;
+
         mob.getLookControl().setLookAt( targetMount, 30.0F, 30.0F );
         
         if( !targetMount.isVehicle() && mob.distanceToSqr( targetMount ) <= mob.getBbWidth() * mob.getBbWidth() * 4.0F + targetMount.getBbWidth() ) {
@@ -86,7 +88,12 @@ public class RiderGoal extends Goal {
             mob.getNavigation().moveTo( targetMount.getX(), targetMount.getY(), targetMount.getZ(), SPEED_MULTIPLIER );
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

@@ -68,7 +68,12 @@ public class SprintEliteGoal extends AbstractEliteGoal {
         }
         cooldownTimer++;
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

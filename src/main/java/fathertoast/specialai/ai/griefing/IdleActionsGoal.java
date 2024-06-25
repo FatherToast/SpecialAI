@@ -214,10 +214,13 @@ public class IdleActionsGoal extends Goal {
     @Override
     public void tick() {
         giveUpDelay++;
-        mob.getLookControl().setLookAt( targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5,
-                30.0F, 30.0F );
+
+        if ( targetPos != null ) {
+            mob.getLookControl().setLookAt(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5,
+                    30.0F, 30.0F);
+        }
         
-        if( canReach && targetHitResult != null ) {
+        if( canReach && targetHitResult != null && targetBlock != null ) {
             // The target can be reached, perform the activity
             switch( currentActivity ) {
                 case FIDDLING:
@@ -249,7 +252,12 @@ public class IdleActionsGoal extends Goal {
             }
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called each tick while this AI is active, in hiding mode, and the mob can reach its target. */
     private void performHiding() {
         // Try to hide in the block
@@ -332,7 +340,7 @@ public class IdleActionsGoal extends Goal {
     private void performFiddling() {
         if( mob.level() instanceof ServerLevel ) { // This should always be true, but check just in case
             // Handle special cases
-            if( targetBlock.getBlock() instanceof TntBlock) {
+            if( targetBlock.getBlock() instanceof TntBlock ) {
                 targetBlock.getBlock().onCaughtFire( targetBlock, mob.level(), targetPos, null, mob );
                 mob.level().removeBlock( targetPos, false );
             }
@@ -520,7 +528,6 @@ public class IdleActionsGoal extends Goal {
     //        and not highly depends on what other mods might add to worldgen
     /** @return Returns true if the block is a natural light source. */
     private boolean isNaturalLightBlock( Block block ) {
-        // Note: 1.17+ has Glow Berries/Lichen & Amethyst Bud/Cluster
         return block instanceof BaseFireBlock || block instanceof RedStoneOreBlock ||
                 block == Blocks.SEA_PICKLE || block == Blocks.MAGMA_BLOCK || block == Blocks.SHROOMLIGHT ||
                 block == Blocks.GLOW_LICHEN || block == Blocks.CAVE_VINES || block == Blocks.CAVE_VINES_PLANT ||

@@ -135,7 +135,12 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
             }
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

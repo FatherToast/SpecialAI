@@ -65,4 +65,9 @@ public class JumpEliteGoal extends AbstractEliteGoal {
     /** Called each tick while this AI is active. */
     @Override
     public void tick() { mob.fallDistance = 0.0F; }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
 }

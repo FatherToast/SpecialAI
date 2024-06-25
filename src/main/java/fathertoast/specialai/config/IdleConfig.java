@@ -5,8 +5,10 @@ import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
 import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.value.*;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -142,11 +144,8 @@ public class IdleConfig extends AbstractConfigFile {
         /** Build a list of special use blocks. */
         private static BlockList buildDefaultGriefTargets() {
             // Start with specific blocks
-            final List<BlockEntry> targets = new ArrayList<>( Arrays.asList(
-                    // Farm blocks
-                    new BlockEntry( Blocks.FARMLAND ), new BlockEntry( Blocks.WHEAT ), new BlockEntry( Blocks.POTATOES ),
-                    new BlockEntry( Blocks.CARROTS ), new BlockEntry( Blocks.BEETROOTS ), new BlockEntry( Blocks.PUMPKIN_STEM ),
-                    new BlockEntry( Blocks.MELON_STEM ), new BlockEntry( Blocks.BEEHIVE )
+            final List<BlockEntry> targets = new ArrayList<>( List.of(
+                    new BlockEntry( Blocks.FARMLAND ), new BlockEntry( Blocks.BEEHIVE )
             ) );
             // Add block groups, possibly including mod blocks
             for( Block block : ForgeRegistries.BLOCKS ) {
@@ -165,7 +164,7 @@ public class IdleConfig extends AbstractConfigFile {
                     targets.add( new BlockEntry( block ) );
                 }
             }
-            return new BlockList( targets.toArray( new BlockEntry[0] ) );
+            return new BlockList( List.of( BlockTags.CROPS ), targets.toArray( new BlockEntry[0] ) );
         }
         
         /** Build a list of chest blocks. */

@@ -102,7 +102,12 @@ public class EatBreedingItemGoal extends Goal {
             }
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Plays audio-visual effects when a food item is eaten. */
     private void triggerEatingEffects( ItemStack item ) {
         // Spawn particles

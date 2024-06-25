@@ -12,12 +12,10 @@ import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.util.GoalUtils;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.world.level.pathfinder.PathFinder;
-import net.minecraftforge.common.Tags;
 
 import java.util.function.Predicate;
 
@@ -205,7 +203,12 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
             lastBlockDamage = damage;
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the door. */
     private boolean madCreeper() { return Config.GENERAL.DOOR_BREAKING.madCreepers.get() && mob instanceof Creeper; }
 }

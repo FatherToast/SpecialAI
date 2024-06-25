@@ -82,7 +82,12 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
             default:
         }
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called each tick while this AI is active and in grab mode. */
     private void tickGrab() {
         final LivingEntity target = mob.getTarget();

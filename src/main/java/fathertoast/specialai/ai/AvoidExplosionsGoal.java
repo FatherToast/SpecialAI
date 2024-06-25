@@ -13,6 +13,7 @@ import net.minecraft.world.entity.projectile.WitherSkull;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
@@ -79,6 +80,7 @@ public class AvoidExplosionsGoal extends Goal {
     }
     
     /** @return Returns the nearest entity in the list, or null if the list is empty. */
+    @Nullable
     private <T extends Entity> T getNearest( List<T> entities ) {
         double nearestDistSqr = Double.POSITIVE_INFINITY;
         T nearest = null;
@@ -113,7 +115,12 @@ public class AvoidExplosionsGoal extends Goal {
     public void tick() {
         mob.getNavigation().setSpeedModifier( mob.distanceToSqr( entityToAvoid ) < 64.0 ? speedModifier : 1.0 );
     }
-    
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {
