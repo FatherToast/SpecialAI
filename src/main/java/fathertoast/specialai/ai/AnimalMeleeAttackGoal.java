@@ -2,7 +2,6 @@ package fathertoast.specialai.ai;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -10,7 +9,10 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.animal.*;
+import net.minecraft.world.entity.animal.camel.Camel;
+import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.sniffer.Sniffer;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.AxeItem;
@@ -34,11 +36,14 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
         if( entity instanceof AbstractVillager ) {
             return 0.7;
         }
-        if( entity instanceof Rabbit) {
+        if( entity instanceof Rabbit ) {
             return 3.3;
         }
         if( entity instanceof Chicken || entity instanceof AbstractFish ) {
             return 1.6;
+        }
+        if ( entity instanceof Frog ) {
+            return 1.5;
         }
         if( entity instanceof Animal ) {
             return 1.3;
@@ -58,6 +63,9 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
         }
         if( entity instanceof Cow || entity instanceof AbstractHorse ) {
             return 4.0F;
+        }
+        if ( entity instanceof Sniffer ) {
+            return 6.0F;
         }
         return 3.0F;
     }
@@ -104,10 +112,10 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
     public static void doHurtTarget( Mob mob, Entity target ) {
         // Try to perform the attack organically
         try {
-            mob.doHurtTarget( target );
+            mob.doHurtTarget(target);
             return;
         }
-        catch( Exception ex ) {
+        catch (Exception ex) {
             // Most likely failed due to missing attack damage/knockback attributes
         }
         
