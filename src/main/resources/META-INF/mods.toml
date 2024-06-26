@@ -8,7 +8,7 @@ logoFile = "banner.png"
 authors = "Father Toast"
 credits = "Mother Toast & Baby Toast"
 version = "${file.jarVersion}"
-#displayTest = "IGNORE_SERVER_VERSION" #TODO un-comment for 1.19.2+
+displayTest = "IGNORE_SERVER_VERSION"
 displayName = "Special AI"
 modId = "specialai"
 description = '''
@@ -42,7 +42,7 @@ side = "BOTH"
 [[dependencies.specialai]]
 modId = "crust"
 mandatory = true
-versionRange = "[2.1.1,)"
+versionRange = "[2.2.1,)"
 ordering = "NONE"
 side = "BOTH"
 
