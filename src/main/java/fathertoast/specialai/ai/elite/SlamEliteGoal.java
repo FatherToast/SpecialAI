@@ -16,8 +16,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 
 /**
- * This AI causes an entity to periodically charge up and quickly run forward, dealing high damage and knockback.
- * If the entity hits a wall while charging, they will enter a 'stunned' state for a short time, rendering them helpless.
+ * This AI causes an entity to periodically retaliate with an explosive slam attack.
  */
 public class SlamEliteGoal extends AbstractEliteGoal {
     /** Differentiates between the different actions that can be taken by this AI. */
