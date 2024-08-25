@@ -42,8 +42,8 @@ side = "BOTH"
 [[dependencies.specialai]]
 modId = "crust"
 mandatory = true
-versionRange = "[2.2.1,)"
-ordering = "NONE"
+versionRange = "[2.3.4,)"
+ordering = "BEFORE"
 side = "BOTH"
 
 # A URL to query for updates for this mod. See the JSON update specification https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
