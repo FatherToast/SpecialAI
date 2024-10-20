@@ -41,7 +41,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -72,12 +71,6 @@ public final class AIManager {
     
     public static final String TAG_ELITE_AI = "elite_ai";
     private static final String TAG_FORCE_INIT = "force_init";
-    
-    /** All actions currently waiting to be performed at the end of the server tick. */
-    private static final List<Supplier<Boolean>> TICK_END_ACTIONS = new ArrayList<>();
-    
-    /** Queues an action to perform at the end of the server tick. Will be called at the end of each tick until it returns 'true'. */
-    public static void queue( Supplier<Boolean> action ) { TICK_END_ACTIONS.add( action ); }
     
     /** The number of remaining global block scans that can be performed this server tick. */
     private static int scansLeft = Config.IDLE.GENERAL.scanCountGlobal.get();
@@ -228,11 +221,6 @@ public final class AIManager {
         if( event.phase == TickEvent.Phase.END ) {
             // Reset the global scan limit
             scansLeft = Config.IDLE.GENERAL.scanCountGlobal.get();
-            
-            // Run any queued actions
-            if( !TICK_END_ACTIONS.isEmpty() ) {
-                TICK_END_ACTIONS.removeIf( Supplier::get );
-            }
         }
     }
     
@@ -386,6 +374,14 @@ public final class AIManager {
         }
         
         // Elite AI
+        if( EnvironmentHelper.isLoaded( entity.level(), entity.blockPosition() ) )
+            initializeEliteAI( tag, entity );
+        else
+            DeferredAction.queue( new DelayedInitializeEliteAI( tag, entity ) );
+    }
+    
+    /** Called when a mob is spawned in the world, including by chunk loading and dimension transition. */
+    private static void initializeEliteAI( CompoundTag tag, Mob entity ) {
         final CompoundTag eliteTag = NBTHelper.containsCompound( tag, TAG_ELITE_AI ) ?
                 tag.getCompound( TAG_ELITE_AI ) : initializeEliteAIData( tag, entity );
         EliteAIHelper.loadEliteAI( entity, eliteTag, tag.getBoolean( TAG_FORCE_INIT ) );
@@ -453,7 +449,7 @@ public final class AIManager {
                 // Note this logic is duplicated from the "hurt by target" goal, it is just massively simplified
                 for( Mob other : entity.level().getEntitiesOfClass( entity.getClass(), boundingBox ) ) {
                     if( entity != other && other.getTarget() == null &&
-                            (!(entity instanceof TamableAnimal ) || ((TamableAnimal) entity).getOwner() == ((TamableAnimal) other).getOwner()) &&
+                            (!(entity instanceof TamableAnimal) || ((TamableAnimal) entity).getOwner() == ((TamableAnimal) other).getOwner()) &&
                             !other.isAlliedTo( target ) ) {
                         other.setTarget( (LivingEntity) target );
                     }
@@ -497,6 +493,33 @@ public final class AIManager {
             for( BlockPos pos : event.getAffectedBlocks() ) {
                 BlockHelper.spawnHiddenMob( level, pos, player, true );
             }
+        }
+    }
+    
+    /** All info needed for a mob waiting for elite AI initialization. */
+    private static final class DelayedInitializeEliteAI implements Supplier<Boolean> {
+        private final CompoundTag tag;
+        private final Mob entity;
+        
+        private int ticksRemaining = 20; // Wait 1 sec max
+        
+        private DelayedInitializeEliteAI( CompoundTag otag, Mob oentity ) {
+            tag = otag;
+            entity = oentity;
+        }
+        
+        /** Called each server tick to see if the mob is ready to be initialized. Return true when done. */
+        @Override
+        public Boolean get() {
+            if( !entity.isAlive() ) {
+                return true; // Entity was killed or unloaded before getting initialized
+            }
+            else if( EnvironmentHelper.isLoaded( entity.level(), entity.blockPosition() ) ) {
+                initializeEliteAI( tag, entity );
+                return true; // Initialized!
+            }
+            ticksRemaining--;
+            return ticksRemaining < 0; // Times out if it takes too long
         }
     }
 }

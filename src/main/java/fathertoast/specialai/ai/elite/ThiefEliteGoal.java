@@ -1,6 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
-import fathertoast.specialai.ai.AIManager;
+import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
@@ -11,7 +11,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
-import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -111,7 +110,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
                     if( !stolen.isEmpty() ) {
                         final ItemEntity drop = new ItemEntity( mob.level(), mob.getX(), mob.getY() + 0.5, mob.getZ(), stolen );
                         drop.setPickUpDelay( 20 );
-                        AIManager.queue( new EquipToThief( mob, drop ) );
+                        DeferredAction.queue( new EquipToThief( mob, drop ) );
                         mob.level().addFreshEntity( drop );
                     }
                 }
@@ -135,12 +134,12 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
             }
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

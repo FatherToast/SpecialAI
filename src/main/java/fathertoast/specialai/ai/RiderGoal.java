@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai;
 
+import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.specialai.config.Config;
 import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.world.entity.Entity;
@@ -79,12 +80,12 @@ public class RiderGoal extends Goal {
     /** Called each tick while this AI is active. */
     @Override
     public void tick() {
-        if ( targetMount == null ) return;
-
+        if( targetMount == null ) return;
+        
         mob.getLookControl().setLookAt( targetMount, 30.0F, 30.0F );
         
         if( !targetMount.isVehicle() && mob.distanceToSqr( targetMount ) <= mob.getBbWidth() * mob.getBbWidth() * 4.0F + targetMount.getBbWidth() ) {
-            AIManager.queue( new StartRiding( mob, targetMount ) );
+            DeferredAction.queue( new StartRiding( mob, targetMount ) );
             targetMount = null;
         }
         else if( mob.getNavigation().isDone() ) {
@@ -92,12 +93,12 @@ public class RiderGoal extends Goal {
             mob.getNavigation().moveTo( targetMount.getX(), targetMount.getY(), targetMount.getZ(), SPEED_MULTIPLIER );
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {
