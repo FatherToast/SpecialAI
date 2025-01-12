@@ -28,7 +28,7 @@ Discussion: https://discord.gg/GFTzTdX
 [[dependencies.specialai]]
 modId = "forge"
 mandatory = true
-versionRange = "[47,)"
+versionRange = "[47.3.10,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -42,7 +42,7 @@ side = "BOTH"
 [[dependencies.specialai]]
 modId = "crust"
 mandatory = true
-versionRange = "[2.3.4,)"
+versionRange = "[2.3.7,)"
 ordering = "BEFORE"
 side = "BOTH"
 
