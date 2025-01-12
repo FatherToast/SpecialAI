@@ -2,6 +2,7 @@ package fathertoast.specialai.ai;
 
 
 import fathertoast.crust.api.config.common.ConfigUtil;
+import fathertoast.crust.api.lib.EnvironmentHelper;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIHelper;
@@ -245,19 +246,26 @@ public final class AIManager {
     public static void onJoinWorld( EntityJoinLevelEvent event ) {
         // None of this should be done on the client side
         if( event.getLevel().isClientSide() || !event.getEntity().isAlive() ) return;
-        
+
+        Entity entity = event.getEntity();
+        BlockPos entityPos = BlockPos.containing( entity.position() );
+
+        // Avoid messing with entities that spawn in not fully loaded chunks.
+        // Will more likely than not cause a world deadlock!
+        if ( !EnvironmentHelper.isLoaded( event.getLevel(), entityPos ) ) return;
+
         // Check if this is an arrow that can be dodged
-        if( event.getEntity() instanceof Projectile && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
-            event.getEntity().getPersistentData().putBoolean( TAG_ARROW_DODGE_CHECKED, true );
-            DodgeProjectilesGoal.doDodgeCheckForProjectile( event.getEntity() );
+        if( entity instanceof Projectile && !entity.getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
+            entity.getPersistentData().putBoolean( TAG_ARROW_DODGE_CHECKED, true );
+            DodgeProjectilesGoal.doDodgeCheckForProjectile( entity );
         }
         
         // Only initialize AI on mob entities, where the base AI system is implemented
-        if( event.getEntity() instanceof Mob mob ) {
+        if( entity instanceof Mob mob ) {
             initializeSpecialAI( mob );
         }
     }
-    
+
     /**
      * Called when a mob is spawned in the world, including by chunk loading and dimension transition.
      *

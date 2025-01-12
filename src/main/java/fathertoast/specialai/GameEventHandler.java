@@ -35,7 +35,7 @@ public final class GameEventHandler {
      * @param event The event data.
      */
     @SubscribeEvent( priority = EventPriority.LOW )
-    public static void onJoinWorld( EntityJoinLevelEvent event ) { AIManager.onJoinWorld( event ); }
+    public static void onEntityJoinLevel( EntityJoinLevelEvent event ) { AIManager.onJoinWorld( event ); }
     
     /**
      * Called when a living entity dies for any reason.
