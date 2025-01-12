@@ -10,6 +10,7 @@ buildscript {
 plugins {
     id 'eclipse'
     id 'maven-publish'
+    id 'idea'
 }
 apply plugin: 'net.minecraftforge.gradle'
 
@@ -66,7 +67,7 @@ repositories {
             includeGroup 'curse.maven'
         }
     }
-    // Apocalypse isn't hosted on any maven servers anymore, oh well
+    // For local deps, if needed
     flatDir {
         dir 'flat_deps'
     }
@@ -82,6 +83,9 @@ dependencies {
     // Add in JEI and TOP to assist debugging during development
     runtimeOnly fg.deobf("curse.maven:jei-238222:${jei_version}")
     runtimeOnly fg.deobf("curse.maven:jade-324717:${jade_version}")
+
+    runtimeOnly fg.deobf("curse.maven:apocalypse-229199:${apocalypse_version}")
+    compileOnly fg.deobf("curse.maven:apocalypse_api-229199:${apocalypse_api_version}")
 }
 
 jar {
@@ -111,5 +115,12 @@ publishing {
         maven {
             url "file:///${project.projectDir}/mcmodsrepo"
         }
+    }
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
     }
 }
