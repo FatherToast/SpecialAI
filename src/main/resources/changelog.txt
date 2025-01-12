@@ -1,4 +1,4 @@
-1.20.1-2.0.2
+1.20.1-2.1.2
     - Bumped min required Forge version to 47.3.22
     - Bumped min required Crust version to 2.3.7
     - Fixed world deadlock related to modifying AI on entities spawning in not fully loaded chunks (#30)
