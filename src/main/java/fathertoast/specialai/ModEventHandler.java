@@ -20,6 +20,8 @@ public final class ModEventHandler {
      */
     @SubscribeEvent( priority = EventPriority.NORMAL )
     public static void setup( final FMLCommonSetupEvent event ) {
-        Config.initialize();
+        event.enqueueWork( () -> {
+            Config.initialize();
+        });
     }
 }
