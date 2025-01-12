@@ -1,13 +1,14 @@
 package fathertoast.specialai.config;
 
 import fathertoast.crust.api.config.common.ConfigManager;
+import fathertoast.specialai.SpecialAI;
 
 /**
  * The initial loading for this is done during the common setup event.
  */
 public class Config {
     
-    private static final ConfigManager MANAGER = ConfigManager.create( "SpecialAI" );
+    private static final ConfigManager MANAGER = ConfigManager.create( "SpecialAI", SpecialAI.MOD_ID );
     
     public static final GeneralConfig GENERAL = new GeneralConfig( MANAGER, "general" );
     public static final IdleConfig IDLE = new IdleConfig( MANAGER, "idle_ai" );
