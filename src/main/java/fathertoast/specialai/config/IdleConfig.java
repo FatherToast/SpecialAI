@@ -6,13 +6,12 @@ import fathertoast.crust.api.config.common.ConfigManager;
 import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.value.*;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class IdleConfig extends AbstractConfigFile {
@@ -91,7 +90,7 @@ public class IdleConfig extends AbstractConfigFile {
         public final BlockListField targetWhitelist;
         public final BlockListField targetWhitelistLootable;
         public final BlockListField targetBlacklist;
-        
+
         Griefing( IdleConfig parent ) {
             super( parent, "idle_griefing",
                     "Options to customize monsters' idle block breaking behavior." );
@@ -164,7 +163,7 @@ public class IdleConfig extends AbstractConfigFile {
                     targets.add( new BlockEntry( block ) );
                 }
             }
-            return new BlockList( List.of( BlockTags.CROPS ), targets.toArray( new BlockEntry[0] ) );
+            return new BlockList( null, List.of( BlockTags.CROPS ), targets.toArray( new BlockEntry[0] ) );
         }
         
         /** Build a list of chest blocks. */
