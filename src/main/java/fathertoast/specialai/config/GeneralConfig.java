@@ -8,6 +8,7 @@ import fathertoast.crust.api.config.common.field.BooleanField;
 import fathertoast.crust.api.config.common.field.DoubleField;
 import fathertoast.crust.api.config.common.field.EntityListField;
 import fathertoast.crust.api.config.common.value.BlockList;
+import fathertoast.crust.api.config.common.value.DefaultValueEntry;
 import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
 import net.minecraft.world.entity.EntityType;
@@ -55,6 +56,7 @@ public class GeneralConfig extends AbstractConfigFile {
             depacifyList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "depacify_entities.whitelist", new EntityList(
                             // Farm animals
+                            null,
                             new EntityEntry( EntityType.CHICKEN, 1.0 ), new EntityEntry( EntityType.COW, 1.0 ),
                             new EntityEntry( EntityType.PIG, 1.0 ), new EntityEntry( EntityType.SHEEP, 1.0 ),
                             new EntityEntry( EntityType.RABBIT, 1.0 ),
@@ -66,13 +68,14 @@ public class GeneralConfig extends AbstractConfigFile {
                     ).setSinglePercent(),
                             "List of passive mobs (by entity type registry id) that are made 'neutral' like wolves.",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "depacify_entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "depacify_entities.blacklist", new EntityList(null).setNoValues() ) )
             );
             
             SPEC.newLine();
             
             aggressiveList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "aggressive_entities.whitelist", new EntityList(
+                            null,
                             new EntityEntry( EntityType.COW, 0.04 ), new EntityEntry( EntityType.RABBIT, 0.02 ),
                             new EntityEntry( EntityType.STRIDER, 0.02 ),
                             new EntityEntry( EntityType.SQUID, 1.0 ), new EntityEntry( EntityType.COD, 0.02 ),
@@ -80,7 +83,7 @@ public class GeneralConfig extends AbstractConfigFile {
                     ).setSinglePercent(),
                             "List of neutral (including depacified) mobs that are made 'aggressive' like monsters.",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "aggressive_entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "aggressive_entities.blacklist", new EntityList(null).setNoValues() ) )
             );
             
             SPEC.newLine();
@@ -111,37 +114,37 @@ public class GeneralConfig extends AbstractConfigFile {
             
             avoidExplosionsList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "avoid_explosions.whitelist", new EntityList(
-                            new EntityEntry( 1.4 )
+                            new DefaultValueEntry( 1.4 )
                     ).setSingleValue().setRangePos(),
                             "List of mobs that will try to avoid TNT and creepers that are about to explode.",
                             "Additional value after the entity type is their movement speed multiplier while fleeing." ) ),
-                    SPEC.define( new EntityListField( "avoid_explosions.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "avoid_explosions.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();
             
             callForHelpList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "call_for_help.whitelist", new EntityList(
-                            new EntityEntry( 1.0 )
+                            new DefaultValueEntry( 1.0 )
                     ).setSinglePercent(),
                             "List of mobs that will call for help from nearby mobs of the same type when " +
                                     "struck. This does not trigger from killing blows (see below).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "call_for_help.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "call_for_help.blacklist", new EntityList( null ).setNoValues() ) )
             );
             callForHelpOnDeathList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "call_for_help_on_death.whitelist", new EntityList(
-                            new EntityEntry( 0.1 )
+                            new DefaultValueEntry( 0.1 )
                     ).setSinglePercent(),
                             "List of mobs that will call for help when dealt a killing blow and the chance for it to occur." ) ),
-                    SPEC.define( new EntityListField( "call_for_help_on_death.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "call_for_help_on_death.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();
             
             dodgeArrowsList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "dodge_arrows.whitelist", new EntityList(
-                            new EntityEntry( 0.2, 0.5 ),
+                            new DefaultValueEntry( 0.2, 0.5 ),
                             new EntityEntry( EntityType.SKELETON, 1.0, 0.5 ), new EntityEntry( EntityType.STRAY, 1.0, 0.5 ),
                             new EntityEntry( EntityType.WITHER_SKELETON, 1.0, 0.5 )
                     ).setMultiValue( 2 ).setRange0to1(),
@@ -149,7 +152,7 @@ public class GeneralConfig extends AbstractConfigFile {
                             "Additional values after the entity type are the chance (0.0 to 1.0) for entities of that type " +
                                     "to spawn with the AI, followed by the chance for entities of that type with the AI to " +
                                     "attempt to dodge (rolled for each arrow)." ) ),
-                    SPEC.define( new EntityListField( "dodge_arrows.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "dodge_arrows.blacklist", new EntityList( null ).setNoValues() ) )
             );
         }
     }
@@ -170,6 +173,7 @@ public class GeneralConfig extends AbstractConfigFile {
             
             mountWhitelist = SPEC.define( new EntityListField( "mount_entities.whitelist", new EntityList(
                     // Classic
+                    null,
                     new EntityEntry( EntityType.SPIDER ), new EntityEntry( EntityType.SLIME ),
                     new EntityEntry( EntityType.SKELETON_HORSE ), new EntityEntry( EntityType.ZOMBIE_HORSE ),
                     // Passive mobs
@@ -185,17 +189,19 @@ public class GeneralConfig extends AbstractConfigFile {
                     "List of mobs that can be ridden on by normal-sized riders (not all entities can be controlled by their rider)." ) );
             mountWhitelistSmall = SPEC.define( new EntityListField( "mount_entities.small_list", new EntityList(
                     // Classic
+                    null,
                     new EntityEntry( EntityType.CHICKEN ), new EntityEntry( EntityType.RABBIT ),
                     new EntityEntry( EntityType.CAVE_SPIDER )
             ).setNoValues(),
                     "List of mobs that can be ridden on by small riders or normal-sized riders that are babies " +
                             "(not all entities can be controlled by their rider)." ) );
-            mountBlacklist = SPEC.define( new EntityListField( "mount_entities.blacklist", new EntityList().setNoValues() ) );
+            mountBlacklist = SPEC.define( new EntityListField( "mount_entities.blacklist", new EntityList( null ).setNoValues() ) );
             
             SPEC.newLine();
             
             riderWhitelist = SPEC.define( new EntityListField( "rider_entities.whitelist", new EntityList(
                     // Classic
+                    null,
                     new EntityEntry( EntityType.SKELETON, 0.1 ), new EntityEntry( EntityType.STRAY, 0.1 ),
                     new EntityEntry( EntityType.WITHER_SKELETON, 0.1 ), new EntityEntry( EntityType.ZOMBIE, 0.05 ),
                     new EntityEntry( EntityType.CREEPER, 0.05 ), new EntityEntry( EntityType.WITCH, 0.05 ),
@@ -204,10 +210,10 @@ public class GeneralConfig extends AbstractConfigFile {
             ).setSinglePercent(),
                     "List of mobs that can ride normal-sized mounts and the chance for them to gain the rider AI. " +
                             "Note that the entity must have task-based AI enabled." ) );
-            riderWhitelistSmall = SPEC.define( new EntityListField( "rider_entities.small_list", new EntityList().setSinglePercent(),
+            riderWhitelistSmall = SPEC.define( new EntityListField( "rider_entities.small_list", new EntityList( null ).setSinglePercent(),
                     "List of mobs that can only ride small mounts or normal-sized mounts that are babies and the " +
                             "chance for them to gain the rider AI. Note that the entity must have task-based AI enabled." ) );
-            riderBlacklist = SPEC.define( new EntityListField( "rider_entities.blacklist", new EntityList().setNoValues() ) );
+            riderBlacklist = SPEC.define( new EntityListField( "rider_entities.blacklist", new EntityList( null ).setNoValues() ) );
             
         }
     }
@@ -233,11 +239,13 @@ public class GeneralConfig extends AbstractConfigFile {
             
             entityList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            new EntityEntry( EntityType.ZOMBIE, 1.0 ), new EntityEntry( EntityType.CREEPER, 1.0 )
+                            null,
+                            new EntityEntry( EntityType.ZOMBIE, 1.0 ),
+                            new EntityEntry( EntityType.CREEPER, 1.0 )
                     ).setSinglePercent(),
                             "List of mobs that can gain door breaking AI (note that the entity must have task-based AI enabled).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();

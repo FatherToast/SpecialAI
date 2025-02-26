@@ -97,11 +97,13 @@ public class IdleConfig extends AbstractConfigFile {
             
             entityList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            new EntityEntry( EntityType.ZOMBIE, 1.0 ), new EntityEntry( EntityType.CREEPER, 1.0 )
+                            null,
+                            new EntityEntry( EntityType.ZOMBIE, 1.0 ),
+                            new EntityEntry( EntityType.CREEPER, 1.0 )
                     ).setSinglePercent(),
                             "List of mobs that can gain passive griefing AI (note that the entity must have task-based AI enabled).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();
@@ -193,13 +195,14 @@ public class IdleConfig extends AbstractConfigFile {
             
             entityList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
+                            null,
                             new EntityEntry( EntityType.SKELETON, 1.0 ), new EntityEntry( EntityType.STRAY, 1.0 ),
                             new EntityEntry( EntityType.WITHER_SKELETON, 1.0 ),
                             new EntityEntry( EntityType.ZOMBIFIED_PIGLIN, 1.0 ), new EntityEntry( EntityType.PIGLIN, 1.0 )
                     ).setSinglePercent(),
                             "List of mobs that can gain passive fiddling AI (note that the entity must have task-based AI enabled).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();
@@ -234,11 +237,13 @@ public class IdleConfig extends AbstractConfigFile {
             
             entityList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            new EntityEntry( EntityType.CREEPER, 1.0 ), new EntityEntry( EntityType.SPIDER, 1.0 )
+                            null,
+                            new EntityEntry( EntityType.CREEPER, 1.0 ),
+                            new EntityEntry( EntityType.SPIDER, 1.0 )
                     ).setSinglePercent(),
                             "List of mobs that can gain passive hiding AI (note that the entity must have task-based AI enabled).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();

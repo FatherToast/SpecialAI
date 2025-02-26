@@ -110,6 +110,7 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             entityList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
+                            null,
                             new EntityEntry( EntityType.ZOMBIE, 0.04 ),
                             // Skeletons
                             new EntityEntry( EntityType.SKELETON, 0.1, 0.02 ), new EntityEntry( EntityType.STRAY, 0.1, 0.02 ),
@@ -122,7 +123,7 @@ public class EliteAIConfig extends AbstractConfigFile {
                             "Additional values after the entity type are the chances (0.0 to 1.0) for entities of that type to spawn with elite AI. " +
                                     "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack.",
                             "AI patterns applied this way are in addition to any that you have applied directly in the specific categories below." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList(null).setNoValues() ) )
             );
             
             SPEC.newLine();
@@ -809,11 +810,11 @@ public class EliteAIConfig extends AbstractConfigFile {
             parent.ELITE_AI_CATEGORIES.add( this );
             
             entityList = new EntityListField.Combined(
-                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList().setSinglePercent(),
+                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(null).setSinglePercent(),
                             "List of mobs (by entity type registry id) that are given this AI directly " +
                                     "(separate from the general entity list chances and AI weights).",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with this AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList().setNoValues() ) )
+                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList(null).setNoValues() ) )
             );
             
             SPEC.newLine();
