@@ -433,12 +433,19 @@ public final class AIManager {
     public static void onLivingDeath( LivingDeathEvent event ) {
         // Call for help on death
         final double chance = Config.GENERAL.REACTIONS.callForHelpOnDeathList.getValue( event.getEntity() );
+
         if( chance > 0.0 && event.getEntity() instanceof Mob entity && event.getEntity().getRandom().nextDouble() < chance ) {
             Entity target = event.getSource().getEntity();
+
             if( target instanceof LivingEntity ) {
-                
+                // Don't target invulnerable players
+                if ( target instanceof Player player && ( player.isCreative() || player.isSpectator() ) )
+                    return;
+
                 // Alert all similar entities around the killed entity to the killer
-                final double range = entity.getAttributeValue( Attributes.FOLLOW_RANGE );
+                final double range = entity.getAttribute( Attributes.FOLLOW_RANGE ) == null
+                        ? 32.0D
+                        : entity.getAttributeValue( Attributes.FOLLOW_RANGE );
                 AABB boundingBox = AABB.unitCubeFromLowerCorner( entity.position() ).inflate( range, 10.0, range );
                 
                 // Note this logic is duplicated from the "hurt by target" goal, it is just massively simplified
