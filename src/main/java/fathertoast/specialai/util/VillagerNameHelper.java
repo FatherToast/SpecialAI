@@ -2,6 +2,8 @@ package fathertoast.specialai.util;
 
 import fathertoast.specialai.SpecialAI;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.ai.behavior.TradeWithVillager;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -27,10 +29,6 @@ public final class VillagerNameHelper {
         return SpecialAI.toString( ForgeRegistries.VILLAGER_PROFESSIONS.getKey( profession ) );
     }
     
-    //    private static String getKey( VillagerCareer career, VillagerProfession profession /* because parent profession is private in career */ ) {
-    //        return getKey( getKey( profession ), career.getName() );
-    //    }
-    
     private static String getKey( String profKey, String careerName ) {
         return profKey + "#" + careerName;
     }
@@ -40,11 +38,11 @@ public final class VillagerNameHelper {
         CompoundTag tag = new CompoundTag();
         entity.save( tag );
         
-        //        VillagerProfession prof = entity.getProfessionForge();
-        //        VillagerCareer career = prof.getCareer( tag.getInteger( TAG_CAREER ) - 1 );
+        VillagerProfession prof = entity.getVillagerData().getProfession();
+        int merchantLevel = entity.getVillagerData().getLevel();
         
-        String profKey = "";//getKey( prof );
-        String careerKey = "";//getKey( career, prof );
+        String profKey = getKey( prof );
+        String careerKey = getKey( Component.translatable( "merchant.level." + merchantLevel ).toString(), prof.name() );
         
         // Build the pool of appropriate name parts
         List<String> namePool = new ArrayList<>( NAME_POOLS.get( "" ) );
@@ -87,9 +85,8 @@ public final class VillagerNameHelper {
         else {
             name.insert( 0, " " ).insert( 0, title );
         }
-        
-        // Apply the name TODO
-        //entity.setCustomName( name.toString() );
+
+        entity.setCustomName( Component.literal( name.toString() ) );
     }
     
     static {

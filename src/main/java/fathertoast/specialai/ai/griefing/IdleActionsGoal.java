@@ -15,6 +15,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fluids.IFluidBlock;
@@ -273,6 +275,17 @@ public class IdleActionsGoal extends Goal {
         if( mob.getNavigation().isInProgress() ) {
             mob.getNavigation().stop();
         }
+
+        final double blockReach = mob.getAttribute( ForgeMod.BLOCK_REACH.get() ) == null
+                ? 4.0D // Half a block shorter range than players by default
+                : mob.getAttributeValue( ForgeMod.BLOCK_REACH.get() );
+
+        // Too far away from the target, abort
+        if ( mob.distanceToSqr( targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5 )
+                > ( blockReach * blockReach ) ) {
+            targetBlock = null;
+            return;
+        }
         
         if( madCreeper() ) {
             // Goal complete
@@ -298,7 +311,7 @@ public class IdleActionsGoal extends Goal {
         }
         
         // Perform block breaking
-        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, level, targetPos ) * Config.IDLE.GRIEFING.breakSpeed.get();
+        blockDamage += (float) (BlockHelper.getDestroyProgress( targetBlock, mob, level, targetPos ) * Config.IDLE.GRIEFING.breakSpeed.get());
         if( blockDamage >= 1.0F ) {
             // Block is broken
             // Handle special cases
