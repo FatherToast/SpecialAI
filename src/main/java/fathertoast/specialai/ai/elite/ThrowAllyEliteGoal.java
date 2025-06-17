@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.specialai.ai.IVehicleControlOverride;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
@@ -14,7 +15,7 @@ import java.util.List;
 /**
  * This AI causes an entity to throw nearby allies at its target when at range.
  */
-public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal {
+public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IVehicleControlOverride {
     /** The entity this mob is following. */
     private Mob throwTarget;
     /** Ticks until next attack. */

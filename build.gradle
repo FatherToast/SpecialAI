@@ -1,10 +1,12 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0,6.2)', changing: true
+        classpath group: "org.spongepowered", name: "mixingradle", version: "0.7-SNAPSHOT"
     }
 }
 plugins {
@@ -13,6 +15,11 @@ plugins {
     id 'idea'
 }
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: "org.spongepowered.mixin"
+
+mixin {
+    add sourceSets.main, "specialai.refmap.json"
+}
 
 // The mod's version and id
 version = "${mc_version}-${mod_version}"
@@ -42,12 +49,14 @@ minecraft {
 
         client {
             property "mixin.debug.export", "true"
-            property 'mixin.env.disableRefMap', 'true'
+
+            arg "-mixin.config=specialai.mixins.json"
         }
 
         server {
             property "mixin.debug.export", "true"
-            property 'mixin.env.disableRefMap', 'true'
+
+            arg "-mixin.config=specialai.mixins.json"
         }
 
         data {
@@ -86,6 +95,8 @@ dependencies {
 
     runtimeOnly fg.deobf("curse.maven:apocalypse-229199:${apocalypse_version}")
     compileOnly fg.deobf("curse.maven:apocalypse_api-229199:${apocalypse_version}")
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 jar {
@@ -97,8 +108,8 @@ jar {
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : "${version}",
                 "Implementation-Vendor"   : "FatherToast",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-                //"MixinConfigs"            : "specialai.mixins.json"
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "MixinConfigs"            : "specialai.mixins.json"
         ])
     }
 }
@@ -116,6 +127,10 @@ publishing {
             url "file:///${project.projectDir}/mcmodsrepo"
         }
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
 idea {
