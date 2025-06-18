@@ -33,6 +33,8 @@ public class EatBreedingItemGoal extends Goal {
     private ItemEntity target;
     /** Ticks until the entity will search for more food. */
     private int checkTime;
+    /** The cooldown in ticks between each time the entity eats one item out of the stack. */
+    private int cooldown;
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     
@@ -63,6 +65,7 @@ public class EatBreedingItemGoal extends Goal {
     /** Called when this AI is activated. */
     @Override
     public void start() {
+        cooldown = 0;
         mob.getNavigation().moveTo( target.position().x, target.position().y, target.position().z, 1.0 );
     }
     
@@ -74,19 +77,26 @@ public class EatBreedingItemGoal extends Goal {
         
         List<Entity> list = mob.level().getEntities( mob, mob.getBoundingBox().inflate( 0.2, 0.0, 0.2 ) );
         if( list.contains( target ) ) {
-            // Eat one item out of the stack
-            ItemStack item = target.getItem();
-            if( Config.GENERAL.ANIMALS.eatingHeals.get() ) {
-                final FoodProperties food = item.getItem().getFoodProperties( item, mob );
-                final float healAmount = Math.max( food == null ? 0.0F : food.getNutrition(), 1.0F );
-                mob.heal( healAmount );
+            // Tick cooldown
+            if ( cooldown > 0 ) {
+                --cooldown;
             }
-            triggerEatingEffects( item );
-            mob.getNavigation().stop();
-            
-            item.shrink( 1 );
-            if( item.isEmpty() ) {
-                target.discard();
+            else {
+                // Eat one item out of the stack
+                ItemStack item = target.getItem();
+                if ( Config.GENERAL.ANIMALS.eatingHeals.get() ) {
+                    final FoodProperties food = item.getItem().getFoodProperties( item, mob );
+                    final float healAmount = Math.max( food == null ? 0.0F : food.getNutrition(), 1.0F );
+                    mob.heal( healAmount );
+                }
+                triggerEatingEffects(item);
+                mob.getNavigation().stop();
+
+                item.shrink( 1 );
+                if ( item.isEmpty() ) {
+                    target.discard();
+                }
+                cooldown = Config.GENERAL.ANIMALS.eatingCooldown.get();
             }
         }
         else {

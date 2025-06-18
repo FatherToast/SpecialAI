@@ -3,10 +3,7 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
-import fathertoast.crust.api.config.common.field.BlockListField;
-import fathertoast.crust.api.config.common.field.BooleanField;
-import fathertoast.crust.api.config.common.field.DoubleField;
-import fathertoast.crust.api.config.common.field.EntityListField;
+import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.value.BlockList;
 import fathertoast.crust.api.config.common.value.DefaultValueEntry;
 import fathertoast.crust.api.config.common.value.EntityEntry;
@@ -47,6 +44,7 @@ public class GeneralConfig extends AbstractConfigFile {
         public final BooleanField eatBreedingItems;
         public final DoubleField eatingReach;
         public final BooleanField eatingHeals;
+        public final IntField eatingCooldown;
         
         Animals( GeneralConfig parent ) {
             super( parent, "animals",
@@ -90,12 +88,17 @@ public class GeneralConfig extends AbstractConfigFile {
             
             eatBreedingItems = SPEC.define( new BooleanField( "eat_breeding_items", true,
                     "If true, passive mobs will seek out and eat the items used to breed them laying on the floor." ) );
+
             eatingReach = SPEC.define( new DoubleField( "eating_reach", 2.0, DoubleField.Range.NON_NEGATIVE,
                     "Mobs' reach (from foot position) when targeting breeding items to eat. Player reach is about 4.5. " +
                             "When in range, the item will be slowly 'vacuumed' toward the passive mob." ) );
+
             eatingHeals = SPEC.define( new BooleanField( "eating_heals", true,
                     "If true, when mobs eat breeding items off the floor, they will regain health (like " +
                             "wolves). The option \"eat_breeding_items\" needs to be enabled for this to have any effect." ) );
+
+            eatingCooldown = SPEC.define( new IntField( "eating_cooldown", 2, IntField.Range.NON_NEGATIVE,
+                    "The cooldown in ticks between each time the mob will consume one item out of the food item stack it has found." ) );
         }
     }
     
