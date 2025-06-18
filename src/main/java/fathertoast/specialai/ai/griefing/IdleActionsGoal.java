@@ -503,6 +503,8 @@ public class IdleActionsGoal extends Goal {
     
     /** @return Returns true if the specified block can be targeted for griefing. */
     private boolean isValidTargetForGriefing( BlockState state, BlockPos pos ) {
+        if ( madCreeper() && !canExplodeBlock( state.getBlock() ) ) return false;
+
         if( state.liquid() || Config.IDLE.GRIEFING.targetBlacklist.get().matches( state ) ) {
             return false;
         }
@@ -548,7 +550,7 @@ public class IdleActionsGoal extends Goal {
     
     /**
      * @return Returns true if the specified block is not a container with a loot table tag.
-     * @see net.minecraft.tileentity.LockableLootTileEntity#tryLoadLootTable(CompoundNBT)
+     * @see net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity#tryLoadLootTable(CompoundTag)
      */
     @SuppressWarnings("JavadocReference")
     private boolean isLootContainerTargetable(BlockPos pos ) {
@@ -560,4 +562,15 @@ public class IdleActionsGoal extends Goal {
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the block. */
     private boolean madCreeper() { return Config.IDLE.GRIEFING.madCreepers.get() && mob instanceof Creeper; }
+
+    // TODO for 1.21+ - Might be a block tag for blocks that can be exploded or something
+    /**
+     * Helper method for lazily determining if a block can be exploded or not.
+     */
+    private boolean canExplodeBlock( Block block ) {
+        //noinspection deprecation
+        final float blockResistance = block.getExplosionResistance();
+
+        return blockResistance < (float) Config.IDLE.GRIEFING.resistanceThreshold.get();
+    }
 }
