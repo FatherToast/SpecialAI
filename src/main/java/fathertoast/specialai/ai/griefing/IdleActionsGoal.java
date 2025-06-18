@@ -275,10 +275,7 @@ public class IdleActionsGoal extends Goal {
         if( mob.getNavigation().isInProgress() ) {
             mob.getNavigation().stop();
         }
-
-        final double blockReach = mob.getAttribute( ForgeMod.BLOCK_REACH.get() ) == null
-                ? 4.0D // Half a block shorter range than players by default
-                : mob.getAttributeValue( ForgeMod.BLOCK_REACH.get() );
+        final double blockReach = Config.IDLE.GENERAL.reach.get();
 
         // Too far away from the target, abort
         if ( mob.distanceToSqr( targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5 )
