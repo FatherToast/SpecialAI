@@ -18,12 +18,14 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringUtil;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.monster.piglin.PiglinBrute;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
@@ -199,8 +201,8 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             
             for( int i = 0; i < spawnCount; i++ ) {
                 // Load entity type
-                final CompoundTag spawnData = nextSpawnData.getEntityToSpawn();
-                final Optional<EntityType<?>> entityType = EntityType.by( spawnData );
+                final CompoundTag entityTag = nextSpawnData.getEntityToSpawn();
+                final Optional<EntityType<?>> entityType = EntityType.by( entityTag );
                 if( entityType.isEmpty() ) break;
                 
                 // Pick a random spawn position; ignore any dumb nbt position (unlike base spawn logic)
@@ -214,7 +216,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                 if( !level.noCollision( entityType.get().getAABB( spawnPos.x, spawnPos.y, spawnPos.z ) ) ) continue;
                 
                 // Create the entity to spawn
-                final Entity newEntity = EntityType.loadEntityRecursive( spawnData, level, ( loadEntity ) -> {
+                final Entity newEntity = EntityType.loadEntityRecursive( entityTag, level, ( loadEntity ) -> {
                     loadEntity.moveTo( spawnPos.x, spawnPos.y, spawnPos.z, loadEntity.getYRot(), loadEntity.getXRot() );
                     return loadEntity;
                 } );
@@ -239,7 +241,14 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                     
                     // If needed, perform the standard entity spawn initialization
                     if( nextSpawnData.getEntityToSpawn().size() == 1 && NBTHelper.containsString( nextSpawnData.getEntityToSpawn(), TAG_ENTITY_ID ) ) {
-                        ForgeEventFactory.onFinalizeSpawnSpawner( newMob, level, level.getCurrentDifficultyAt( pos ), null, null, this );
+                        MobSpawnEvent.FinalizeSpawn finalizeSpawn = ForgeEventFactory.onFinalizeSpawnSpawner( newMob, level, level.getCurrentDifficultyAt( pos ), null, null, this );
+
+                        if ( finalizeSpawn != null ) {
+                            // These are expected for parity with vanilla code
+                            //noinspection deprecation, OverrideOnly
+                            newMob.finalizeSpawn( level, finalizeSpawn.getDifficulty(), finalizeSpawn.getSpawnType(),
+                                    finalizeSpawn.getSpawnData(), finalizeSpawn.getSpawnTag() );
+                        }
                     }
                 }
                 if( !level.tryAddFreshEntityWithPassengers( newEntity ) ) break;
