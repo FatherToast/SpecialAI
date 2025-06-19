@@ -4,6 +4,7 @@ import fathertoast.specialai.config.Config;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.util.EntityPredicates;
@@ -11,6 +12,7 @@ import net.minecraft.util.EntityPredicates;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -58,7 +60,8 @@ public class RiderGoal extends Goal {
     /** @return Called each update while active and returns true if this AI can remain active. */
     @Override
     public boolean canContinueToUse() {
-        return !mob.isPassenger() && targetMount != null && !targetMount.isVehicle() && targetMount.isAlive() && ++giveUpDelay <= 400;
+        return !mob.isPassenger() && targetMount != null && !targetMount.isVehicle()
+                && targetMount.isAlive() && !isMountAggro( targetMount ) && ++giveUpDelay <= 400;
     }
     
     /** @return Returns true if this AI can be interrupted by a higher priority conflicting task. */
@@ -110,6 +113,9 @@ public class RiderGoal extends Goal {
     
     /** @return Returns true if the given mount is a valid mount and is size-compatible with the rider. */
     private boolean isValidMount( LivingEntity mount ) {
+        // Don't try to mount creatures that are pissed and want to unalive you
+        if ( isMountAggro( mount ) ) return false;
+
         if( Config.GENERAL.JOCKEYS.mountBlacklist.get().contains( mount ) ) return false;
         
         if( isSmallMount( mount ) ) return isSmallRider();
@@ -133,7 +139,30 @@ public class RiderGoal extends Goal {
     private boolean isSmallRider() {
         return isSmall || mob.isBaby() || mob instanceof SlimeEntity && ((SlimeEntity) mob).isTiny();
     }
-    
+
+    /**
+     * @return True if the given entity is a mob and is aggroed either the rider
+     *         or a different entity of the same type as the rider.
+     */
+    private boolean isMountAggro( LivingEntity mount ) {
+        // Check brain first. Some "newer" mobs don't set their target field
+        if ( mount.getBrain().hasMemoryValue( MemoryModuleType.ATTACK_TARGET ) ) {
+            Optional<LivingEntity> memoryTarget = mount.getBrain().getMemory( MemoryModuleType.ATTACK_TARGET );
+
+            if ( memoryTarget.isPresent() && ( memoryTarget.get() == mob || memoryTarget.get().getType() == mob.getType() ) )
+                return true;
+        }
+
+        // No target found in the brain's memories, check target field
+        if ( mount instanceof MobEntity ) {
+            MobEntity mobMount = (MobEntity) mount;
+
+            return mobMount.getTarget() != null
+                    && ( mobMount.getTarget() == mob || mobMount.getTarget().getType() == mob.getType() );
+        }
+        return false;
+    }
+
     /**
      * Used to connect a rider to its target mount, so it can start riding.
      * This strategy is used because mounting during the AI tick can potentially cause issues.

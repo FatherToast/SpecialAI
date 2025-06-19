@@ -179,8 +179,7 @@ public class GeneralConfig extends AbstractConfigFile {
                     new EntityEntry( EntityType.HORSE ), new EntityEntry( EntityType.DONKEY ),
                     new EntityEntry( EntityType.MULE ), new EntityEntry( EntityType.LLAMA, false ),
                     // Nether
-                    new EntityEntry( EntityType.STRIDER ), new EntityEntry( EntityType.HOGLIN ),
-                    new EntityEntry( EntityType.ZOGLIN )
+                    new EntityEntry( EntityType.HOGLIN )
             ).setNoValues(),
                     "List of mobs that can be ridden on by normal-sized riders (not all entities can be controlled by their rider)." ) );
             mountWhitelistSmall = SPEC.define( new EntityListField( "mount_entities.small_list", new EntityList(
