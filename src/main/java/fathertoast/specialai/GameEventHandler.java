@@ -2,6 +2,7 @@ package fathertoast.specialai;
 
 
 import fathertoast.specialai.ai.AIManager;
+import net.minecraft.world.entity.ai.behavior.ResetProfession;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;

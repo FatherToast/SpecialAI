@@ -4,6 +4,8 @@ import fathertoast.specialai.ai.IVehicleControlOverride;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.vehicle.Boat;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -23,5 +25,11 @@ public class MixinHooks {
                 return;
             }
         }
+    }
+
+    public static void onSetVillagerData( Villager villager, VillagerData data ) {
+        if ( villager.level().isClientSide ) return;
+
+        VillagerNameHelper.setVillagerName( villager.getRandom(), villager, data );
     }
 }

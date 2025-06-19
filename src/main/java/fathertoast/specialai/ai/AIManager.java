@@ -12,6 +12,7 @@ import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
 import fathertoast.specialai.util.BlockHelper;
+import fathertoast.specialai.util.VillagerNameHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.*;
@@ -30,10 +31,13 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -263,6 +267,14 @@ public final class AIManager {
         // Only initialize AI on mob entities, where the base AI system is implemented
         if( entity instanceof Mob mob ) {
             initializeSpecialAI( mob );
+        }
+    }
+
+    @SubscribeEvent( priority = EventPriority.LOWEST )
+    public void onFinalizeSpawn( MobSpawnEvent.FinalizeSpawn event ) {
+        // Randomly name villagers
+        if ( event.getEntity() instanceof Villager villager ) {
+            VillagerNameHelper.setVillagerName( event.getLevel().getRandom(), villager, villager.getVillagerData() );
         }
     }
 
