@@ -3,10 +3,7 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
-import fathertoast.crust.api.config.common.field.BlockListField;
-import fathertoast.crust.api.config.common.field.BooleanField;
-import fathertoast.crust.api.config.common.field.DoubleField;
-import fathertoast.crust.api.config.common.field.EntityListField;
+import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.value.BlockList;
 import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
@@ -46,6 +43,7 @@ public class GeneralConfig extends AbstractConfigFile {
         public final BooleanField eatBreedingItems;
         public final DoubleField eatingReach;
         public final BooleanField eatingHeals;
+        public final IntField eatingCooldown;
         
         Animals( GeneralConfig parent ) {
             super( parent, "animals",
@@ -93,6 +91,8 @@ public class GeneralConfig extends AbstractConfigFile {
             eatingHeals = SPEC.define( new BooleanField( "eating_heals", true,
                     "If true, when mobs eat breeding items off the floor, they will regain health (like " +
                             "wolves). The option \"eat_breeding_items\" needs to be enabled for this to have any effect." ) );
+            eatingCooldown = SPEC.define( new IntField( "eating_cooldown", 2, IntField.Range.NON_NEGATIVE,
+                    "The cooldown in ticks between each time the mob will consume one item out of the food item stack it has found." ) );
         }
     }
     
