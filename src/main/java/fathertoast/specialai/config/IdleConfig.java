@@ -83,6 +83,7 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final DoubleField breakSpeed;
         public final BooleanField madCreepers;
+        public final DoubleField resistanceThreshold;
         
         public final BooleanField targetLights;
         public final BooleanField targetBeds;
@@ -123,7 +124,10 @@ public class IdleConfig extends AbstractConfigFile {
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", true,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
-            
+            resistanceThreshold = SPEC.define( new DoubleField( "resistance_threshold", 6.0D, DoubleField.Range.NON_NEGATIVE,
+                    "If 'mad_creepers' is enabled, creepers will not try to explode blocks with an explosion resistance value equal to or higher than this value.",
+                    "Blocks with negative resistance such as bedrock are automatically omitted." ) );
+
             SPEC.newLine();
             
             targetLights = SPEC.define( new BooleanField( "targets.auto_target_lights", true,

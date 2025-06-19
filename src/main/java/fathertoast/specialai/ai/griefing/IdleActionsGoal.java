@@ -499,6 +499,8 @@ public class IdleActionsGoal extends Goal {
     
     /** @return Returns true if the specified block can be targeted for griefing. */
     private boolean isValidTargetForGriefing( BlockState state, BlockPos pos ) {
+        if ( madCreeper() && !canExplodeBlock( state.getBlock() ) ) return false;
+
         if( state.getMaterial().isLiquid() || Config.IDLE.GRIEFING.targetBlacklist.get().matches( state ) ) {
             return false;
         }
@@ -553,4 +555,14 @@ public class IdleActionsGoal extends Goal {
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the block. */
     private boolean madCreeper() { return Config.IDLE.GRIEFING.madCreepers.get() && mob instanceof CreeperEntity; }
+
+    /**
+     * Helper method for lazily determining if a block can be exploded or not.
+     */
+    private boolean canExplodeBlock( Block block ) {
+        //noinspection deprecation
+        final float blockResistance = block.getExplosionResistance();
+
+        return blockResistance < (float) Config.IDLE.GRIEFING.resistanceThreshold.get();
+    }
 }
