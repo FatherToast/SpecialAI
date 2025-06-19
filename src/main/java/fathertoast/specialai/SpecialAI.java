@@ -69,7 +69,6 @@ public class SpecialAI {
      *  - spawner
      *  - throw ally
      *  - throw enemy
-     *  + fishing (wields a fishing rod and uses it against its target)
      *  + grappling (similar to fishing, but pulls the mob to target instead, mob may mount the target?)
      *
      * VILLAGES - TODO all these features must be re-evaluated due to village overhaul

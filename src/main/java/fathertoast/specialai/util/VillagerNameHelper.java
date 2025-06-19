@@ -9,6 +9,7 @@ import net.minecraft.world.entity.ai.behavior.TradeWithVillager;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.checkerframework.checker.units.qual.C;
 
@@ -30,10 +31,7 @@ public final class VillagerNameHelper {
     //TODO Expose these in configs (mainly to allow name support for mod-added professions)
     private static final Map<String, String[]> CAREER_TITLES = new HashMap<>();
     private static final Map<String, List<String>> NAME_POOLS = new HashMap<>();
-    
-    private static String getKey( VillagerProfession profession ) {
-        return SpecialAI.toString( ForgeRegistries.VILLAGER_PROFESSIONS.getKey( profession ) );
-    }
+
 
     /**
      * Generates a new, random name for the given villager and sets it as the entity's display name.<br>
@@ -59,11 +57,9 @@ public final class VillagerNameHelper {
         
         // Get the pool of job titles
         String[] titles = CAREER_TITLES.get( profKey );
-
-        SpecialAI.LOG.info(CAREER_TITLES.toString());
-
+        
         if( titles == null ) {
-            SpecialAI.LOG.warn( "Naming villager with unknown profession#career '{}'", profKey );
+            SpecialAI.LOG.warn( "Naming villager with unknown profession '{}'", profKey );
             List<String[]> values = new ArrayList<>( CAREER_TITLES.values() );
             titles = values.get( random.nextInt( values.size() ) );
         }
@@ -104,8 +100,21 @@ public final class VillagerNameHelper {
         }
         entity.setCustomName( Component.literal( name.toString() ) );
     }
+
+    /**
+     * @return The registry name of the given profession as a String,
+     *         if it exists in the Forge registry. Throws an exception otherwise.
+     */
+    private static String getKey( VillagerProfession profession ) {
+        return SpecialAI.toString( ForgeRegistries.VILLAGER_PROFESSIONS.getKey( profession ) );
+    }
     
-    static {
+    /**
+     * Constructs first name and profession/career names for
+     * all vanilla villager professions.<br><br>
+     * Called from {@link fathertoast.specialai.ModEventHandler#setup(FMLCommonSetupEvent)}
+     */
+    public static void initCareerComponents() {
         String profKey;
         
         NAME_POOLS.put( "", Arrays.asList(
@@ -116,7 +125,7 @@ public final class VillagerNameHelper {
                 "sil", "ver", "fish", "cow", "chic", "ken", "sheep", "lla", "rab", "bit", "squid", "hell"
         ) );
 
-        profKey = "minecraft:farmer";
+        profKey = getKey( VillagerProfession.FARMER );
         CAREER_TITLES.put( profKey, new String[] {
                 "Farmer", "Farmer", "Gardener", "Gardener", "Seedmonger", "Seedmonger",
                 "Cropper", "Greenskeeper", "Agriculturalist", "Horticulturist", "Seedsman", "Landscaper", "Seedvendor"
@@ -125,7 +134,7 @@ public final class VillagerNameHelper {
                 "farm", "garden", "soil", "seed", "plant", "crop", "green", "wheat", "carrot", "potato", "beet", "hoe"
         ) );
 
-        profKey = "minecraft:fisherman";
+        profKey = getKey( VillagerProfession.FISHERMAN );
         CAREER_TITLES.put( profKey, new String[] {
                 "Fisherman", "Fisherman", "Fisher", "Fisher", "Angler", "Angler", "Fishmonger", "Fishmonger",
                 "Piscator", "Rodman", "Troller", "Trawler", "Fishman", "Skipper", "Captain", "Fishvendor"
@@ -134,7 +143,7 @@ public final class VillagerNameHelper {
                 "fish", "sea", "boat", "salt", "rod", "cast", "net", "gold", "treasure", "sunken", "oar", "plank", "beard"
         ) );
 
-        profKey = "minecraft:shepherd";
+        profKey = getKey( VillagerProfession.SHEPHERD );
         CAREER_TITLES.put( profKey, new String[] {
                 "Shepherd", "Shepherd", "Rancher", "Rancher", "Herder", "Herder",
                 "Cowhand", "Herdsman", "Cowpuncher", "Sheepsman", "Sheeper", "Cooper", "Stockman"
@@ -143,7 +152,7 @@ public final class VillagerNameHelper {
                 "herd", "ranch", "brand", "cow", "sheep", "chicken", "pig", "horse", "fence", "gate", "post", "hay"
         ) );
 
-        profKey = "minecraft:fletcher";
+        profKey = getKey( VillagerProfession.FLETCHER );
         CAREER_TITLES.put( profKey, new String[] {
                 "Fletcher", "Fletcher", "Bowyer", "Bowyer", "Arrowvendor", "Arrowvendor",
                 "Arrowman", "Bowman", "Arrowcrafter", "Bowcrafter", "Bowvendor", "Arrowmonger", "Bowmonger"
@@ -152,7 +161,7 @@ public final class VillagerNameHelper {
                 "arrow", "feather", "string", "bow", "archer", "shoot", "poke"
         ) );
 
-        profKey = "minecraft:librarian";
+        profKey = getKey( VillagerProfession.LIBRARIAN );
         CAREER_TITLES.put( profKey, new String[] {
                 "Librarian", "Librarian", "Curator", "Curator", "Bookbinder", "Bookbinder", "Bookvendor", "Bookvendor",
                 "Cataloger", "Researcher", "Bookman", "Bibliothecary", "Recordkeeper", "Bookmonger"
@@ -161,7 +170,7 @@ public final class VillagerNameHelper {
                 "book", "shelf", "wise", "read", "bind", "record", "biblio", "libro", "lib"
         ) );
 
-        profKey = "minecraft:cartographer";
+        profKey = getKey( VillagerProfession.CARTOGRAPHER );
         CAREER_TITLES.put( profKey, new String[] {
                 "Cartographer", "Cartographer", "Mapmaker", "Mapmaker", "Explorer", "Explorer", "Mapvendor", "Mapvendor",
                 "Topographer", "Mapper", "Adventurer", "Pathfinder", "Pioneer", "Mapmonger", "Wayfinder"
@@ -170,7 +179,7 @@ public final class VillagerNameHelper {
                 "map", "dora", "venture", "carto", "topo", "way", "path", "find", "treasure"
         ) );
 
-        profKey = "minecraft:cleric";
+        profKey = getKey( VillagerProfession.CLERIC );
         CAREER_TITLES.put( profKey, new String[] {
                 "Cleric", "Cleric", "Cleric", "Priest", "Priest", "Priest",
                 "Father", "Mother", "Preacher", "Reverend", "Rabbi", "Chaplain", "Minister", "Churchman", "Healer", "Storyteller",
@@ -180,7 +189,7 @@ public final class VillagerNameHelper {
                 "holy", "wise", "mystic", "secret", "cleric", "priest", "div"
         ) );
 
-        profKey = "minecraft:armorer";
+        profKey = getKey( VillagerProfession.ARMORER );
         CAREER_TITLES.put( profKey, new String[] {
                 "Armorsmith", "Armorsmith", "Armorer", "Armorer", "Armorworker", "Armorworker", "Armorvendor", "Armorvendor",
                 "Armormaster", "Armorman", "Armorcrafter", "Plateworker", "Platesmith", "Platecrafter", "Shieldworker", "Shieldsmith", "Shieldcrafter",
@@ -190,7 +199,7 @@ public final class VillagerNameHelper {
                 "armor", "plate", "shield", "smith", "forge", "fire", "anvil"
         ) );
 
-        profKey = "minecraft:weaponsmith";
+        profKey = getKey( VillagerProfession.WEAPONSMITH );
         CAREER_TITLES.put( profKey, new String[] {
                 "Weaponsmith", "Weaponsmith", "Swordsmith", "Swordsmith", "Weaponmonger", "Weaponmonger",
                 "Weaponcrafter", "Weaponmaker", "Weaponmaster", "Weaponman", "Swordcrafter", "Swordmaker", "Swordmaster",
@@ -200,7 +209,7 @@ public final class VillagerNameHelper {
                 "weapon", "sword", "poker", "smith", "forge", "fire", "anvil"
         ) );
 
-        profKey = "minecraft:toolsmith";
+        profKey = getKey( VillagerProfession.TOOLSMITH );
         CAREER_TITLES.put( profKey, new String[] {
                 "Toolsmith", "Toolsmith", "Toolmaker", "Toolmaker", "Toolvendor", "Toolvendor",
                 "Toolworker", "Toolcrafter", "Toolman", "Toolmaster", "Tooler", "Artisan", "Toolmonger"
@@ -209,7 +218,7 @@ public final class VillagerNameHelper {
                 "tool", "pick", "axe", "shovel", "hoe", "hammer", "smith", "forge", "fire", "anvil"
         ) );
 
-        profKey = "minecraft:butcher";
+        profKey = getKey( VillagerProfession.BUTCHER );
         CAREER_TITLES.put( profKey, new String[] {
                 "Butcher", "Butcher", "Meatman", "Meatman", "Meatmonger", "Meatmonger",
                 "Meatvendor", "Cowslayer", "Sheepslayer", "Chickenslayer", "Rabbitslayer"
@@ -218,7 +227,7 @@ public final class VillagerNameHelper {
                 "butcher", "blood", "meat", "chop", "cleave", "hook"
         ) );
 
-        profKey = "minecraft:leatherworker";
+        profKey = getKey( VillagerProfession.LEATHERWORKER );
         CAREER_TITLES.put( profKey, new String[] {
                 "Tanner", "Tanner", "Leathermaker", "Leathermaker", "Leathermonger", "Leathermonger",
                 "Leatherman", "Skinner", "Cowskinner", "Sheepskinner", "Hidetanner", "Leathertanner", "Leathervendor"
@@ -227,7 +236,7 @@ public final class VillagerNameHelper {
                 "tan", "leather", "hide", "skin", "strip", "chop", "cleave", "blood"
         ) );
 
-        profKey = "minecraft:nitwit";
+        profKey = getKey( VillagerProfession.NITWIT );
         CAREER_TITLES.put( profKey, new String[] {
                 "Nitwit", "Blockhead", "Fool", "Dimwit", "Dork", "Dunce", "Jerk", "Moron", "Pinhead", "Ninny", "Simpleton"
         } );
@@ -235,7 +244,7 @@ public final class VillagerNameHelper {
                 "fool", "dork", "jerk", "wit", "genius", "head", "smart", "wise"
         ) );
 
-        profKey = "minecraft:none";
+        profKey = getKey( VillagerProfession.NONE );
         CAREER_TITLES.put( profKey, new String[] {
                 "Jobless", "Noob", "Lazy",
         } );

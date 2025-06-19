@@ -1,6 +1,7 @@
 package fathertoast.specialai;
 
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.util.VillagerNameHelper;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -22,6 +23,7 @@ public final class ModEventHandler {
     public static void setup( final FMLCommonSetupEvent event ) {
         event.enqueueWork( () -> {
             Config.initialize();
+            VillagerNameHelper.initCareerComponents();
         });
     }
 }
