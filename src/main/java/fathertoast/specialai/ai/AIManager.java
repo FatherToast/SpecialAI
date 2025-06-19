@@ -30,6 +30,7 @@ import net.minecraft.world.IWorld;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
@@ -435,7 +436,10 @@ public final class AIManager {
             MobEntity entity = (MobEntity) event.getEntityLiving();
             Entity target = event.getSource().getEntity();
             if( target instanceof LivingEntity ) {
-                
+                // Don't target invulnerable players
+                if ( target instanceof PlayerEntity && ( ((PlayerEntity) target).isCreative() || target.isSpectator() ) )
+                    return;
+
                 // Alert all similar entities around the killed entity to the killer
                 final double range = entity.getAttributeValue( Attributes.FOLLOW_RANGE );
                 AxisAlignedBB boundingBox = AxisAlignedBB.unitCubeFromLowerCorner( entity.position() ).inflate( range, 10.0, range );
