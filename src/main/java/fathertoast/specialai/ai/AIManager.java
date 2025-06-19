@@ -2,6 +2,7 @@ package fathertoast.specialai.ai;
 
 
 import fathertoast.crust.api.config.common.ConfigUtil;
+import fathertoast.crust.api.lib.EnvironmentHelper;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIHelper;
@@ -251,7 +252,7 @@ public final class AIManager {
 
         // Avoid messing with entities that spawn in not fully loaded chunks.
         // Will more likely than not cause a world deadlock!
-        if ( !event.getWorld().isLoaded( entityPos ) ) return;
+        if ( !EnvironmentHelper.isLoaded( event.getWorld(), entityPos ) ) return;
 
         // Check if this is an arrow that can be dodged
         if( event.getEntity() instanceof ProjectileEntity && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
