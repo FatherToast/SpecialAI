@@ -244,7 +244,14 @@ public final class AIManager {
     public static void onJoinWorld( EntityJoinWorldEvent event ) {
         // None of this should be done on the client side
         if( event.getWorld().isClientSide() || !event.getEntity().isAlive() ) return;
-        
+
+        Entity entity = event.getEntity();
+        BlockPos entityPos = new BlockPos( entity.getX(), entity.getY(), entity.getZ() );
+
+        // Avoid messing with entities that spawn in not fully loaded chunks.
+        // Will more likely than not cause a world deadlock!
+        if ( !event.getWorld().isLoaded( entityPos ) ) return;
+
         // Check if this is an arrow that can be dodged
         if( event.getEntity() instanceof ProjectileEntity && !event.getEntity().getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
             event.getEntity().getPersistentData().putBoolean( TAG_ARROW_DODGE_CHECKED, true );
