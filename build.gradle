@@ -4,13 +4,14 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0,6.2)', changing: true
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'idea'
 
 // The mod's version and id
 version = "${mc_version}-${mod_version}"
@@ -80,10 +81,6 @@ repositories {
         }
     }
 
-    //maven { // JEI
-    //    name 'prog'
-    //    url 'http://dvs1.progwml6.com/files/maven'
-    //}
     maven { // TOP
         name 'tterrag'
         url 'https://maven.tterrag.com/'
@@ -102,10 +99,6 @@ dependencies {
     // Crust; only implement the api, but include the entire mod at runtime
     implementation "curse.maven:crust-873570:${crust_api_version}"
     runtimeOnly "curse.maven:crust-873570:${crust_src_version}"
-
-    // Add in JEI and TOP to assist debugging during development
-    //runtimeOnly fg.deobf("mezz.jei:jei-${jei_version}")
-    runtimeOnly fg.deobf("mcjty.theoneprobe:TheOneProbe-${top_version}")
 }
 
 jar {
@@ -135,5 +128,16 @@ publishing {
         maven {
             url "file:///${project.projectDir}/mcmodsrepo"
         }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
     }
 }
