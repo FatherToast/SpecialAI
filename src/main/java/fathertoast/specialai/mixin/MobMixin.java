@@ -11,15 +11,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-//@Mixin(Mob.class)
+@Mixin(Mob.class)
 public abstract class MobMixin extends LivingEntity implements Targeting {
-
 
     protected MobMixin(EntityType<? extends LivingEntity> type, Level level ) {
         super( type, level );
     }
 
-    /*
     @Inject(
             method = "updateControlFlags",
             at = @At(
@@ -30,7 +28,6 @@ public abstract class MobMixin extends LivingEntity implements Targeting {
             cancellable = true
     )
 
-     */
     public void onUpdateControlFlags( CallbackInfo ci ) {
         MixinHooks.onUpdateControlFlags( (Mob)(Object) this, ci );
     }

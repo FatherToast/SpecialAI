@@ -5,6 +5,7 @@
   "minVersion": "0.8",
   "refmap": "specialai.refmap.json",
   "mixins": [
+    "MobMixin"
   ],
   "client": [],
   "server": [],
