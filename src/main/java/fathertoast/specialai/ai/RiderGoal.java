@@ -7,11 +7,14 @@ import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.Zoglin;
 
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -46,7 +49,7 @@ public class RiderGoal extends Goal {
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
     
-    /** @return Returns true if this AI can be activated. */
+    /** @return True if this AI can be activated. */
     @Override
     public boolean canUse() {
         if( !mob.isPassenger() && ++checkTime > 50 ) {
@@ -59,10 +62,11 @@ public class RiderGoal extends Goal {
     /** @return Called each update while active and returns true if this AI can remain active. */
     @Override
     public boolean canContinueToUse() {
-        return !mob.isPassenger() && targetMount != null && !targetMount.isVehicle() && targetMount.isAlive() && ++giveUpDelay <= 400;
+        return !mob.isPassenger() && targetMount != null && !targetMount.isVehicle()
+                && targetMount.isAlive() && !isMountAggro( targetMount ) && ++giveUpDelay <= 400;
     }
     
-    /** @return Returns true if this AI can be interrupted by a higher priority conflicting task. */
+    /** @return True if this AI can be interrupted by a higher priority conflicting task. */
     @Override
     public boolean isInterruptable() { return false; }
     
@@ -108,40 +112,61 @@ public class RiderGoal extends Goal {
                 EntitySelector.ENTITY_NOT_BEING_RIDDEN );
         Collections.shuffle( list );
         for( Entity entity : list ) {
-            if( entity instanceof LivingEntity && isValidMount( (LivingEntity) entity ) ) {
-                targetMount = (LivingEntity) entity;
+            if( entity instanceof LivingEntity livingEntity && isValidMount( livingEntity ) ) {
+                targetMount = livingEntity;
                 return true;
             }
         }
         return false;
     }
     
-    /** @return Returns true if the given mount is a valid mount and is size-compatible with the rider. */
+    /** @return True if the given mount is a valid mount and is size-compatible with the rider. */
     private boolean isValidMount( LivingEntity mount ) {
+        // Don't try to mount creatures that are pissed and want to unalive you
+        if ( isMountAggro( mount ) ) return false;
+
         if( Config.GENERAL.JOCKEYS.mountBlacklist.get().contains( mount ) ) return false;
         
         if( isSmallMount( mount ) ) return isSmallRider();
         if( isNormalMount( mount ) ) return !isSmallRider();
-        
+
         return false; // The mob was not a mount
     }
     
-    /** @return Returns true if the given entity can be considered a small mount. */
+    /** @return True if the given entity can be considered a small mount. */
     private boolean isSmallMount( LivingEntity mount ) {
         return Config.GENERAL.JOCKEYS.mountWhitelistSmall.get().contains( mount ) ||
                 mount.isBaby() && Config.GENERAL.JOCKEYS.mountWhitelist.get().contains( mount );
     }
     
-    /** @return Returns true if the given entity can be considered a normal mount. */
+    /** @return True if the given entity can be considered a normal mount. */
     private boolean isNormalMount( LivingEntity mount ) {
         return !mount.isBaby() && Config.GENERAL.JOCKEYS.mountWhitelist.get().contains( mount );
     }
     
-    /** @return Returns true if the rider is a small rider, and false if the rider is normal-sized. */
+    /** @return True if the rider is a small rider, and false if the rider is normal-sized. */
     private boolean isSmallRider() {
         return isSmall || mob.isBaby() || mob instanceof Slime && ((Slime) mob).isTiny();
     }
-    
+
+    /**
+     * @return True if the given entity is a mob and is aggroed either the rider
+     *         or a different entity of the same type as the rider.
+     */
+    private boolean isMountAggro( LivingEntity mount ) {
+        // Check brain first. Some "newer" mobs don't set their target field
+        if ( mount.getBrain().hasMemoryValue( MemoryModuleType.ATTACK_TARGET ) ) {
+            Optional<LivingEntity> memoryTarget = mount.getBrain().getMemory( MemoryModuleType.ATTACK_TARGET );
+
+            if ( memoryTarget.isPresent() && ( memoryTarget.get() == mob || memoryTarget.get().getType() == mob.getType() ) )
+                return true;
+        }
+
+        // No target found in the brain's memories, check target field
+        return mount instanceof Mob mobMount && mobMount.getTarget() != null
+                && ( mobMount.getTarget() == mob || mobMount.getTarget().getType() == mob.getType() );
+    }
+
     /**
      * Used to connect a rider to its target mount, so it can start riding.
      * This strategy is used because mounting during the AI tick can potentially cause issues.

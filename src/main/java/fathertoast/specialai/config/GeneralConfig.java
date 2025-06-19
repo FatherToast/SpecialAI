@@ -177,17 +177,16 @@ public class GeneralConfig extends AbstractConfigFile {
             mountWhitelist = SPEC.define( new EntityListField( "mount_entities.whitelist", new EntityList(
                     // Classic
                     null,
-                    new EntityEntry( EntityType.SPIDER ), new EntityEntry( EntityType.SLIME ),
+                    new EntityEntry( EntityType.SPIDER ),
                     new EntityEntry( EntityType.SKELETON_HORSE ), new EntityEntry( EntityType.ZOMBIE_HORSE ),
                     // Passive mobs
-                    new EntityEntry( EntityType.PIG ), new EntityEntry( EntityType.SHEEP ),
+                    new EntityEntry( EntityType.SHEEP ),
                     new EntityEntry( EntityType.COW ), new EntityEntry( EntityType.POLAR_BEAR ),
                     // Horse-type mobs
                     new EntityEntry( EntityType.HORSE ), new EntityEntry( EntityType.DONKEY ),
                     new EntityEntry( EntityType.MULE ), new EntityEntry( EntityType.LLAMA, false ),
                     // Nether
-                    new EntityEntry( EntityType.STRIDER ), new EntityEntry( EntityType.HOGLIN ),
-                    new EntityEntry( EntityType.ZOGLIN )
+                    new EntityEntry( EntityType.HOGLIN )
             ).setNoValues(),
                     "List of mobs that can be ridden on by normal-sized riders (not all entities can be controlled by their rider)." ) );
             mountWhitelistSmall = SPEC.define( new EntityListField( "mount_entities.small_list", new EntityList(
