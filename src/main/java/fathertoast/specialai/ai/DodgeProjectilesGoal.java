@@ -56,7 +56,7 @@ public class DodgeProjectilesGoal extends Goal {
     /** Alerts the entity's projectile dodge AI, if it has one, that a projectile has been fired at the entity. */
     private static void tryDodgeProjectile( PathfinderMob entity, Vec3 projectileDirection ) {
         for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
-            if( task.getGoal() instanceof DodgeProjectilesGoal) {
+            if( task.getGoal() instanceof DodgeProjectilesGoal ) {
                 ((DodgeProjectilesGoal) task.getGoal()).setDodgeTarget( projectileDirection );
             }
         }
