@@ -113,7 +113,7 @@ public final class BlockHelper {
      */
     private static float getDigSpeedSlowdown( @Nullable MobEffectInstance effect ) {
         if( effect == null ) return 1.0F;
-        return switch (effect.getAmplifier()) {
+        return switch ( effect.getAmplifier() ) {
             case 0 -> 0.3F;
             case 1 -> 0.09F;
             case 2 -> 0.0027F;
