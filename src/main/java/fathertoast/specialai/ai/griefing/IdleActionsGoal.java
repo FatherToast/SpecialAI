@@ -1,10 +1,12 @@
 package fathertoast.specialai.ai.griefing;
 
+import com.toast.apocalypse.common.entity.living.Destroyer;
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.util.BlockDestroyTracker;
 import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.util.SpecialAIFakePlayer;
 import net.minecraft.core.BlockPos;
@@ -30,6 +32,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Deque;
 import java.util.EnumSet;
 
 /**
@@ -131,8 +134,8 @@ public class IdleActionsGoal extends Goal {
     /** @return Called each update while active and returns true if this AI can remain active. */
     @Override
     public boolean canContinueToUse() {
-        // If the target changes, everything needs to be validated again - just cancel instead and it can re-pick later if still valid
-        if( mob.isPassenger() || targetBlock == null || mob.level().getBlockState( targetPos ).getBlock() != targetBlock.getBlock() ) {
+        // If the target changes, everything needs to be validated again - just cancel instead, and it can re-pick later if still valid
+        if( !mob.isAlive() || mob.isPassenger() || targetBlock == null || mob.level().getBlockState( targetPos ).getBlock() != targetBlock.getBlock() ) {
             return false;
         }
 
@@ -206,6 +209,7 @@ public class IdleActionsGoal extends Goal {
         
         if( !madCreeper() ) {
             mob.level().destroyBlockProgress( mob.getId(), targetPos, -1 );
+            BlockDestroyTracker.removeEntryFor( mob, targetPos );
         }
     }
     
@@ -341,6 +345,9 @@ public class IdleActionsGoal extends Goal {
         // Update block damage
         final int damage = (int) Math.ceil( blockDamage * 10.0F ) - 1;
         if( damage != lastBlockDamage ) {
+            if ( lastBlockDamage == -1 ) {
+                BlockDestroyTracker.putEntry(mob, level, targetPos);
+            }
             mob.level().destroyBlockProgress( mob.getId(), targetPos, damage );
             lastBlockDamage = damage;
         }
