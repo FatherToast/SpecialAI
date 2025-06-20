@@ -96,11 +96,21 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
      */
     @Override
     protected void checkAndPerformAttack( @Nullable LivingEntity target, double distanceSqr ) {
-        if( target != null && distanceSqr <= getAttackReachSqr( target ) && getTicksUntilNextAttack() <= 0 ) {
+        // Target is null or an invul player, abort attacking
+        if ( target == null || isInvulPlayer( target ) ) {
+            mob.setTarget( null );
+            mob.getNavigation().stop();
+        }
+        else if( distanceSqr <= getAttackReachSqr( target ) && getTicksUntilNextAttack() <= 0 ) {
             resetAttackCooldown();
             mob.swing( InteractionHand.MAIN_HAND );
             doHurtTarget( mob, target );
         }
+    }
+
+    /** @return True if the target is a player in either creative or spec mode. */
+    private boolean isInvulPlayer( LivingEntity target ) {
+        return target instanceof Player player && ( player.isCreative() || player.isSpectator() );
     }
     
     /**
