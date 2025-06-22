@@ -3,6 +3,8 @@ package fathertoast.specialai.util;
 import fathertoast.crust.api.lib.EnvironmentHelper;
 import fathertoast.specialai.SpecialAI;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
@@ -13,7 +15,7 @@ import net.minecraftforge.fml.common.Mod;
 import org.codehaus.plexus.util.FastMap;
 
 import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.Queue;
 
 /**
  * Helps keeping track of block destroy progress made by mobs and cleaning up
@@ -23,7 +25,7 @@ import java.util.Deque;
 @Mod.EventBusSubscriber( bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SpecialAI.MOD_ID )
 public class BlockDestroyTracker {
 
-    private static final FastMap<Level, Deque<Entry>> ENTRIES_PER_LEVEL = new FastMap<>( 150 ); // No way there is ever 150 or MORE levels
+    private static final FastMap<ResourceKey<Level>, Queue<Entry>> ENTRIES_PER_LEVEL = new FastMap<>( 150 ); // No way there is ever 150 or MORE levels
     private static int timeNextUpdate = 0;
 
     /**
@@ -31,40 +33,41 @@ public class BlockDestroyTracker {
      * Note that duplicate checks are not done.
      */
     public static void putEntry( LivingEntity blockBreaker, Level level, BlockPos pos ) {
-        ENTRIES_PER_LEVEL.get( level ).add( new Entry( blockBreaker, level, pos ) );
+        ENTRIES_PER_LEVEL.get( level.dimension() ).add( new Entry( blockBreaker, GlobalPos.of( level.dimension(), pos ) ) );
     }
 
-    /** Removes any found entries matching the given entity and block position. */
+    /** Removes any found entries matching the given entity. */
     public static void removeEntryFor( LivingEntity entity, BlockPos pos ) {
-        ENTRIES_PER_LEVEL.forEach( (level, deque) -> {
-            if ( !deque.isEmpty() ) {
-                deque.removeIf( (entry) -> entry.blockBreaker == entity && entry.pos.equals( pos ) );
+        ENTRIES_PER_LEVEL.forEach( (dimension, queue) -> {
+            if ( !queue.isEmpty() ) {
+                queue.removeIf( (entry) -> entry.blockBreaker == entity && entry.pos.pos().equals( pos ) );
             }
         });
     }
 
     /**
      * Called at the end of each server tick.<br>
-     * Updates the deques every 3 ticks and checks at most
+     * Updates the queue every 3 ticks and checks at most
      * 3 entries every cycle.
      */
     @SubscribeEvent
     public static void onServerTick( TickEvent.ServerTickEvent event ) {
         if ( event.phase == TickEvent.Phase.END && --timeNextUpdate <= 0 ) {
             for ( Level level : event.getServer().getAllLevels() ) {
-                Deque<Entry> deque = ENTRIES_PER_LEVEL.get( level );
+                Queue<Entry> queue = ENTRIES_PER_LEVEL.get( level.dimension() );
 
                 // Inspect 3 entries at a time per level, no need to go crazy here
                 for ( int i = 0; i < 3; i++ ) {
-                    if ( deque.isEmpty() ) break;
+                    if ( queue.isEmpty() ) break;
 
-                    Entry entry = deque.peek();
+                    Entry entry = queue.peek();
 
+                    // Is the entry expired? Reset destroy progress at location if possible.
                     if ( entry.isExpired() ) {
                         // Do not mess with the destroy progress in unloaded chunks
-                        if ( EnvironmentHelper.isLoaded( level, entry.pos ) )
-                            level.destroyBlockProgress( entry.blockBreaker.getId(), entry.pos, -1 );
-                        deque.pollFirst();
+                        if ( EnvironmentHelper.isLoaded( level, entry.pos.pos() ) )
+                            level.destroyBlockProgress( entry.blockBreaker.getId(), entry.pos.pos(), -1 );
+                        queue.remove();
                     }
                 }
             }
@@ -74,18 +77,18 @@ public class BlockDestroyTracker {
 
     /**
      * Called when the server has started.<br>
-     * Populates the deque map for each loaded level.
+     * Populates the queue map for each loaded level.
      */
     @SubscribeEvent
     public static void onServerStarted( ServerStartedEvent event ) {
         for ( Level level : event.getServer().getAllLevels() ) {
-            ENTRIES_PER_LEVEL.put( level, new ArrayDeque<>() );
+            ENTRIES_PER_LEVEL.put( level.dimension(), new ArrayDeque<>() );
         }
     }
 
     /**
      * Called when the server has stopped.<br>
-     * Clears the deque map.
+     * Clears the queue map.
      */
     @SubscribeEvent
     public static void onServerStopped( ServerStoppedEvent event ) {
@@ -93,7 +96,7 @@ public class BlockDestroyTracker {
     }
 
     /** Contains info such as what entity is breaking a block, in what world, and where. */
-    record Entry( LivingEntity blockBreaker, Level level, BlockPos pos ) {
+    record Entry( LivingEntity blockBreaker, GlobalPos pos ) {
 
         /**
          *  @return True if the entity belonging to this entry
@@ -101,7 +104,7 @@ public class BlockDestroyTracker {
          *          entity changed level.
          */
         boolean isExpired() {
-            return blockBreaker == null || !blockBreaker.isAlive() || blockBreaker.level() != level;
+            return blockBreaker == null || !blockBreaker.isAlive() || !blockBreaker.level().dimension().equals( pos.dimension() );
         }
     }
 }

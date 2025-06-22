@@ -183,7 +183,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         Level level = mob.level();
         
         // Perform block breaking
-        blockDamage += BlockHelper.getDestroyProgress( targetBlock, mob, level, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get();
+        blockDamage += (float) ( BlockHelper.getDestroyProgress( targetBlock, mob, level, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get() );
         if( blockDamage >= 1.0F ) {
             // Block is broken
             level.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
@@ -202,11 +202,6 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
             level.destroyBlockProgress( mob.getId(), doorPos, damage );
             lastBlockDamage = damage;
         }
-    }
-
-    @Override
-    public boolean requiresUpdateEveryTick() {
-        return true;
     }
 
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the door. */
