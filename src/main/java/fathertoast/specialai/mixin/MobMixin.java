@@ -27,7 +27,6 @@ public abstract class MobMixin extends LivingEntity implements Targeting {
             ),
             cancellable = true
     )
-
     public void onUpdateControlFlags( CallbackInfo ci ) {
         MixinHooks.onUpdateControlFlags( (Mob)(Object) this, ci );
     }

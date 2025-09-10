@@ -1,7 +1,10 @@
 package fathertoast.specialai;
 
+import fathertoast.specialai.ai.VillagerAI;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -72,12 +75,12 @@ public class SpecialAI {
      *  + grappling (similar to fishing, but pulls the mob to target instead, mob may mount the target?)
      *
      * VILLAGES - TODO all these features must be re-evaluated due to village overhaul
-     *  o rep is never forgotten (vanilla bug fix)
      *  o hostile against very low rep players
-     *  o rep affected by building or breaking certain blocks in village
-     *  o chance to attack when breaking blocks in village
-     *  o rep gained by killing hostile mobs near village
-     *  o command to check your village rep
+     *  - rep affected by building or breaking certain blocks in village
+     *  ? chance to attack when breaking blocks in village
+     *  - rep gained by killing hostile mobs near village
+     *  ? rep gained by assisting some villagers in their work (farmer is likely the only one we can do this with)
+     *  o command to check your village rep (maybe print mean rep, lowest rep and highest rep of villagers within a given radius?)
      *
      * BOSSES
      *  + name influenced by entity type and abilities
@@ -100,7 +103,16 @@ public class SpecialAI {
     
     /** The logger used by this mod. */
     public static final Logger LOG = LogManager.getLogger();
-    
+
+
+    public SpecialAI() {
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        //VillagerAI.SENSOR_TYPE_REGISTER.register( modBus );
+        //VillagerAI.ACTIVITY_REGISTER.register( modBus );
+    }
+
+
     /** @return Returns the resource location as a string, or "null" if it is null. */
     public static String toString( @Nullable ResourceLocation res ) { return res == null ? "null" : res.toString(); }
 }

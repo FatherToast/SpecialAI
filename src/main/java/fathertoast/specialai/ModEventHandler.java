@@ -23,7 +23,6 @@ public final class ModEventHandler {
     public static void setup( final FMLCommonSetupEvent event ) {
         event.enqueueWork( () -> {
             Config.initialize();
-            VillagerNameHelper.initCareerComponents();
         });
     }
 }

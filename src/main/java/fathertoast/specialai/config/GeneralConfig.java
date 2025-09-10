@@ -74,9 +74,11 @@ public class GeneralConfig extends AbstractConfigFile {
             aggressiveList = new EntityListField.Combined(
                     SPEC.define( new EntityListField( "aggressive_entities.whitelist", new EntityList(
                             null,
-                            new EntityEntry( EntityType.COW, 0.04 ), new EntityEntry( EntityType.RABBIT, 0.02 ),
+                            new EntityEntry( EntityType.COW, 0.04 ),
+                            new EntityEntry( EntityType.RABBIT, 0.02 ),
                             new EntityEntry( EntityType.STRIDER, 0.02 ),
-                            new EntityEntry( EntityType.SQUID, 1.0 ), new EntityEntry( EntityType.COD, 0.02 ),
+                            new EntityEntry( EntityType.SQUID, 1.0 ),
+                            new EntityEntry( EntityType.COD, 0.02 ),
                             new EntityEntry( EntityType.SALMON, 0.04 )
                     ).setSinglePercent(),
                             "List of neutral (including depacified) mobs that are made 'aggressive' like monsters.",

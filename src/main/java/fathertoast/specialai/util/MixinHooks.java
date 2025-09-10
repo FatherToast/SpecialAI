@@ -1,7 +1,10 @@
 package fathertoast.specialai.util;
 
 import fathertoast.specialai.ai.IVehicleControlOverride;
+import fathertoast.specialai.ai.VillagerAI;
+import fathertoast.specialai.mixin.VillagerMixin;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.npc.Villager;
