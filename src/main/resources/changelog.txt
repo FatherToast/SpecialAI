@@ -1,3 +1,30 @@
+1.20.1-3.0.3
+    - Reimplemented randomly generated villager names!
+    - Reimplemented village reputation tweaks:
+        - Configurable reputation lost/gained by breaking certain blocks
+        - Configurable reputation lost/gained by killing certain mobs
+        - Villagers will refuse to trade if reputation is low enough (configurable)
+        - Trampling farmland will upset farmer villagers (configurable)
+    - AnimalMeleeAttackGoal now stops executing if the target player goes into creative or spec mode
+    - Improved cleanup of block-breaking progress done by mobs when they are interrupted or die
+1.16.5-1.3.1
+    - Added cooldown config option for "eat breeding item" AI
+    - Added block explosion resistance threshold to idle grief config to help stop creepers from trying to blow up blocks they probably can't
+    - Fixed idle grief AI not stopping if the mob is out of range of the block it is trying to break
+    - Fixed "call for help on death" AI making mobs target players in spectator or creative mode
+    - Changed "jockey" AI to stop riders from trying to mount mobs that are aggroed on them or aggroed on another mob of the same type as the rider
+    - Changed some config default entries
+1.20.1-2.3.2
+    - Added cooldown config option for "eat breeding item" AI
+    - Added block explosion resistance threshold to idle grief config to help stop creepers from trying to blow up blocks they probably can't
+    - Fixed idle grief AI not stopping if the mob is out of range of the block it is trying to break
+    - Fixed "call for help on death" AI making mobs target players in spectator or creative mode
+    - Fixed "throw ally" and "throw enemy" AI not working properly
+    - Fixed mobs spawning from the "spawner" AI not spawning in with the right equipment
+    - Changed "jockey" AI to stop riders from trying to mount mobs that are aggroed on them or aggroed on another mob of the same type as the rider
+    - Changed some config default entries
+1.20.1-2.2.2
+    - Bumped required Crust version to 2.5.9+
 1.20.1-2.1.2
     - Bumped min required Forge version to 47.3.22
     - Bumped min required Crust version to 2.3.7
