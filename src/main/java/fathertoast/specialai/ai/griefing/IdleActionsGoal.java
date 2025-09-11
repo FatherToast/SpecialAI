@@ -346,7 +346,7 @@ public class IdleActionsGoal extends Goal {
         final int damage = (int) Math.ceil( blockDamage * 10.0F ) - 1;
         if( damage != lastBlockDamage ) {
             if ( lastBlockDamage == -1 ) {
-                BlockDestroyTracker.putEntry(mob, level, targetPos);
+                BlockDestroyTracker.putEntry( mob, level, targetPos );
             }
             mob.level().destroyBlockProgress( mob.getId(), targetPos, damage );
             lastBlockDamage = damage;

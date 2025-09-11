@@ -12,9 +12,10 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.codehaus.plexus.util.FastMap;
 
 import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -25,7 +26,7 @@ import java.util.Queue;
 @Mod.EventBusSubscriber( bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SpecialAI.MOD_ID )
 public class BlockDestroyTracker {
 
-    private static final FastMap<ResourceKey<Level>, Queue<Entry>> ENTRIES_PER_LEVEL = new FastMap<>( 150 ); // No way there is ever 150 or MORE levels
+    private static final Map<ResourceKey<Level>, Queue<Entry>> ENTRIES_PER_LEVEL = new HashMap<>( 150 ); // No way there is ever 150 or MORE levels
     private static int timeNextUpdate = 0;
 
     /**
