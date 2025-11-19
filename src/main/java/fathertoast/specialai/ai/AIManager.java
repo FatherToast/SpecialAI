@@ -2,6 +2,7 @@ package fathertoast.specialai.ai;
 
 
 import fathertoast.crust.api.config.common.ConfigUtil;
+import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.crust.api.lib.EnvironmentHelper;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
@@ -232,14 +233,14 @@ public final class AIManager {
     public static void onJoinWorld( EntityJoinLevelEvent event ) {
         // None of this should be done on the client side
         if( event.getLevel().isClientSide() || !event.getEntity().isAlive() ) return;
-
+        
         Entity entity = event.getEntity();
         BlockPos entityPos = BlockPos.containing( entity.position() );
-
+        
         // Avoid messing with entities that spawn in not fully loaded chunks.
         // Will more likely than not cause a world deadlock!
-        if ( !EnvironmentHelper.isLoaded( event.getLevel(), entityPos ) ) return;
-
+        if( !EnvironmentHelper.isLoaded( event.getLevel(), entityPos ) ) return;
+        
         // Check if this is an arrow that can be dodged
         if( entity instanceof Projectile && !entity.getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
             entity.getPersistentData().putBoolean( TAG_ARROW_DODGE_CHECKED, true );
@@ -251,15 +252,15 @@ public final class AIManager {
             initializeSpecialAI( mob );
         }
     }
-
+    
     @SubscribeEvent( priority = EventPriority.LOWEST )
     public void onFinalizeSpawn( MobSpawnEvent.FinalizeSpawn event ) {
         // Randomly name villagers
-        if ( event.getEntity() instanceof Villager villager ) {
+        if( event.getEntity() instanceof Villager villager ) {
             VillagerNameHelper.setVillagerName( event.getLevel().getRandom(), villager, villager.getVillagerData() );
         }
     }
-
+    
     /**
      * Called when a mob is spawned in the world, including by chunk loading and dimension transition.
      *
@@ -427,19 +428,19 @@ public final class AIManager {
      * @param event The event being triggered.
      */
     public static void onLivingDeath( LivingDeathEvent event ) {
-        if ( event.getEntity().level().isClientSide ) return;
-
+        if( event.getEntity().level().isClientSide ) return;
+        
         // Call for help on death
         final double chance = Config.GENERAL.REACTIONS.callForHelpOnDeathList.getValue( event.getEntity() );
-
+        
         if( chance > 0.0 && event.getEntity() instanceof Mob entity && event.getEntity().getRandom().nextDouble() < chance ) {
             Entity target = event.getSource().getEntity();
-
+            
             if( target instanceof LivingEntity ) {
                 // Don't target invulnerable players
-                if ( target instanceof Player player && ( player.isCreative() || player.isSpectator() ) )
+                if( target instanceof Player player && (player.isCreative() || player.isSpectator()) )
                     return;
-
+                
                 // Alert all similar entities around the killed entity to the killer
                 final double range = entity.getAttribute( Attributes.FOLLOW_RANGE ) == null
                         ? 32.0D

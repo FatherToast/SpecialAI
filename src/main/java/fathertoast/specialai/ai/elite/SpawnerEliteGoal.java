@@ -18,7 +18,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringUtil;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.monster.piglin.PiglinBrute;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.SpawnData;
@@ -70,12 +69,12 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
     public boolean canContinueToUse() {
         return checkSight( true );
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /**
      * @return Performs a sight check to the target, if possible.
      * <p>
@@ -156,7 +155,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             // Noop; AI is only on server
         }
         
-
+        
         /** @return The entity acting as the spawner, if any. */
         @Override
         @Nullable
@@ -167,7 +166,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         public void setEntityId( EntityType<?> entityType, @Nullable Level level, RandomSource random, BlockPos pos ) {
             nextSpawnData.entityToSpawn().putString( TAG_ENTITY_ID, ForgeRegistries.ENTITY_TYPES.getKey( entityType ).toString() );
         }
-
+        
         /** Sets the data of the mob to spawn for the next wave. */
         @Override
         public void setNextSpawnData( @Nullable Level level, BlockPos pos, SpawnData spawnData ) {
@@ -242,8 +241,8 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
                     // If needed, perform the standard entity spawn initialization
                     if( nextSpawnData.getEntityToSpawn().size() == 1 && NBTHelper.containsString( nextSpawnData.getEntityToSpawn(), TAG_ENTITY_ID ) ) {
                         MobSpawnEvent.FinalizeSpawn finalizeSpawn = ForgeEventFactory.onFinalizeSpawnSpawner( newMob, level, level.getCurrentDifficultyAt( pos ), null, null, this );
-
-                        if ( finalizeSpawn != null ) {
+                        
+                        if( finalizeSpawn != null ) {
                             // These are expected for parity with vanilla code
                             //noinspection deprecation, OverrideOnly
                             newMob.finalizeSpawn( level, finalizeSpawn.getDifficulty(), finalizeSpawn.getSpawnType(),
@@ -276,9 +275,9 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             }
             // Reset mob selection
             if( !spawnPotentials.isEmpty() ) {
-                spawnPotentials.getRandom( random ).ifPresent(( entry ) -> {
-                    setNextSpawnData( level, pos, entry.getData());
-                });
+                spawnPotentials.getRandom( random ).ifPresent( ( entry ) -> {
+                    setNextSpawnData( level, pos, entry.getData() );
+                } );
             }
             // Save the updated data
             aiGoal.save();
@@ -300,28 +299,28 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
         @Override
         public void load( @Nullable Level level, BlockPos pos, CompoundTag compoundTag ) {
             spawnDelay = compoundTag.getShort( TAG_DELAY );
-
+            
             boolean hasSpawnData = compoundTag.contains( TAG_SPAWN_DATA, Tag.TAG_COMPOUND );
-
-            if ( hasSpawnData ) {
-                SpawnData spawnData = SpawnData.CODEC.parse( NbtOps.INSTANCE, compoundTag.getCompound( TAG_SPAWN_DATA ) ).resultOrPartial(( s ) -> {
+            
+            if( hasSpawnData ) {
+                SpawnData spawnData = SpawnData.CODEC.parse( NbtOps.INSTANCE, compoundTag.getCompound( TAG_SPAWN_DATA ) ).resultOrPartial( ( s ) -> {
                     SpecialAI.LOG.warn( "Invalid SpawnData: {}", s );
-                }).orElseGet( SpawnData::new );
+                } ).orElseGet( SpawnData::new );
                 setNextSpawnData( level, pos, spawnData );
             }
-
+            
             boolean hasSpawnPotentials = compoundTag.contains( TAG_SPAWN_POTENTIALS, Tag.TAG_LIST );
-
-            if ( hasSpawnPotentials ) {
+            
+            if( hasSpawnPotentials ) {
                 ListTag listTag = compoundTag.getList( TAG_SPAWN_POTENTIALS, Tag.TAG_COMPOUND );
-                spawnPotentials = SpawnData.LIST_CODEC.parse( NbtOps.INSTANCE, listTag ).resultOrPartial(( s ) -> {
+                spawnPotentials = SpawnData.LIST_CODEC.parse( NbtOps.INSTANCE, listTag ).resultOrPartial( ( s ) -> {
                     SpecialAI.LOG.warn( "Invalid SpawnPotentials list: {}", s );
-                }).orElseGet( SimpleWeightedRandomList::empty );
+                } ).orElseGet( SimpleWeightedRandomList::empty );
             }
             else {
                 spawnPotentials = SimpleWeightedRandomList.single( nextSpawnData != null ? nextSpawnData : new SpawnData() );
             }
-
+            
             if( NBTHelper.containsNumber( compoundTag, TAG_MIN_DELAY ) ) {
                 minSpawnDelay = compoundTag.getShort( TAG_MIN_DELAY );
                 maxSpawnDelay = compoundTag.getShort( TAG_MAX_DELAY );
@@ -347,21 +346,21 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
             tag.putShort( TAG_ACTIVATION_RANGE, (short) requiredPlayerRange );
             tag.putShort( TAG_SPAWN_RANGE, (short) spawnRange );
             verifyEntityId();
-
-            if ( nextSpawnData != null ) {
+            
+            if( nextSpawnData != null ) {
                 tag.put( TAG_SPAWN_DATA, SpawnData.CODEC.encodeStart( NbtOps.INSTANCE, nextSpawnData ).result().orElseThrow( () -> new IllegalStateException( "Invalid SpawnData" ) ) );
             }
             tag.put( TAG_SPAWN_POTENTIALS, SpawnData.LIST_CODEC.encodeStart( NbtOps.INSTANCE, spawnPotentials ).result().orElseThrow() );
-
+            
             return tag;
         }
-
+        
         /** Makes sure the saved entity id is valid. */
         private void verifyEntityId() {
             // Try to load the entity id
             final String id = nextSpawnData.entityToSpawn().getString( TAG_ENTITY_ID );
             ResourceLocation regKey;
-            try { regKey = StringUtil.isNullOrEmpty( id ) ? null : new ResourceLocation( id ); }
+            try { regKey = StringUtil.isNullOrEmpty( id ) ? null : ResourceLocation.tryParse( id ); }
             catch( ResourceLocationException ex ) { regKey = null; }
             
             if( regKey == null ) {

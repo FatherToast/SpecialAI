@@ -1,8 +1,6 @@
 package fathertoast.specialai;
 
-import fathertoast.specialai.ai.VillagerAI;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -103,16 +101,16 @@ public class SpecialAI {
     
     /** The logger used by this mod. */
     public static final Logger LOG = LogManager.getLogger();
-
-
-    public SpecialAI() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-
+    
+    
+    public SpecialAI( FMLJavaModLoadingContext context ) {
+        //IEventBus modBus = context.getModEventBus();
+        
         //VillagerAI.SENSOR_TYPE_REGISTER.register( modBus );
         //VillagerAI.ACTIVITY_REGISTER.register( modBus );
     }
-
-
+    
+    
     /** @return Returns the resource location as a string, or "null" if it is null. */
     public static String toString( @Nullable ResourceLocation res ) { return res == null ? "null" : res.toString(); }
 }

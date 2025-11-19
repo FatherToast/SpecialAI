@@ -1,6 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
-import fathertoast.crust.api.config.common.value.WeightedList;
+import fathertoast.crust.api.config.common.value.weighted.WeightedList;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
@@ -367,7 +367,7 @@ public enum EliteAIType implements WeightedList.Value {
         entity.goalSelector.addGoal( 0, FACTORY.create( entity, aiTag ) );
     }
     
-    private interface IFactory {
+    protected interface IFactory {
         AbstractEliteGoal create( Mob entity, CompoundTag aiTag );
     }
 }
