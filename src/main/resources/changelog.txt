@@ -1,6 +1,19 @@
+1.16.5-1.3.2
+    - Mad creepers are now disabled by default.
+1.16.5-1.3.1
+    - Added cooldown config option for "eat breeding item" AI.
+    - Added block explosion resistance threshold to idle grief config to help stop creepers from trying to blow up blocks they probably can't .
+    - Fixed idle grief AI not stopping if the mob is out of range of the block it is trying to break.
+    - Fixed "call for help on death" AI making mobs target players in spectator or creative mode.
+    - Changed "jockey" AI to stop riders from trying to mount mobs that are aggroed on them or aggroed on another mob of the same type as the rider.
+    - Changed some config default entries.
+1.16.5-1.2.1
+    - Bumped accepted Crust version range-
+1.16.5-1.2.0
+    - Updated to require Crust 1.1.1-
 1.16.5-1.1.0
     - Implemented and now requires Crust (improved configs).
-    - New idle AI - hide (taken from Sarinsa's Tomfoolery mod)
+    - New idle AI - hide (taken from Sarinsa's Tomfoolery mod).
     - New elite AI - slam.
     - Added more config customization capability for elite AI.
     - Fixed issues #26 and #27 - minor bugs.
