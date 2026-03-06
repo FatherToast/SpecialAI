@@ -1,6 +1,10 @@
 package fathertoast.specialai;
 
+import fathertoast.crust.api.config.client.ClientConfigUtil;
+import fathertoast.specialai.config.Config;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -108,6 +112,12 @@ public class SpecialAI {
         
         //VillagerAI.SENSOR_TYPE_REGISTER.register( modBus );
         //VillagerAI.ACTIVITY_REGISTER.register( modBus );
+        
+        Config.init();
+        
+        // Tell Forge to open the config editor when our mod's "Config" button is clicked in the Mods screen
+        // noinspection Convert2MethodRef
+        DistExecutor.unsafeRunWhenOn( Dist.CLIENT, () -> () -> ClientConfigUtil.registerConfigButtonAsEditScreen() );
     }
     
     
