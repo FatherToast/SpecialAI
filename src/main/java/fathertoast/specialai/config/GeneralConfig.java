@@ -10,6 +10,8 @@ import fathertoast.crust.api.config.common.value.EntityEntry;
 import fathertoast.crust.api.config.common.value.EntityList;
 import net.minecraft.world.entity.EntityType;
 
+import java.util.List;
+
 public class GeneralConfig extends AbstractConfigFile {
     
     public final Animals ANIMALS;
@@ -45,6 +47,7 @@ public class GeneralConfig extends AbstractConfigFile {
         public final DoubleField eatingReach;
         public final BooleanField eatingHeals;
         public final IntField eatingCooldown;
+        public final EntityListField eatingBlacklist;
         
         Animals( GeneralConfig parent ) {
             super( parent, "animals",
@@ -66,7 +69,7 @@ public class GeneralConfig extends AbstractConfigFile {
                     ).setSinglePercent(),
                             "List of passive mobs (by entity type registry id) that are made 'neutral' like wolves.",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "depacify_entities.blacklist", new EntityList(null).setNoValues() ) )
+                    SPEC.define( new EntityListField( "depacify_entities.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();
@@ -83,24 +86,27 @@ public class GeneralConfig extends AbstractConfigFile {
                     ).setSinglePercent(),
                             "List of neutral (including depacified) mobs that are made 'aggressive' like monsters.",
                             "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "aggressive_entities.blacklist", new EntityList(null).setNoValues() ) )
+                    SPEC.define( new EntityListField( "aggressive_entities.blacklist", new EntityList( null ).setNoValues() ) )
             );
             
             SPEC.newLine();
             
             eatBreedingItems = SPEC.define( new BooleanField( "eat_breeding_items", true,
                     "If true, passive mobs will seek out and eat the items used to breed them laying on the floor." ) );
-
+            
             eatingReach = SPEC.define( new DoubleField( "eating_reach", 2.0, DoubleField.Range.NON_NEGATIVE,
                     "Mobs' reach (from foot position) when targeting breeding items to eat. Player reach is about 4.5. " +
                             "When in range, the item will be slowly 'vacuumed' toward the passive mob." ) );
-
+            
             eatingHeals = SPEC.define( new BooleanField( "eating_heals", true,
                     "If true, when mobs eat breeding items off the floor, they will regain health (like " +
                             "wolves). The option \"eat_breeding_items\" needs to be enabled for this to have any effect." ) );
-
+            
             eatingCooldown = SPEC.define( new IntField( "eating_cooldown", 2, IntField.Range.NON_NEGATIVE,
                     "The cooldown in ticks between each time the mob will consume one item out of the food item stack it has found." ) );
+            
+            eatingBlacklist = SPEC.define( new EntityListField( "eating_blacklist", new EntityList( null, List.of() ),
+                    "List of animal entities that should not get the 'eat breeding items' AI." ) );
         }
     }
     

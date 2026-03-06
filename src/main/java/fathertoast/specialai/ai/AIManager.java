@@ -292,7 +292,7 @@ public final class AIManager {
             }
             
             // Eat breeding items
-            if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof Animal animal ) {
+            if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof Animal animal && !Config.GENERAL.ANIMALS.eatingBlacklist.contains( animal ) ) {
                 addEatingAI( animal );
             }
             
