@@ -1,11 +1,6 @@
 package fathertoast.specialai;
 
-import fathertoast.specialai.config.Config;
-import fathertoast.specialai.util.VillagerNameHelper;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /**
  * Contains and automatically registers all needed mod events.
@@ -14,15 +9,15 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 @SuppressWarnings( "unused" )
 @Mod.EventBusSubscriber( modid = SpecialAI.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD )
 public final class ModEventHandler {
+    
     /**
      * Called after registry events, but before the client- and server-specific setup events.
      *
      * @param event The event data.
      */
+    /*
     @SubscribeEvent( priority = EventPriority.NORMAL )
-    public static void setup( final FMLCommonSetupEvent event ) {
-        event.enqueueWork( () -> {
-            Config.initialize();
-        });
-    }
+    public static void setup( final FMLCommonSetupEvent event ) { }
+    
+     */
 }
