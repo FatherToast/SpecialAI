@@ -1,6 +1,5 @@
 package fathertoast.specialai.ai.griefing;
 
-import com.toast.apocalypse.common.entity.living.Destroyer;
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
@@ -17,7 +16,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -26,13 +24,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.Deque;
 import java.util.EnumSet;
 
 /**
@@ -138,8 +133,8 @@ public class IdleActionsGoal extends Goal {
         if( !mob.isAlive() || mob.isPassenger() || targetBlock == null || mob.level().getBlockState( targetPos ).getBlock() != targetBlock.getBlock() ) {
             return false;
         }
-
-        return switch (currentActivity) {
+        
+        return switch( currentActivity ) {
             case FIDDLING -> canContinueFiddling();
             case GRIEFING -> canContinueGriefing();
             case HIDING -> canContinueHiding();
@@ -220,10 +215,10 @@ public class IdleActionsGoal extends Goal {
     @Override
     public void tick() {
         giveUpDelay++;
-
-        if ( targetPos != null ) {
-            mob.getLookControl().setLookAt(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5,
-                    30.0F, 30.0F);
+        
+        if( targetPos != null ) {
+            mob.getLookControl().setLookAt( targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5,
+                    30.0F, 30.0F );
         }
         
         if( canReach && targetHitResult != null && targetBlock != null ) {
@@ -258,12 +253,12 @@ public class IdleActionsGoal extends Goal {
             }
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called each tick while this AI is active, in hiding mode, and the mob can reach its target. */
     private void performHiding() {
         // Try to hide in the block
@@ -280,10 +275,10 @@ public class IdleActionsGoal extends Goal {
             mob.getNavigation().stop();
         }
         final double blockReach = Config.IDLE.GENERAL.reach.get();
-
+        
         // Too far away from the target, abort
-        if ( mob.distanceToSqr( targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5 )
-                > ( blockReach * blockReach ) ) {
+        if( mob.distanceToSqr( targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5 )
+                > (blockReach * blockReach) ) {
             targetBlock = null;
             return;
         }
@@ -318,9 +313,9 @@ public class IdleActionsGoal extends Goal {
             // Handle special cases
             if( targetBlock.getBlock() == Blocks.FARMLAND ) {
                 level.setBlock( targetPos, Blocks.DIRT.defaultBlockState(), 3 );
-
+                
                 // Help mobs not fall through the farmland they break
-                if ( mob.blockPosition().equals( targetPos ) ) {
+                if( mob.blockPosition().equals( targetPos ) ) {
                     mob.setPos( mob.getX(), targetPos.getY() + 1, mob.getZ() );
                 }
             }
@@ -345,7 +340,7 @@ public class IdleActionsGoal extends Goal {
         // Update block damage
         final int damage = (int) Math.ceil( blockDamage * 10.0F ) - 1;
         if( damage != lastBlockDamage ) {
-            if ( lastBlockDamage == -1 ) {
+            if( lastBlockDamage == -1 ) {
                 BlockDestroyTracker.putEntry( mob, level, targetPos );
             }
             mob.level().destroyBlockProgress( mob.getId(), targetPos, damage );
@@ -448,10 +443,10 @@ public class IdleActionsGoal extends Goal {
     /** @return Called when a sight check hits blocks other than the target. Changes the target to the hit block if possible. */
     private boolean tryTargetObstructingBlock( BlockHitResult hit ) {
         BlockState block = mob.level().getBlockState( hit.getBlockPos() );
-        return switch (currentActivity) {
-            case FIDDLING -> tryTargetBlockFiddling(block, hit.getBlockPos());
-            case GRIEFING -> tryTargetBlockGriefing(block, hit.getBlockPos());
-            case HIDING -> tryTargetBlockHiding(block, hit.getBlockPos());
+        return switch( currentActivity ) {
+            case FIDDLING -> tryTargetBlockFiddling( block, hit.getBlockPos() );
+            case GRIEFING -> tryTargetBlockGriefing( block, hit.getBlockPos() );
+            case HIDING -> tryTargetBlockHiding( block, hit.getBlockPos() );
             default -> false;
         };
     }
@@ -459,7 +454,7 @@ public class IdleActionsGoal extends Goal {
     /** @return Tries to target the block at a position for any of the enabled actions. Returns true if successful. */
     private boolean tryTargetBlock( BlockPos pos ) {
         BlockState block = mob.level().getBlockState( pos );
-        if( block.isAir( ) ) return false;
+        if( block.isAir() ) return false;
         
         return hidingEnabled && tryTargetBlockHiding( block, pos ) ||
                 griefingEnabled && tryTargetBlockGriefing( block, pos ) ||
@@ -510,8 +505,8 @@ public class IdleActionsGoal extends Goal {
     
     /** @return Returns true if the specified block can be targeted for griefing. */
     private boolean isValidTargetForGriefing( BlockState state, BlockPos pos ) {
-        if ( madCreeper() && !canExplodeBlock( state.getBlock() ) ) return false;
-
+        if( madCreeper() && !canExplodeBlock( state.getBlock() ) ) return false;
+        
         if( state.liquid() || Config.IDLE.GRIEFING.targetBlacklist.get().matches( state ) ) {
             return false;
         }
@@ -537,14 +532,15 @@ public class IdleActionsGoal extends Goal {
                 state.is( BlockTags.WOODEN_DOORS ) || state.is( BlockTags.WOODEN_TRAPDOORS ) || state.is( Tags.Blocks.FENCE_GATES_WOODEN ) ) {
             return true;
         }
-        if( Config.IDLE.FIDDLING.targetSwitches.get() && (block instanceof LeverBlock || block instanceof ButtonBlock ) ) {
+        if( Config.IDLE.FIDDLING.targetSwitches.get() && (block instanceof LeverBlock || block instanceof ButtonBlock) ) {
             return true;
         }
         return Config.IDLE.FIDDLING.targetList.WHITELIST.get().matches( state );
     }
-
+    
     // TODO - Consider making dimension based configs for this. What can be considered natural
     //        and not highly depends on what other mods might add to worldgen
+    
     /** @return Returns true if the block is a natural light source. */
     private boolean isNaturalLightBlock( Block block ) {
         return block instanceof BaseFireBlock || block instanceof RedStoneOreBlock ||
@@ -559,25 +555,26 @@ public class IdleActionsGoal extends Goal {
      * @return Returns true if the specified block is not a container with a loot table tag.
      * @see net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity#tryLoadLootTable(CompoundTag)
      */
-    @SuppressWarnings("JavadocReference")
-    private boolean isLootContainerTargetable(BlockPos pos ) {
+    @SuppressWarnings( "JavadocReference" )
+    private boolean isLootContainerTargetable( BlockPos pos ) {
         BlockEntity container = mob.level().getBlockEntity( pos );
         if( container == null ) return true;
         
-        return !NBTHelper.containsString( container.saveWithoutMetadata( ), "LootTable" );
+        return !NBTHelper.containsString( container.saveWithoutMetadata(), "LootTable" );
     }
     
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the block. */
     private boolean madCreeper() { return Config.IDLE.GRIEFING.madCreepers.get() && mob instanceof Creeper; }
-
+    
     // TODO for 1.21+ - Might be a block tag for blocks that can be exploded or something
+    
     /**
      * Helper method for lazily determining if a block can be exploded or not.
      */
     private boolean canExplodeBlock( Block block ) {
         //noinspection deprecation
         final float blockResistance = block.getExplosionResistance();
-
+        
         return blockResistance < (float) Config.IDLE.GRIEFING.resistanceThreshold.get();
     }
 }

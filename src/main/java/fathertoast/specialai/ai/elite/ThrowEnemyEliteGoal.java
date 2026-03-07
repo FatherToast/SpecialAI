@@ -3,7 +3,6 @@ package fathertoast.specialai.ai.elite;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -92,12 +91,12 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
             default:
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called each tick while this AI is active and in grab mode. */
     private void tickGrab() {
         final LivingEntity target = mob.getTarget();
@@ -128,7 +127,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
                     mob.distanceToSqr( throwTarget ) <= Config.ELITE_AI.THROW_ENEMY.throwRangeSqrMax.get() ) {
                 // Dismount and prepare to throw next tick
                 final Entity throwEntity = mob.getPassengers().get( 0 );
-                throwEntity.dismountTo( throwEntity.getX(),  throwEntity.getY(), throwEntity.getZ() );
+                throwEntity.dismountTo( throwEntity.getX(), throwEntity.getY(), throwEntity.getZ() );
                 entityToThrow = throwEntity;
                 currentActivity = Activity.THROW;
             }
@@ -146,27 +145,27 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
             currentActivity = Activity.NONE;
         }
     }
-
+    
     /** Called the final executing tick while this AI is active and in throw mode. */
     private void tickThrow() {
-        if ( entityToThrow == null ) {
+        if( entityToThrow == null ) {
             currentActivity = Activity.NONE;
             return;
         }
-
+        
         // Throw the held entity
         entityToThrow.setOnGround( false );
         entityToThrow.fallDistance = 0.0F;
         final Vec3 jumpXZ = new Vec3( throwTarget.getX() - mob.getX(), 0.0, throwTarget.getZ() - mob.getZ() )
                 .normalize().scale( Config.ELITE_AI.THROW_ENEMY.throwSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
         entityToThrow.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.THROW_ENEMY.throwSpeedUpward.get(), jumpXZ.z );
-
+        
         // Sync to client for players
-        if ( entityToThrow instanceof ServerPlayer serverPlayer ) {
+        if( entityToThrow instanceof ServerPlayer serverPlayer ) {
             try {
                 serverPlayer.connection.send( new ClientboundSetEntityMotionPacket( entityToThrow ) );
             }
-            catch ( Exception e ) {
+            catch( Exception e ) {
                 e.printStackTrace();
             }
         }
@@ -197,7 +196,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
         int mostNearby = -1;
         for( Entity entity : entitiesNearTarget ) {
             // Check if the entity is a valid ally
-            if( !(entity instanceof Mob throwTarget ) || !throwTarget.isAlive() || target != throwTarget.getTarget() )
+            if( !(entity instanceof Mob throwTarget) || !throwTarget.isAlive() || target != throwTarget.getTarget() )
                 continue;
             final double distanceSqr = throwTarget.distanceToSqr( target );
             if( distanceSqr > maxTargetRange * maxTargetRange ) continue;

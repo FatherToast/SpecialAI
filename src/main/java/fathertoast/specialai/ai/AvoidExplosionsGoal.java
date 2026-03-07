@@ -2,7 +2,6 @@ package fathertoast.specialai.ai;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PathfinderMob;
-import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.entity.item.PrimedTnt;
@@ -68,7 +67,7 @@ public class AvoidExplosionsGoal extends Goal {
         if( nearby.isEmpty() )
             return false;
         entityToAvoid = getNearest( nearby );
-
+        
         Vec3 target = DefaultRandomPos.getPosAway( mob, 16, 7, entityToAvoid.position() );
         if( target == null )
             return false;
@@ -115,12 +114,12 @@ public class AvoidExplosionsGoal extends Goal {
     public void tick() {
         mob.getNavigation().setSpeedModifier( mob.distanceToSqr( entityToAvoid ) < 64.0 ? speedModifier : 1.0 );
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

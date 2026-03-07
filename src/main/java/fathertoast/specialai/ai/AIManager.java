@@ -53,6 +53,7 @@ import java.util.function.Supplier;
  * Additionally, it also uses the server tick to run actions that can't be done during the AI tick.
  */
 public final class AIManager {
+    
     // NBT tags used to store info about this mod's AI.
     private static final String TAG_DEPACIFY = "depacify";
     private static final String TAG_AGGRESSIVE = "aggressive";
@@ -191,7 +192,7 @@ public final class AIManager {
         PathNavigation nav = entity.getNavigation();
         if( nav instanceof GroundPathNavigation ) {
             int priority = 1;
-            // Remove any pre-existing door-breaking ai
+            // Remove any pre-existing door-breaking AI
             for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
                 if( task.getGoal() instanceof BreakDoorGoal ) {
                     if( task.getPriority() < priority ) {
@@ -200,8 +201,7 @@ public final class AIManager {
                     entity.goalSelector.removeGoal( task.getGoal() );
                 }
             }
-            
-            // Add the new ai
+            // Add the new AI
             ((GroundPathNavigation) nav).setCanOpenDoors( true );
             entity.goalSelector.addGoal( priority, new SpecialBreakDoorGoal( entity ) );
         }

@@ -6,7 +6,6 @@ import fathertoast.crust.api.config.common.ConfigManager;
 import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.value.*;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -85,13 +84,13 @@ public class IdleConfig extends AbstractConfigFile {
         public final DoubleField breakSpeed;
         public final BooleanField madCreepers;
         public final DoubleField resistanceThreshold;
-
+        
         public final BooleanField targetLights;
         public final BooleanField targetBeds;
         public final BlockListField targetWhitelist;
         public final BlockListField targetWhitelistLootable;
         public final BlockListField targetBlacklist;
-
+        
         Griefing( IdleConfig parent ) {
             super( parent, "idle_griefing",
                     "Options to customize monsters' idle block breaking behavior." );
@@ -130,7 +129,7 @@ public class IdleConfig extends AbstractConfigFile {
             resistanceThreshold = SPEC.define( new DoubleField( "resistance_threshold", 6.0D, DoubleField.Range.NON_NEGATIVE,
                     "If 'mad_creepers' is enabled, creepers will not try to explode blocks with an explosion resistance value equal to or higher than this value.",
                     "Blocks with negative resistance such as bedrock are automatically omitted." ) );
-
+            
             SPEC.newLine();
             
             targetLights = SPEC.define( new BooleanField( "targets.auto_target_lights", true,

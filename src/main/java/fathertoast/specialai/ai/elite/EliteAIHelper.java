@@ -11,7 +11,6 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileWeaponItem;
@@ -29,7 +28,7 @@ public final class EliteAIHelper {
     static String getLangKey( EliteAIType ai, String subKey ) { return LANG_KEY + ai.getKey() + "." + subKey; }
     
     /** The translation text component. */
-    static Component getText(EliteAIType ai, String subKey ) { return Component.translatable( getLangKey( ai, subKey ) ); }
+    static Component getText( EliteAIType ai, String subKey ) { return Component.translatable( getLangKey( ai, subKey ) ); }
     
     /**
      * @param entity Applies a random elite AI to this mob.
@@ -94,7 +93,7 @@ public final class EliteAIHelper {
         if( Config.ELITE_AI.GENERAL.enablePreferMelee.get() ) {
             for( InteractionHand hand : InteractionHand.values() ) {
                 ItemStack held = entity.getItemInHand( hand );
-
+                
                 if( !held.isEmpty() && held.getItem() instanceof ProjectileWeaponItem ) {
                     entity.setItemInHand( hand, new ItemStack( Items.GOLDEN_SWORD ) );
                 }

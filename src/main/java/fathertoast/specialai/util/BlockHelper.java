@@ -7,7 +7,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
@@ -39,7 +38,7 @@ public final class BlockHelper {
     private static final String TAG_HIDE_DISABLED = SpecialAI.MOD_ID + "_hide_disabled";
     
     /** @return Returns true if the entity can target the block. */
-    public static boolean shouldDamage(BlockState block, Mob entity, boolean needsTool, Level level, BlockPos pos ) {
+    public static boolean shouldDamage( BlockState block, Mob entity, boolean needsTool, Level level, BlockPos pos ) {
         return block.getDestroySpeed( level, pos ) >= 0.0F && !block.liquid() &&
                 (!needsTool || BlockHelper.hasCorrectTool( entity.getMainHandItem(), block )) &&
                 ForgeHooks.canEntityDestroy( entity.level(), pos, entity );
@@ -89,7 +88,7 @@ public final class BlockHelper {
         
         // Apply potion effects
         if( MobEffectUtil.hasDigSpeed( entity ) ) {
-            digSpeed *= 1.0F + (float) ( MobEffectUtil.getDigSpeedAmplification( entity ) + 1 ) * 0.2F;
+            digSpeed *= 1.0F + (float) (MobEffectUtil.getDigSpeedAmplification( entity ) + 1) * 0.2F;
         }
         if( entity.hasEffect( MobEffects.DIG_SLOWDOWN ) ) {
             digSpeed *= getDigSpeedSlowdown( entity.getEffect( MobEffects.DIG_SLOWDOWN ) );
@@ -113,7 +112,7 @@ public final class BlockHelper {
      */
     private static float getDigSpeedSlowdown( @Nullable MobEffectInstance effect ) {
         if( effect == null ) return 1.0F;
-        return switch ( effect.getAmplifier() ) {
+        return switch( effect.getAmplifier() ) {
             case 0 -> 0.3F;
             case 1 -> 0.09F;
             case 2 -> 0.0027F;
@@ -124,6 +123,7 @@ public final class BlockHelper {
     /**
      * Checks whether a mob can be hidden in a block.
      * <p>
+     *
      * @param level The world we live in. Absolutely mad.
      * @param pos   Position to hide at.
      * @return True if a mob can be hidden here.
@@ -131,14 +131,14 @@ public final class BlockHelper {
     public static boolean canHideMob( Level level, BlockPos pos ) {
         BlockEntity blockEntity = level.getExistingBlockEntity( pos );
         if( blockEntity == null ) return false;
-
-        CompoundTag tag = blockEntity.getPersistentData( );
+        
+        CompoundTag tag = blockEntity.getPersistentData();
         if( NBTHelper.containsNumber( tag, TAG_HIDE_DISABLED ) ) {
             if( tag.getBoolean( TAG_HIDE_DISABLED ) ) return false;
         }
         else if( blockEntity instanceof RandomizableContainerBlockEntity ) {
             tag.putBoolean( TAG_HIDE_DISABLED, !Config.IDLE.HIDING.lootableChance.rollChance( level.getRandom(), level, pos )
-                    && NBTHelper.containsString( blockEntity.saveWithoutMetadata( ), "LootTable" ) );
+                    && NBTHelper.containsString( blockEntity.saveWithoutMetadata(), "LootTable" ) );
         }
         return !NBTHelper.containsCompound( tag, TAG_HIDDEN_MOB );
     }
@@ -147,6 +147,7 @@ public final class BlockHelper {
      * Hides a mob in a block. Prior to calling this, make sure the mob can be hidden here
      * via {@link #canHideMob(Level, BlockPos)}.
      * <p>
+     *
      * @param world The world we live in. Absolutely mad.
      * @param pos   Position to hide at.
      * @param mob   The entity to hide.
@@ -165,9 +166,10 @@ public final class BlockHelper {
     /**
      * Checks if there is a hiding mob. If so, unhides the mob and targets the entity that disturbed it.
      * <p>
-     * @param level  The world we live in. Absolutely mad.
-     * @param pos    Position to check for a hidden mob.
-     * @param player The player triggering this check.
+     *
+     * @param level       The world we live in. Absolutely mad.
+     * @param pos         Position to check for a hidden mob.
+     * @param player      The player triggering this check.
      * @param forceUnhide If true and a hidden mob is found, force the mob to spawn even
      *                    if there isn't really enough space for it.
      */
@@ -175,7 +177,7 @@ public final class BlockHelper {
         if( !(level instanceof ServerLevel serverLevel) ) return;
         BlockEntity tileEntity = level.getBlockEntity( pos );
         if( tileEntity == null ) return;
-
+        
         // Get the tag if it exists
         CompoundTag data = tileEntity.getPersistentData();
         if( !NBTHelper.containsCompound( data, TAG_HIDDEN_MOB ) ) return;
@@ -187,25 +189,26 @@ public final class BlockHelper {
         if( optional.isEmpty() ) return;
         
         // Load successful!
-        Entity mob = optional.get();;
+        Entity mob = optional.get();
+        ;
         BlockPos spawnPos = pos.above();
         mob.setPos( spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D );
-
+        
         // If we are not forcefully spawning the mob, check if it
         // has space to be placed above where it is hiding
-        if ( !forceUnhide ) {
+        if( !forceUnhide ) {
             // Check if the mob has space to unhide
-            if (!level.noCollision(mob.getType().getAABB(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D))) {
+            if( !level.noCollision( mob.getType().getAABB( spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D ) ) ) {
                 mob.discard();
                 return;
             }
         }
         // Remove the mob data from tile entity nbt
         data.remove( TAG_HIDDEN_MOB );
-
+        
         // Add the mob to the world and play effects
         serverLevel.addWithUUID( mob );
-
+        
         if( mob instanceof Mob mobEntity ) {
             if( player != null && !player.isSpectator() && player.isAlive() && mobEntity.canAttack( player ) ) {
                 mobEntity.setTarget( player );

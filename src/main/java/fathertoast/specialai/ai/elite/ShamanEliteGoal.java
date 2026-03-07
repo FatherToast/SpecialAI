@@ -2,7 +2,6 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
-import net.minecraft.client.renderer.EffectInstance;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -90,12 +89,12 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
             }
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

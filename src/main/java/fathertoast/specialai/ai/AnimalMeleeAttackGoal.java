@@ -9,7 +9,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.animal.*;
-import net.minecraft.world.entity.animal.camel.Camel;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
@@ -42,7 +41,7 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
         if( entity instanceof Chicken || entity instanceof AbstractFish ) {
             return 1.6;
         }
-        if ( entity instanceof Frog ) {
+        if( entity instanceof Frog ) {
             return 1.5;
         }
         if( entity instanceof Animal ) {
@@ -64,7 +63,7 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
         if( entity instanceof Cow || entity instanceof AbstractHorse ) {
             return 4.0F;
         }
-        if ( entity instanceof Sniffer ) {
+        if( entity instanceof Sniffer ) {
             return 6.0F;
         }
         return 3.0F;
@@ -97,7 +96,7 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
     @Override
     protected void checkAndPerformAttack( @Nullable LivingEntity target, double distanceSqr ) {
         // Target is null or an invul player, abort attacking
-        if ( target == null || isInvulPlayer( target ) ) {
+        if( target == null || isInvulPlayer( target ) ) {
             mob.setTarget( null );
             mob.getNavigation().stop();
         }
@@ -107,10 +106,10 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
             doHurtTarget( mob, target );
         }
     }
-
+    
     /** @return True if the target is a player in either creative or spec mode. */
     private boolean isInvulPlayer( LivingEntity target ) {
-        return target instanceof Player player && ( player.isCreative() || player.isSpectator() );
+        return target instanceof Player player && (player.isCreative() || player.isSpectator());
     }
     
     /**
@@ -122,10 +121,10 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
     public static void doHurtTarget( Mob mob, Entity target ) {
         // Try to perform the attack organically
         try {
-            mob.doHurtTarget(target);
+            mob.doHurtTarget( target );
             return;
         }
-        catch (Exception ex) {
+        catch( Exception ex ) {
             // Most likely failed due to missing attack damage/knockback attributes
         }
         
@@ -166,7 +165,7 @@ public class AnimalMeleeAttackGoal extends MeleeAttackGoal {
                 mob.setDeltaMovement( mob.getDeltaMovement().multiply( 0.6, 1.0, 0.6 ) );
             }
             // Handle shield
-            if(target instanceof Player player ) {
+            if( target instanceof Player player ) {
                 maybeDisableShield( mob, player, mob.getMainHandItem(), player.isUsingItem() ? player.getUseItem() : ItemStack.EMPTY );
             }
             

@@ -2,7 +2,6 @@ package fathertoast.specialai.ai;
 
 import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.specialai.config.Config;
-import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
@@ -10,7 +9,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.entity.monster.Zoglin;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -124,13 +122,13 @@ public class RiderGoal extends Goal {
     /** @return True if the given mount is a valid mount and is size-compatible with the rider. */
     private boolean isValidMount( LivingEntity mount ) {
         // Don't try to mount creatures that are pissed and want to unalive you
-        if ( isMountAggro( mount ) ) return false;
-
+        if( isMountAggro( mount ) ) return false;
+        
         if( Config.GENERAL.JOCKEYS.mountBlacklist.get().contains( mount ) ) return false;
         
         if( isSmallMount( mount ) ) return isSmallRider();
         if( isNormalMount( mount ) ) return !isSmallRider();
-
+        
         return false; // The mob was not a mount
     }
     
@@ -149,25 +147,25 @@ public class RiderGoal extends Goal {
     private boolean isSmallRider() {
         return isSmall || mob.isBaby() || mob instanceof Slime && ((Slime) mob).isTiny();
     }
-
+    
     /**
      * @return True if the given entity is a mob and is aggroed either the rider
-     *         or a different entity of the same type as the rider.
+     * or a different entity of the same type as the rider.
      */
     private boolean isMountAggro( LivingEntity mount ) {
         // Check brain first. Some "newer" mobs don't set their target field
-        if ( mount.getBrain().hasMemoryValue( MemoryModuleType.ATTACK_TARGET ) ) {
+        if( mount.getBrain().hasMemoryValue( MemoryModuleType.ATTACK_TARGET ) ) {
             Optional<LivingEntity> memoryTarget = mount.getBrain().getMemory( MemoryModuleType.ATTACK_TARGET );
-
-            if ( memoryTarget.isPresent() && ( memoryTarget.get() == mob || memoryTarget.get().getType() == mob.getType() ) )
+            
+            if( memoryTarget.isPresent() && (memoryTarget.get() == mob || memoryTarget.get().getType() == mob.getType()) )
                 return true;
         }
-
+        
         // No target found in the brain's memories, check target field
         return mount instanceof Mob mobMount && mobMount.getTarget() != null
-                && ( mobMount.getTarget() == mob || mobMount.getTarget().getType() == mob.getType() );
+                && (mobMount.getTarget() == mob || mobMount.getTarget().getType() == mob.getType());
     }
-
+    
     /**
      * Used to connect a rider to its target mount, so it can start riding.
      * This strategy is used because mounting during the AI tick can potentially cause issues.

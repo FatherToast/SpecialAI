@@ -139,7 +139,7 @@ public final class VillagerAI {
         
         if( nearbyVillagers.isEmpty() ) return;
         
-        int repChange = (int) Config.VILLAGES.REPUTATION.repChangingCreatures.getValue( event.getEntity() );
+        int repChange = Config.VILLAGES.REPUTATION.repChangingCreatures.getOrElse( event.getEntity(), 0 );
         
         // Nothing would change, abort
         if( repChange == 0 ) return;
@@ -158,7 +158,6 @@ public final class VillagerAI {
         if( serverLevel.isVillage( player.blockPosition() ) ) {
             for( Villager villager : nearbyVillagers ) {
                 int reputationForPlayer = villager.getPlayerReputation( player );
-                
                 // Villagers will overlook killing bad reputation creatures if the
                 // player has very good reputation (or whatever the config says is the threshold)
                 if( gossipType == GossipType.MINOR_POSITIVE && reputationForPlayer >= Config.VILLAGES.REPUTATION.killCreatureThreshold.get() )

@@ -5,7 +5,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 
-
 import java.util.EnumSet;
 
 /**
@@ -68,12 +67,12 @@ public class SprintEliteGoal extends AbstractEliteGoal {
         }
         cooldownTimer++;
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {

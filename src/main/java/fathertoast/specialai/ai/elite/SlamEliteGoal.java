@@ -9,7 +9,6 @@ import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -88,12 +87,12 @@ public class SlamEliteGoal extends AbstractEliteGoal {
             default:
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called each tick while this AI is active and in charge up mode. */
     private void tickChargeUp() {
         final LivingEntity target = mob.getTarget();
@@ -117,7 +116,7 @@ public class SlamEliteGoal extends AbstractEliteGoal {
     }
     
     /** @return The expected swing animation time, calculated the same way as {@link LivingEntity#getCurrentSwingDuration()}. */
-    @SuppressWarnings("JavadocReference")
+    @SuppressWarnings( "JavadocReference" )
     private int getSwingDuration() {
         if( MobEffectUtil.hasDigSpeed( mob ) ) {
             return 6 - (1 + MobEffectUtil.getDigSpeedAmplification( mob ));

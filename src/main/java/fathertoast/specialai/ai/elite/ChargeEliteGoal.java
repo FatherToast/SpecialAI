@@ -4,8 +4,6 @@ import fathertoast.specialai.ai.AnimalMeleeAttackGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -97,12 +95,12 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
             default:
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called each tick while this AI is active and in charge up mode. */
     private void tickChargeUp() {
         final LivingEntity target = mob.getTarget();
