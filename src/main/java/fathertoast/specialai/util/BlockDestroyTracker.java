@@ -30,8 +30,11 @@ public class BlockDestroyTracker {
     private static int timeNextUpdate = 0;
     
     /**
-     * Adds a destroy progress entry to the queue of the given level.<br>
+     * Adds a destroy progress entry to the queue of the given level.
+     * <br>
      * This method does not check for duplicate entries before insertion.
+     * <br><br>
+     * Calling this outside the mains server thread can cause co-mod exceptions, take caution.
      */
     public static void putEntry( LivingEntity blockBreaker, Level level, BlockPos pos ) {
         ENTRIES_PER_LEVEL.get( level.dimension() ).add( new Entry( blockBreaker, GlobalPos.of( level.dimension(), pos ) ) );
