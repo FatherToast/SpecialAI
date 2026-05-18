@@ -113,11 +113,12 @@ public class SpecialAI {
         //VillagerAI.SENSOR_TYPE_REGISTER.register( modBus );
         //VillagerAI.ACTIVITY_REGISTER.register( modBus );
         
+        
         Config.init();
         
         // Tell Forge to open the config editor when our mod's "Config" button is clicked in the Mods screen
-        // noinspection Convert2MethodRef
-        DistExecutor.unsafeRunWhenOn( Dist.CLIENT, () -> () -> ClientConfigUtil.registerConfigButtonAsEditScreen() );
+        DistExecutor.unsafeRunWhenOn( Dist.CLIENT, () ->
+                () -> ClientConfigUtil.registerConfigButtonAsEditScreen( context.getContainer() ) );
     }
     
     
