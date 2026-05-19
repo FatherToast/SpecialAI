@@ -77,22 +77,22 @@ public class EatBreedingItemGoal extends Goal {
         List<Entity> list = mob.level().getEntities( mob, mob.getBoundingBox().inflate( 0.2, 0.0, 0.2 ) );
         if( list.contains( target ) ) {
             // Tick cooldown
-            if ( cooldown > 0 ) {
+            if( cooldown > 0 ) {
                 --cooldown;
             }
             else {
                 // Eat one item out of the stack
                 ItemStack item = target.getItem();
-                if ( Config.GENERAL.ANIMALS.eatingHeals.get() ) {
+                if( Config.GENERAL.ANIMALS.eatingHeals.get() ) {
                     final FoodProperties food = item.getItem().getFoodProperties( item, mob );
                     final float healAmount = Math.max( food == null ? 0.0F : food.getNutrition(), 1.0F );
                     mob.heal( healAmount );
                 }
-                triggerEatingEffects(item);
+                triggerEatingEffects( item );
                 mob.getNavigation().stop();
-
+                
                 item.shrink( 1 );
-                if ( item.isEmpty() ) {
+                if( item.isEmpty() ) {
                     target.discard();
                 }
                 cooldown = Config.GENERAL.ANIMALS.eatingCooldown.get();
@@ -104,6 +104,7 @@ public class EatBreedingItemGoal extends Goal {
             if( reach > 0.0 && mob.distanceToSqr( target ) < reach * reach ) {
                 target.setDeltaMovement( mob.position().subtract( target.position() )
                         .normalize().scale( 0.05 ).add( 0.0, 0.04, 0.0 ) );
+                target.hasImpulse = true;
             }
             
             if( mob.getNavigation().isDone() ) {
@@ -111,12 +112,12 @@ public class EatBreedingItemGoal extends Goal {
             }
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Plays audio-visual effects when a food item is eaten. */
     private void triggerEatingEffects( ItemStack item ) {
         // Spawn particles
