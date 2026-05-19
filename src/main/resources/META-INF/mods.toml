@@ -42,7 +42,7 @@ side = "BOTH"
 [[dependencies.specialai]]
 modId = "crust"
 mandatory = true
-versionRange = "[4.15.23,)"
+versionRange = "[4.16.25,)"
 ordering = "BEFORE"
 side = "BOTH"
 
