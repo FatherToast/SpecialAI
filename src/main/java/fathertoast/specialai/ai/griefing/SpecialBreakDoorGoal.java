@@ -13,7 +13,7 @@ import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.util.GoalUtils;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -107,6 +107,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     }
     
     /** @return Returns true if the block is generally valid for targeting, not taking tool or other requirements under consideration. */
+    @SuppressWarnings( "UnstableApiUsage" )
     private boolean isValidBlock( BlockState target ) {
         // Do not allow targets that are considered air
         if( target.isAir() ) {
@@ -168,8 +169,8 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         
         // Play hit effects
         if( hitCounter == 0 ) {
-            // TODO - There is no such thing as block material anymore, hard to tell what is metal
-            if( targetBlock.getBlock() == Blocks.IRON_DOOR || targetBlock.getBlock() == Blocks.IRON_TRAPDOOR ) {
+            // Boldly assume blocks with the metal sound type are, in fact, metal blocks!
+            if( targetBlock.getSoundType() == SoundType.METAL ) {
                 LevelEventHelper.ZOMBIE_ATTACK_IRON_DOOR.play( mob.level(), doorPos );
             }
             else {
