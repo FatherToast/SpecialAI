@@ -5,10 +5,12 @@ import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
 import fathertoast.crust.api.config.common.ConfigUtil;
 import fathertoast.crust.api.config.common.field.*;
+import fathertoast.crust.api.config.common.field.collection.EntityMapField;
 import fathertoast.crust.api.config.common.file.TomlHelper;
-import fathertoast.crust.api.config.common.value.EntityEntry;
-import fathertoast.crust.api.config.common.value.EntityList;
 import fathertoast.crust.api.config.common.value.EnvironmentList;
+import fathertoast.crust.api.config.common.value.collection.EntityMap;
+import fathertoast.crust.api.config.common.value.collection.value.ArrayValueCodec;
+import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
 import fathertoast.specialai.ai.elite.EliteAIType;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import net.minecraft.ChatFormatting;
@@ -21,11 +23,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings( "UnstableApiUsage" )
 public class EliteAIConfig extends AbstractConfigFile {
     
     public final EliteGeneral GENERAL;
     
     private final List<EliteAICategory> ELITE_AI_CATEGORIES = new ArrayList<>();
+    
     public final Leap LEAP;
     public final Jump JUMP;
     public final Sprint SPRINT;
@@ -50,8 +54,6 @@ public class EliteAIConfig extends AbstractConfigFile {
         SPEC.newLine();
         SPEC.comment( "See the appendix at the bottom of this file for more information on the elite AI patterns available." );
         
-        SPEC.fileOnlyNewLine();
-        SPEC.describeEntityList();
         SPEC.fileOnlyNewLine();
         SPEC.describeEnvironmentListPart1of2();
         
@@ -91,12 +93,12 @@ public class EliteAIConfig extends AbstractConfigFile {
         SPEC.describeEnvironmentListPart2of2();
     }
     
-    /** @return A list of all elite ai categories. */
+    /** @return A list of all elite AI categories. */
     public List<EliteAICategory> getEliteAICategories() { return Collections.unmodifiableList( ELITE_AI_CATEGORIES ); }
     
     public static class EliteGeneral extends AbstractConfigCategory<EliteAIConfig> {
         
-        public final EntityListField.Combined entityList;
+        public final EntityMapField<Double[]> entityList;
         
         public final DoubleField.EnvironmentSensitiveWeightedList<EliteAIType> eliteAIWeights;
         
@@ -108,23 +110,11 @@ public class EliteAIConfig extends AbstractConfigFile {
             super( parent, "general",
                     "Options for customizing the elite AI system and options that affect all elite AI patterns." );
             
-            entityList = new EntityListField.Combined(
-                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            null,
-                            new EntityEntry( EntityType.ZOMBIE, 0.04 ),
-                            // Skeletons
-                            new EntityEntry( EntityType.SKELETON, 0.1, 0.02 ), new EntityEntry( EntityType.STRAY, 0.1, 0.02 ),
-                            new EntityEntry( EntityType.WITHER_SKELETON, 0.1, 0.02 ),
-                            // Nether
-                            new EntityEntry( EntityType.PIGLIN, 0.04, 0.04, 0.02 ), new EntityEntry( EntityType.ZOMBIFIED_PIGLIN, 0.04, 0.04, 0.02 ),
-                            new EntityEntry( EntityType.PIGLIN_BRUTE, 0.5, 0.01, 0.01 )
-                    ).setRange0to1(),
-                            "List of mobs that can gain random elite AI patterns and their chances to gain those AIs.",
-                            "Additional values after the entity type are the chances (0.0 to 1.0) for entities of that type to spawn with elite AI. " +
-                                    "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack.",
-                            "AI patterns applied this way are in addition to any that you have applied directly in the specific categories below." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList(null).setNoValues() ) )
-            );
+            entityList = SPEC.define( new EntityMapField<>( "entities", createDefaultEntityList(),
+                    "List of mobs that can gain random elite AI patterns and their chances to gain those AIs.",
+                    "Additional values after the entity type are the chances (0.0 to 1.0) for entities of that type to spawn with elite AI. " +
+                            "You can specify multiple chances for each entity - each chance will be rolled and multiple AIs can stack.",
+                    "AI patterns applied this way are in addition to any that you have applied directly in the specific categories below." ) );
             
             SPEC.newLine();
             
@@ -175,6 +165,20 @@ public class EliteAIConfig extends AbstractConfigFile {
                             "melee preference). This equipment is designed to visually distinguish the elite AI pattern(s) on " +
                             "entities, so disabling this may make it more difficult for players to understand what they are fighting.",
                     "Note that each equipment item can be disabled individually and some can be modified (see categories below)." ) );
+        }
+        
+        private static EntityMap<Double[]> createDefaultEntityList() {
+            return new EntityMap.Builder<>( ArrayValueCodec.of( 0, Double.class, DoubleValueCodec.PERCENT ) )
+                    .put( EntityType.ZOMBIE, new Double[] { 0.04 } )
+                    // Skeletons
+                    .put( EntityType.SKELETON, new Double[] { 0.1, 0.02 } )
+                    .put( EntityType.STRAY, new Double[] { 0.1, 0.02 } )
+                    .put( EntityType.WITHER_SKELETON, new Double[] { 0.1, 0.02 } )
+                    // Nether
+                    .put( EntityType.PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )
+                    .put( EntityType.ZOMBIFIED_PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )
+                    .put( EntityType.PIGLIN_BRUTE, new Double[] { 0.5, 0.01, 0.01 } )
+                    .build();
         }
     }
     
@@ -405,7 +409,7 @@ public class EliteAIConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             arrowDamage = SPEC.define( new DoubleField( "arrow_damage", 3.0, 0.25, Double.POSITIVE_INFINITY,
-                    "The base damage dealt by arrows. Note this varies \u00b10.25, gains +0.11 per difficulty level, " +
+                    "The base damage dealt by arrows. Note this varies " + ConfigUtil.PLUS_OR_MINUS + "0.25, gains +0.11 per difficulty level, " +
                             "and final damage is scaled by total velocity (this is the normal behavior for monster-fired arrows)." ) );
             arrowVariance = SPEC.define( new DoubleField( "arrow_variance", 20.0, DoubleField.Range.NON_NEGATIVE,
                     "The direction variance for fired arrows. The higher this value, the less accurate arrows are." ) );
@@ -782,7 +786,7 @@ public class EliteAIConfig extends AbstractConfigFile {
         
         public final EliteAIType TYPE;
         
-        public final EntityListField.Combined entityList;
+        public final EntityMapField<Double> entityList;
         
         public final BooleanField preferMelee;
         
@@ -809,13 +813,10 @@ public class EliteAIConfig extends AbstractConfigFile {
             TYPE = ai;
             parent.ELITE_AI_CATEGORIES.add( this );
             
-            entityList = new EntityListField.Combined(
-                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(null).setSinglePercent(),
-                            "List of mobs (by entity type registry id) that are given this AI directly " +
-                                    "(separate from the general entity list chances and AI weights).",
-                            "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with this AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList(null).setNoValues() ) )
-            );
+            entityList = SPEC.define( new EntityMapField<>( "entities", new EntityMap.Builder<>( DoubleValueCodec.PERCENT ).build(),
+                    "List of mobs (by entity type registry id) that are given this AI directly " +
+                            "(separate from the general entity list chances and AI weights).",
+                    "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with this AI." ) );
             
             SPEC.newLine();
             

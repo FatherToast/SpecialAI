@@ -25,6 +25,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.BrainBuilder;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingMakeBrainEvent;
@@ -37,6 +38,7 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.List;
 import java.util.function.Supplier;
 
+@SuppressWarnings( "UnstableApiUsage" )
 public final class VillagerAI {
     
     
@@ -82,18 +84,19 @@ public final class VillagerAI {
      */
     public static void onBlockBreak( BlockEvent.BreakEvent event ) {
         if( !event.getLevel().isClientSide() ) {
-            ServerPlayer player = (ServerPlayer) event.getPlayer();
-            ServerLevel serverLevel = player.serverLevel();
+            final ServerPlayer player = (ServerPlayer) event.getPlayer();
+            final ServerLevel serverLevel = player.serverLevel();
+            final BlockState blockState = event.getState();
             
             // Don't do anything if the player is in creative or spec mode
             if( player.isCreative() || player.isSpectator() ) return;
             
             // Check if there are even villagers nearby before doing anything else
-            List<Villager> nearbyVillagers = event.getLevel().getEntitiesOfClass( Villager.class, event.getPlayer().getBoundingBox().inflate( 15 ) );
+            final List<Villager> nearbyVillagers = serverLevel.getEntitiesOfClass( Villager.class, player.getBoundingBox().inflate( 15 ) );
             
             if( nearbyVillagers.isEmpty() ) return;
             
-            int repChange = (int) Config.VILLAGES.REPUTATION.repChangingBlocks.getValue( event.getState().getBlock() );
+            int repChange = Config.VILLAGES.REPUTATION.repChangingBlocks.getOrElse( blockState, 0 );
             
             // Nothing would change, abort
             if( repChange == 0 ) return;
@@ -114,7 +117,7 @@ public final class VillagerAI {
                     
                     // Villagers will overlook breaking bad reputation blocks if the
                     // player has very good reputation (or whatever the config says is the threshold)
-                    if( gossipType == GossipType.MINOR_POSITIVE && reputationForPlayer >= Config.VILLAGES.REPUTATION.breakBlockThreshold.get() )
+                    if( gossipType == GossipType.MINOR_POSITIVE && reputationForPlayer >= Config.VILLAGES.REPUTATION.breakThreshold.get() )
                         return;
                     
                     villager.getGossips().add( player.getUUID(), gossipType, repChange );
@@ -160,7 +163,7 @@ public final class VillagerAI {
                 int reputationForPlayer = villager.getPlayerReputation( player );
                 // Villagers will overlook killing bad reputation creatures if the
                 // player has very good reputation (or whatever the config says is the threshold)
-                if( gossipType == GossipType.MINOR_POSITIVE && reputationForPlayer >= Config.VILLAGES.REPUTATION.killCreatureThreshold.get() )
+                if( gossipType == GossipType.MINOR_POSITIVE && reputationForPlayer >= Config.VILLAGES.REPUTATION.killThreshold.get() )
                     return;
                 
                 villager.getGossips().add( player.getUUID(), gossipType, repChange );
@@ -184,7 +187,7 @@ public final class VillagerAI {
         
         if( nearbyVillagers.isEmpty() ) return;
         
-        int repChange = Config.VILLAGES.REPUTATION.trampleFarmlandAnger.get();
+        int repChange = Config.VILLAGES.REPUTATION.trampleAnger.get();
         
         // Nothing would change, abort
         if( repChange == 0 ) return;

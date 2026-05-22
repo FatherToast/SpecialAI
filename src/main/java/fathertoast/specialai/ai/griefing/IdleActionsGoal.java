@@ -34,6 +34,7 @@ import java.util.EnumSet;
  * This AI causes the entity to seek out blocks to either destroy or interact with (usually right click),
  * depending on which actions are enabled.
  */
+@SuppressWarnings( "UnstableApiUsage" )
 public class IdleActionsGoal extends Goal {
     /** Differentiates between the different actions that can be taken by this AI. */
     private enum Activity { NONE, HIDING, GRIEFING, FIDDLING }
@@ -463,7 +464,7 @@ public class IdleActionsGoal extends Goal {
     
     /** @return Tries to target a block for hiding. Returns true if successful. */
     private boolean tryTargetBlockHiding( BlockState block, BlockPos pos ) {
-        if( isValidTargetForHiding( block, pos ) && BlockHelper.canHideMob( mob.level(), pos ) ) {
+        if( isValidTargetForHiding( block ) && BlockHelper.canHideMob( mob.level(), pos ) ) {
             currentActivity = Activity.HIDING;
             targetPos = pos.immutable();
             targetBlock = block;
@@ -496,18 +497,16 @@ public class IdleActionsGoal extends Goal {
     }
     
     /** @return Returns true if the specified block can be targeted for hiding. */
-    private boolean isValidTargetForHiding( BlockState state, BlockPos pos ) {
-        if( Config.IDLE.HIDING.targetList.BLACKLIST.get().matches( state ) ) {
-            return false;
-        }
-        return Config.IDLE.HIDING.targetList.WHITELIST.get().matches( state );
+    private boolean isValidTargetForHiding( BlockState state ) {
+        return Config.IDLE.HIDING.targetList.contains( state );
     }
     
     /** @return Returns true if the specified block can be targeted for griefing. */
     private boolean isValidTargetForGriefing( BlockState state, BlockPos pos ) {
         if( madCreeper() && !canExplodeBlock( state.getBlock() ) ) return false;
         
-        if( state.liquid() || Config.IDLE.GRIEFING.targetBlacklist.get().matches( state ) ) {
+        // noinspection deprecation
+        if( state.liquid() || Config.IDLE.GRIEFING.targetBlacklist.get().contains( state ) ) {
             return false;
         }
         if( Config.IDLE.GRIEFING.targetLights.get() && state.getLightEmission( mob.level(), pos ) > 1 && !isNaturalLightBlock( state.getBlock() ) ) {
@@ -516,15 +515,15 @@ public class IdleActionsGoal extends Goal {
         if( Config.IDLE.GRIEFING.targetBeds.get() && state.getBlock() instanceof BedBlock ) {
             return true;
         }
-        if( Config.IDLE.GRIEFING.targetWhitelistLootable.get().matches( state ) ) {
+        if( Config.IDLE.GRIEFING.targetWhitelistLootable.get().contains( state ) ) {
             return isLootContainerTargetable( pos );
         }
-        return Config.IDLE.GRIEFING.targetWhitelist.get().matches( state );
+        return Config.IDLE.GRIEFING.targetWhitelist.get().contains( state );
     }
     
     /** @return Returns true if the specified block can be targeted for fiddling. */
     private boolean isValidTargetForFiddling( BlockState state ) {
-        if( Config.IDLE.FIDDLING.targetList.BLACKLIST.get().matches( state ) ) {
+        if( Config.IDLE.FIDDLING.targetBlacklist.contains( state ) ) {
             return false;
         }
         final Block block = state.getBlock();
@@ -535,7 +534,7 @@ public class IdleActionsGoal extends Goal {
         if( Config.IDLE.FIDDLING.targetSwitches.get() && (block instanceof LeverBlock || block instanceof ButtonBlock) ) {
             return true;
         }
-        return Config.IDLE.FIDDLING.targetList.WHITELIST.get().matches( state );
+        return Config.IDLE.FIDDLING.targetWhitelist.contains( state );
     }
     
     // TODO - Consider making dimension based configs for this. What can be considered natural
@@ -566,15 +565,13 @@ public class IdleActionsGoal extends Goal {
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the block. */
     private boolean madCreeper() { return Config.IDLE.GRIEFING.madCreepers.get() && mob instanceof Creeper; }
     
-    // TODO for 1.21+ - Might be a block tag for blocks that can be exploded or something
+    // TODO for 1.21+ - Might be a block tag for blocks that can be exploded or something.
+    //                  We could also maybe run a similar check to the default explosion damage calculator.
     
-    /**
-     * Helper method for lazily determining if a block can be exploded or not.
-     */
+    /** Helper method for lazily determining if a block can be exploded or not. */
     private boolean canExplodeBlock( Block block ) {
         //noinspection deprecation
         final float blockResistance = block.getExplosionResistance();
-        
         return blockResistance < (float) Config.IDLE.GRIEFING.resistanceThreshold.get();
     }
 }

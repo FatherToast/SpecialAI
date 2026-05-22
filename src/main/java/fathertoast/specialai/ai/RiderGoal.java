@@ -22,6 +22,7 @@ import java.util.function.Supplier;
  * Rider size must match up to mount size to be a valid jockey pair.
  * Normal-sized riders and mounts count as small-sized if they are babies.
  */
+@SuppressWarnings( "UnstableApiUsage" )
 public class RiderGoal extends Goal {
     /** The pathfinding speed multiplier to use when trying to mount. */
     private static final double SPEED_MULTIPLIER = 1.2;

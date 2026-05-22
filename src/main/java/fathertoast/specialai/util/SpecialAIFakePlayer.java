@@ -1,7 +1,6 @@
 package fathertoast.specialai.util;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -16,13 +15,10 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ITeleporter;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class SpecialAIFakePlayer extends FakePlayer {
     /** The fake profile used for all fake players used by this mod. */
     private static final GameProfile FAKE_PLAYER_PROFILE = new GameProfile( null, "[SpecialAIFakePlayer]" );

@@ -16,6 +16,7 @@ import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.util.VillagerNameHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -52,6 +53,7 @@ import java.util.function.Supplier;
  * <p>
  * Additionally, it also uses the server tick to run actions that can't be done during the AI tick.
  */
+@SuppressWarnings( "UnstableApiUsage" )
 public final class AIManager {
     
     // NBT tags used to store info about this mod's AI.
@@ -267,13 +269,15 @@ public final class AIManager {
      * @param entity The entity to initialize.
      */
     public static void initializeSpecialAI( Mob entity ) {
+        // The rng of the entity
+        final RandomSource rng = entity.getRandom();
         // The tag all info for this mod is stored on for the entity
         final CompoundTag tag = NBTHelper.getForgeData( entity, SpecialAI.MOD_ID );
         
         // Dodge arrows
         if( !NBTHelper.containsNumber( tag, TAG_DODGE_ARROWS ) ) {
-            final double[] dodgeValues = Config.GENERAL.REACTIONS.dodgeArrowsList.getValues( entity );
-            tag.putDouble( TAG_DODGE_ARROWS, dodgeValues != null && entity.getRandom().nextDouble() < dodgeValues[0] ? dodgeValues[1] : 0.0 );
+            final Double[] dodgeValues = Config.GENERAL.REACTIONS.dodgeArrowsList.get( entity );
+            tag.putDouble( TAG_DODGE_ARROWS, dodgeValues != null && rng.nextDouble() < dodgeValues[0] ? dodgeValues[1] : 0.0 );
         }
         if( tag.getDouble( TAG_DODGE_ARROWS ) > 0.0F ) {
             addDodgeArrowsAI( entity, tag.getDouble( TAG_DODGE_ARROWS ) );
@@ -285,7 +289,7 @@ public final class AIManager {
             
             // Avoid explosions
             if( !NBTHelper.containsNumber( tag, TAG_AVOID_EXPLOSIONS ) ) {
-                tag.putDouble( TAG_AVOID_EXPLOSIONS, Config.GENERAL.REACTIONS.avoidExplosionsList.getValue( entity ) );
+                tag.putDouble( TAG_AVOID_EXPLOSIONS, Config.GENERAL.REACTIONS.avoidExplosionsList.getOrElse( entity, 0.0 ) );
             }
             if( tag.getDouble( TAG_AVOID_EXPLOSIONS ) > 0.0 ) {
                 addAvoidExplosionsAI( pathfinderMob, tag.getDouble( TAG_AVOID_EXPLOSIONS ) );
@@ -298,7 +302,7 @@ public final class AIManager {
             
             // Depacify
             if( !NBTHelper.containsNumber( tag, TAG_DEPACIFY ) ) {
-                tag.putBoolean( TAG_DEPACIFY, Config.GENERAL.ANIMALS.depacifyList.rollChance( entity ) );
+                tag.putBoolean( TAG_DEPACIFY, Config.GENERAL.ANIMALS.depacifyList.rollChance( entity, rng ) );
             }
             if( tag.getBoolean( TAG_DEPACIFY ) ) {
                 addHurtByTargetAI( pathfinderMob );
@@ -307,7 +311,7 @@ public final class AIManager {
             
             // Aggressive
             if( !NBTHelper.containsNumber( tag, TAG_AGGRESSIVE ) ) {
-                tag.putBoolean( TAG_AGGRESSIVE, Config.GENERAL.ANIMALS.aggressiveList.rollChance( entity ) );
+                tag.putBoolean( TAG_AGGRESSIVE, Config.GENERAL.ANIMALS.aggressiveList.rollChance( entity, rng ) );
             }
             if( tag.getBoolean( TAG_AGGRESSIVE ) ) {
                 addAggressiveTargetAI( pathfinderMob );
@@ -321,7 +325,7 @@ public final class AIManager {
         
         // Call for help
         if( !NBTHelper.containsNumber( tag, TAG_CALL_FOR_HELP ) ) {
-            tag.putBoolean( TAG_CALL_FOR_HELP, Config.GENERAL.REACTIONS.callForHelpList.rollChance( entity ) );
+            tag.putBoolean( TAG_CALL_FOR_HELP, Config.GENERAL.REACTIONS.callForHelpList.rollChance( entity, rng ) );
         }
         if( tag.getBoolean( TAG_CALL_FOR_HELP ) ) {
             setHelpAI( entity );
@@ -336,10 +340,10 @@ public final class AIManager {
             }
             // Small rider whitelist is a special case, so it gets priority over the normal whitelist
             else if( small ) {
-                makeRider = Config.GENERAL.JOCKEYS.riderWhitelistSmall.get().rollChance( entity );
+                makeRider = Config.GENERAL.JOCKEYS.riderWhitelistSmall.get().rollChance( entity, rng );
             }
             else {
-                makeRider = Config.GENERAL.JOCKEYS.riderWhitelist.get().rollChance( entity );
+                makeRider = Config.GENERAL.JOCKEYS.riderWhitelist.get().rollChance( entity, rng );
             }
             tag.putBoolean( TAG_RIDER, makeRider );
         }
@@ -349,13 +353,13 @@ public final class AIManager {
         
         // Passive griefing
         if( !NBTHelper.containsNumber( tag, TAG_HIDE ) ) {
-            tag.putBoolean( TAG_HIDE, Config.IDLE.HIDING.entityList.rollChance( entity ) );
+            tag.putBoolean( TAG_HIDE, Config.IDLE.HIDING.entityList.rollChance( entity, rng ) );
         }
         if( !NBTHelper.containsNumber( tag, TAG_GRIEF ) ) {
-            tag.putBoolean( TAG_GRIEF, Config.IDLE.GRIEFING.entityList.rollChance( entity ) );
+            tag.putBoolean( TAG_GRIEF, Config.IDLE.GRIEFING.entityList.rollChance( entity, rng ) );
         }
         if( !NBTHelper.containsNumber( tag, TAG_FIDDLE ) ) {
-            tag.putBoolean( TAG_FIDDLE, Config.IDLE.FIDDLING.entityList.rollChance( entity ) );
+            tag.putBoolean( TAG_FIDDLE, Config.IDLE.FIDDLING.entityList.rollChance( entity, rng ) );
         }
         addIdleAI( entity, tag.getBoolean( TAG_HIDE ), tag.getBoolean( TAG_GRIEF ), tag.getBoolean( TAG_FIDDLE ) );
 
@@ -368,7 +372,7 @@ public final class AIManager {
         
         // Door-breaking AI
         if( !NBTHelper.containsNumber( tag, TAG_DOOR_BREAK ) ) {
-            tag.putBoolean( TAG_DOOR_BREAK, Config.GENERAL.DOOR_BREAKING.entityList.rollChance( entity ) );
+            tag.putBoolean( TAG_DOOR_BREAK, Config.GENERAL.DOOR_BREAKING.entityList.rollChance( entity, rng ) );
         }
         if( tag.getBoolean( TAG_DOOR_BREAK ) ) {
             addDoorBreakAI( entity );
@@ -397,8 +401,10 @@ public final class AIManager {
         CompoundTag eliteTag = NBTHelper.getOrCreateCompound( tag, TAG_ELITE_AI );
         
         // Apply random-weighted AI selection
-        final double[] chances = Config.ELITE_AI.GENERAL.entityList.getValues( entity );
+        final Double[] chances = Config.ELITE_AI.GENERAL.entityList.get( entity );
+        
         if( chances != null ) {
+            // noinspection ConstantConditions
             for( double chance : chances ) {
                 if( chance > 0.0 && entity.getRandom().nextDouble() < chance ) {
                     EliteAIHelper.saveEliteAI( eliteTag, entity );
@@ -408,7 +414,7 @@ public final class AIManager {
         
         // Apply specific AI selection
         for( EliteAIConfig.EliteAICategory ai : Config.ELITE_AI.getEliteAICategories() ) {
-            if( ai.entityList.rollChance( entity ) ) {
+            if( ai.entityList.rollChance( entity, entity.getRandom() ) ) {
                 EliteAIHelper.saveEliteAI( eliteTag, ai.TYPE );
             }
         }
@@ -428,13 +434,15 @@ public final class AIManager {
      * @param event The event being triggered.
      */
     public static void onLivingDeath( LivingDeathEvent event ) {
-        if( event.getEntity().level().isClientSide ) return;
+        final LivingEntity entity = event.getEntity();
+        
+        if( entity.level().isClientSide ) return;
         
         // Call for help on death
-        final double chance = Config.GENERAL.REACTIONS.callForHelpOnDeathList.getValue( event.getEntity() );
+        final double chance = Config.GENERAL.REACTIONS.callForHelpOnDeathList.getOrElse( entity, 0.0 );
         
-        if( chance > 0.0 && event.getEntity() instanceof Mob entity && event.getEntity().getRandom().nextDouble() < chance ) {
-            Entity target = event.getSource().getEntity();
+        if( chance > 0.0 && event.getEntity() instanceof Mob mob && event.getEntity().getRandom().nextDouble() < chance ) {
+            final Entity target = event.getSource().getEntity();
             
             if( target instanceof LivingEntity ) {
                 // Don't target invulnerable players
@@ -442,15 +450,15 @@ public final class AIManager {
                     return;
                 
                 // Alert all similar entities around the killed entity to the killer
-                final double range = entity.getAttribute( Attributes.FOLLOW_RANGE ) == null
+                final double range = mob.getAttribute( Attributes.FOLLOW_RANGE ) == null
                         ? 32.0D
-                        : entity.getAttributeValue( Attributes.FOLLOW_RANGE );
-                AABB boundingBox = AABB.unitCubeFromLowerCorner( entity.position() ).inflate( range, 10.0, range );
+                        : mob.getAttributeValue( Attributes.FOLLOW_RANGE );
+                AABB boundingBox = AABB.unitCubeFromLowerCorner( mob.position() ).inflate( range, 10.0, range );
                 
                 // Note this logic is duplicated from the "hurt by target" goal, it is just massively simplified
-                for( Mob other : entity.level().getEntitiesOfClass( entity.getClass(), boundingBox ) ) {
-                    if( entity != other && other.getTarget() == null &&
-                            (!(entity instanceof TamableAnimal) || ((TamableAnimal) entity).getOwner() == ((TamableAnimal) other).getOwner()) &&
+                for( Mob other : mob.level().getEntitiesOfClass( mob.getClass(), boundingBox ) ) {
+                    if( mob != other && other.getTarget() == null &&
+                            (!(mob instanceof TamableAnimal) || ((TamableAnimal) mob).getOwner() == ((TamableAnimal) other).getOwner()) &&
                             !other.isAlliedTo( target ) ) {
                         other.setTarget( (LivingEntity) target );
                     }

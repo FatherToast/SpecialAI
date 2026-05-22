@@ -3,28 +3,31 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
-import fathertoast.crust.api.config.common.field.*;
+import fathertoast.crust.api.config.common.ConfigUtil;
+import fathertoast.crust.api.config.common.field.BooleanField;
+import fathertoast.crust.api.config.common.field.DoubleField;
+import fathertoast.crust.api.config.common.field.IntField;
+import fathertoast.crust.api.config.common.field.StringListField;
+import fathertoast.crust.api.config.common.field.collection.BlockStateMapField;
 import fathertoast.crust.api.config.common.field.collection.EntityMapField;
-import fathertoast.crust.api.config.common.value.DefaultValueEntry;
-import fathertoast.crust.api.config.common.value.RegistryEntryValueList;
-import fathertoast.crust.api.config.common.value.RegistryValueEntry;
-import fathertoast.crust.api.config.common.value.RegistryValueTagEntry;
+import fathertoast.crust.api.config.common.field.collection.FuzzyListField;
+import fathertoast.crust.api.config.common.field.collection.RegistryMapField;
+import fathertoast.crust.api.config.common.value.collection.BlockStateMap;
 import fathertoast.crust.api.config.common.value.collection.EntityMap;
+import fathertoast.crust.api.config.common.value.collection.FuzzyList;
+import fathertoast.crust.api.config.common.value.collection.key.NumberKey;
 import fathertoast.crust.api.config.common.value.collection.value.IntValueCodec;
-import fathertoast.specialai.config.field.IntListField;
-import fathertoast.specialai.config.field.ProfessionNameListField;
+import fathertoast.crust.api.util.BlockStatePropertyMap;
 import fathertoast.specialai.util.VillagerNameHelper;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
-import java.util.Objects;
 
+@SuppressWarnings( "UnstableApiUsage" )
 public class VillagesConfig extends AbstractConfigFile {
     
     public final BehaviorTweaks AI_TWEAKS;
@@ -36,14 +39,6 @@ public class VillagesConfig extends AbstractConfigFile {
     VillagesConfig( ConfigManager cfgManager, String cfgName ) {
         super( cfgManager, cfgName,
                 "This config contains various options to control village tweaks, villager behavior, and reputation." );
-        
-        SPEC.fileOnlyNewLine();
-        SPEC.describeBlockList();
-        SPEC.fileOnlyNewLine();
-        SPEC.describeRegistryEntryValueList();
-        SPEC.fileOnlyNewLine();
-        SPEC.describeEntityList();
-        SPEC.fileOnlyNewLine();
         
         AI_TWEAKS = new BehaviorTweaks( this );
         REPUTATION = new Reputation( this );
@@ -77,32 +72,38 @@ public class VillagesConfig extends AbstractConfigFile {
     
     public static class Reputation extends AbstractConfigCategory<VillagesConfig> {
         
-        public final RegistryEntryValueListField<Block> repChangingBlocks;
-        public final IntField breakBlockThreshold;
+        public final BlockStateMapField<Integer> repChangingBlocks;
+        public final IntField breakThreshold;
         
         public final EntityMapField<Integer> repChangingCreatures;
-        public final IntField killCreatureThreshold;
+        public final IntField killThreshold;
         
-        public final IntField trampleFarmlandAnger;
+        public final IntField trampleAnger;
         
         Reputation( VillagesConfig parent ) {
             super( parent, "reputation",
                     "Options for reputation gain and reputation loss." );
             
-            repChangingBlocks = SPEC.define( new RegistryEntryValueListField<>( "reputation_changing_blocks", createDefaultRepBlocks(),
+            repChangingBlocks = SPEC.define( new BlockStateMapField<>( "blocks.list", createDefaultRepBlocks(),
                     "A list of blocks that may either anger or please nearby villagers inside villages when destroyed by a player.",
                     "The numeric value in each entry determines the reputation change.",
                     "Negative values mean bad reputation, positive means good reputation.",
                     "Note that breaking blocks will only affect 'minor negative' or 'minor positive' reputation, " +
                             "which both have an upper limit of 200." ) );
             
-            breakBlockThreshold = SPEC.define( new IntField( "break_block_threshold", 100, IntField.Range.ANY,
+            breakThreshold = SPEC.define( new IntField( "blocks.break_threshold", 100, IntField.Range.ANY,
                     "If a player's reputation is greater than or equal to this value with a villager, the observing villager will not " +
                             "be bothered if the player breaks a block in the village that would otherwise give bad reputation." ) );
             
             SPEC.newLine();
             
-            repChangingCreatures = SPEC.define( new EntityMapField<>( "reputation_changing_creatures", createDefaultRepCreatures(),
+            trampleAnger = SPEC.define( new IntField( "trample_anger", -4, -200, 0,
+                    "If greater than 0, players will anger nearby farmer villagers if they trample farmland, losing the specified amount of reputation.",
+                    "Note that farmer villagers take trampling personally, and will be displeased even if it happens outside a village." ) );
+            
+            SPEC.newLine();
+            
+            repChangingCreatures = SPEC.define( new EntityMapField<>( "entities.list", createDefaultRepCreatures(),
                     "A list of entities that may either anger or please nearby villagers inside villages when killed by a player.",
                     "The numeric value in each entry determines the reputation change.",
                     "Negative values mean bad reputation, positive means good reputation.",
@@ -110,32 +111,28 @@ public class VillagesConfig extends AbstractConfigFile {
                     "Note that killing creatures will only affect 'minor negative' or 'minor positive' reputation, " +
                             "which both have an upper limit of 200." ) );
             
-            killCreatureThreshold = SPEC.define( new IntField( "kill_creature_threshold", 190, IntField.Range.ANY,
+            killThreshold = SPEC.define( new IntField( "entities.kill_threshold", 190, IntField.Range.ANY,
                     "If a player's reputation is greater than or equal to this value with a villager, the observing villager will not " +
                             "be bothered if the player kills a creature in the village that would otherwise give bad reputation." ) );
-            
-            SPEC.newLine();
-            
-            trampleFarmlandAnger = SPEC.define( new IntField( "trample_farmland_anger", -4, -200, 0,
-                    "If greater than 0, players will anger nearby farmer villagers if they trample farmland, losing the specified amount of reputation.",
-                    "Note that farmer villagers take trampling personally, and will be displeased even if it happens outside a village." ) );
         }
         
-        private RegistryEntryValueList<Block> createDefaultRepBlocks() {
-            return new RegistryEntryValueList<>( new DefaultValueEntry( -1 ), () -> ForgeRegistries.BLOCKS,
-                    new RegistryValueEntry<>( id( Blocks.HAY_BLOCK ), -2 ), new RegistryValueEntry<>( id( Blocks.CHEST ), -5 ),
-                    new RegistryValueEntry<>( id( Blocks.FURNACE ), -4 ), new RegistryValueEntry<>( id( Blocks.BARREL ), -4 ),
-                    new RegistryValueEntry<>( id( Blocks.TALL_GRASS ), 0 ), new RegistryValueEntry<>( id( Blocks.GRASS ), 0 ),
-                    new RegistryValueEntry<>( id( Blocks.FERN ), 0 )
-            
-            ).addTagEntries( List.of(
-                    new RegistryValueTagEntry<>( BlockTags.DOORS, -3 ),
-                    new RegistryValueTagEntry<>( BlockTags.FLOWERS, 0 )
-            ) );
+        // TODO - Check out common blocks in villages and make adjustments as needed
+        private static BlockStateMap<Integer> createDefaultRepBlocks() {
+            return new BlockStateMap.Builder<>( IntValueCodec.ANY )
+                    .put( Blocks.HAY_BLOCK, BlockStatePropertyMap.EMPTY, -2 )
+                    .put( Blocks.TALL_GRASS, BlockStatePropertyMap.EMPTY, 0 )
+                    .put( Blocks.GRASS, BlockStatePropertyMap.EMPTY, 0 )
+                    .put( Blocks.FERN, BlockStatePropertyMap.EMPTY, 0 )
+                    .put( Blocks.CHEST, BlockStatePropertyMap.EMPTY, -4 )
+                    .put( Blocks.BARREL, BlockStatePropertyMap.EMPTY, -4 )
+                    .put( Blocks.FURNACE, BlockStatePropertyMap.EMPTY, -4 )
+                    .putTag( BlockTags.DOORS, BlockStatePropertyMap.EMPTY, -3 )
+                    .putTag( BlockTags.FLOWERS, BlockStatePropertyMap.EMPTY, 0 )
+                    .buildWithDefault( -1 );
         }
         
         @SuppressWarnings( "UnstableApiUsage" )
-        private EntityMap<Integer> createDefaultRepCreatures() {
+        private static EntityMap<Integer> createDefaultRepCreatures() {
             return new EntityMap.Builder<>( IntValueCodec.ANY )
                     .put( EntityType.CAT, -20 ).put( EntityType.COW, -5 )
                     .put( EntityType.SHEEP, -5 ).put( EntityType.PIG, -5 )
@@ -148,10 +145,6 @@ public class VillagesConfig extends AbstractConfigFile {
                     .putTag( EntityTypeTags.RAIDERS, 15 )
                     .build();
         }
-        
-        private static ResourceLocation id( Block block ) {
-            return Objects.requireNonNull( ForgeRegistries.BLOCKS.getKey( block ) );
-        }
     }
     
     
@@ -159,13 +152,14 @@ public class VillagesConfig extends AbstractConfigFile {
         
         public final BooleanField masterToggle;
         
-        public final StringListField baseNameComponents;
-        public final IntListField componentRolls;
+        public final StringListField componentList;
+        public final FuzzyListField<Integer, FuzzyList<Integer>> componentRolls;
         
         public final StringListField namePrefixes;
         public final DoubleField namePrefixChance;
         
-        public final ProfessionNameListField villagerJobTitles;
+        public final RegistryMapField<VillagerProfession, String[]> villagerJobTitles;
+        
         
         public VillagerNames( VillagesConfig parent ) {
             super( parent, "villager_names",
@@ -177,32 +171,33 @@ public class VillagesConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            baseNameComponents = SPEC.define( new StringListField( "base_name_components", createDefaultNameParts(),
+            componentList = SPEC.define( new StringListField( "components.list", createDefaultNameParts(),
                     "A list of name components to pick from when generating a random name for a villager." ) );
             
-            componentRolls = SPEC.define( new IntListField( "component_rolls", List.of( "1", "1", "4", "16", "64" ), IntField.Range.POSITIVE,
-                    "A list of rolls to determine how many name components can be picked when generating a villager name.",
-                    "For example, if the list contains 5 numbers, a villager name may generate with 1-5 total components.",
-                    "The value of each number determines the chance to add a component, so 1 would equal a 1/1 chance, and 64 would equal a 1/64 chance." ) );
+            componentRolls = SPEC.define( new FuzzyListField<>( "components.rolls", createDefaultComponentRolls(),
+                    "A list of weights to roll when picking components for a randomly generated villager name.",
+                    "For example, if the list contains 5 weight entries, a villager name may generate with at most 5 components.",
+                    "Each weight must be " + ConfigUtil.GREATER_OR_EQUAL + " to 1.",
+                    "The value of each weight determines the chance to add a component, so 1 would equal a 1/1 chance, and 64 would equal a 1/64 chance." ) );
             
             SPEC.newLine();
             
-            namePrefixes = SPEC.define( new StringListField( "name_prefixes", createDefaultNamePrefixes(),
+            namePrefixes = SPEC.define( new StringListField( "prefixes.list", createDefaultNamePrefixes(),
                     "A list of prefixes that may be added to a villager's first name." ) );
             
-            namePrefixChance = SPEC.define( new DoubleField( "name_prefix_chance", 0.01, DoubleField.Range.PERCENT,
+            namePrefixChance = SPEC.define( new DoubleField( "prefixes.chance", 0.01, DoubleField.Range.PERCENT,
                     "The chance for a prefix from the above list to be added to the name of a villager." ) );
             
             SPEC.newLine();
             
-            villagerJobTitles = SPEC.define( new ProfessionNameListField( "villager_job_titles", VillagerNameHelper.getDefaultJobTitles(),
+            villagerJobTitles = SPEC.define( new RegistryMapField<>( "job_titles", VillagerNameHelper.createDefaultJobTitles(),
                     "A list of villager professions and all job titles associated with them.",
                     "Existing titles can be modified here, and new ones can be added for professions from other mods.",
                     "When a villager picks up a new profession, a random job title for that profession is picked from this list.",
                     "Adding the same title multiple times essentially just gets it picked more commonly." ) );
         }
         
-        private List<String> createDefaultNameParts() {
+        private static List<String> createDefaultNameParts() {
             return List.of(
                     "grab", "thar", "ger", "ald", "mas", "on", "o", "din", "thor", "jon", "ath", "an", "burb", "en",
                     "a", "e", "i", "u", "hab", "bloo", "ena", "dit", "aph", "ern", "bor", "dav", "id", "toast", "son", "dottir",
@@ -210,10 +205,21 @@ public class VillagesConfig extends AbstractConfigFile {
                     "ette", "ere", "man", "qua", "bro", "cree", "per", "skel", "ton", "zom", "bie", "wolf", "end", "er", "pig",
                     "sil", "ver", "fish", "cow", "chic", "ken", "sheep", "lla", "rab", "bit", "squid", "hell", "scrub", "loaf",
                     "bonk", "clonk", "bink", "guy", "gal", "wool", "flo", "fee", "fi", "fo", "fum", "green", "blue", "red",
-                    "seed", "wheat", "boat", "rod", "poke", "bow" );
+                    "seed", "wheat", "boat", "rod", "poke", "bow"
+            );
         }
         
-        private List<String> createDefaultNamePrefixes() {
+        private static FuzzyList<Integer> createDefaultComponentRolls() {
+            return new FuzzyList.Builder<>( NumberKey.intParser( IntValueCodec.POSITIVE ) )
+                    .add( NumberKey.of( 1 ) )
+                    .add( NumberKey.of( 1 ) )
+                    .add( NumberKey.of( 4 ) )
+                    .add( NumberKey.of( 16 ) )
+                    .add( NumberKey.of( 64 ) )
+                    .build();
+        }
+        
+        private static List<String> createDefaultNamePrefixes() {
             return List.of(
                     "Mc", "Mac"
             );

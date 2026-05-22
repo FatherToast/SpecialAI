@@ -107,7 +107,8 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
     
     /** @return Returns true if the block is generally valid for targeting, not taking tool or other requirements under consideration. */
     private boolean isValidBlock( BlockState target ) {
-        if( target.getBlock() == Blocks.AIR || Config.GENERAL.DOOR_BREAKING.targetList.BLACKLIST.get().matches( target ) ) {
+        // Do not allow targets that are considered air
+        if( target.isAir() ) {
             return false;
         }
         if( Config.GENERAL.DOOR_BREAKING.targetDoors.get() ) {
@@ -115,7 +116,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
                 return true;
             }
         }
-        return Config.GENERAL.DOOR_BREAKING.targetList.WHITELIST.get().matches( target );
+        return Config.GENERAL.DOOR_BREAKING.targetList.contains( target );
     }
     
     /** Called when this AI is activated. */
@@ -183,7 +184,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         Level level = mob.level();
         
         // Perform block breaking
-        blockDamage += (float) ( BlockHelper.getDestroyProgress( targetBlock, mob, level, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get() );
+        blockDamage += (float) (BlockHelper.getDestroyProgress( targetBlock, mob, level, doorPos ) * Config.GENERAL.DOOR_BREAKING.breakSpeed.get());
         if( blockDamage >= 1.0F ) {
             // Block is broken
             level.destroyBlock( doorPos, Config.GENERAL.DOOR_BREAKING.leaveDrops.get(), mob );
@@ -203,7 +204,7 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
             lastBlockDamage = damage;
         }
     }
-
+    
     /** @return Returns true if the entity is a creeper and should explode instead of attacking the door. */
     private boolean madCreeper() { return Config.GENERAL.DOOR_BREAKING.madCreepers.get() && mob instanceof Creeper; }
 }

@@ -3,16 +3,23 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
-import fathertoast.crust.api.config.common.field.*;
-import fathertoast.crust.api.config.common.value.*;
+import fathertoast.crust.api.config.common.field.BooleanField;
+import fathertoast.crust.api.config.common.field.DoubleField;
+import fathertoast.crust.api.config.common.field.EnvironmentListField;
+import fathertoast.crust.api.config.common.field.IntField;
+import fathertoast.crust.api.config.common.field.collection.BlockStateSetField;
+import fathertoast.crust.api.config.common.field.collection.EntityMapField;
+import fathertoast.crust.api.config.common.value.EnvironmentList;
+import fathertoast.crust.api.config.common.value.collection.BlockStateSet;
+import fathertoast.crust.api.config.common.value.collection.EntityMap;
+import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
+import fathertoast.crust.api.util.BlockStatePropertyMap;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@SuppressWarnings( "UnstableApiUsage" )
 public class IdleConfig extends AbstractConfigFile {
     
     public final IdleGeneral GENERAL;
@@ -25,11 +32,6 @@ public class IdleConfig extends AbstractConfigFile {
         super( cfgManager, cfgName,
                 "This config contains options for idle behaviors; actions taken by mobs when they are bored."
         );
-        
-        SPEC.fileOnlyNewLine();
-        SPEC.describeEntityList();
-        SPEC.fileOnlyNewLine();
-        SPEC.describeBlockList();
         
         GENERAL = new IdleGeneral( this );
         GRIEFING = new Griefing( this );
@@ -47,6 +49,7 @@ public class IdleConfig extends AbstractConfigFile {
         public final IntField scanDelay;
         public final IntField scanCount;
         public final IntField scanCountGlobal;
+        
         
         IdleGeneral( IdleConfig parent ) {
             super( parent, "idle_general",
@@ -74,7 +77,7 @@ public class IdleConfig extends AbstractConfigFile {
     
     public static class Griefing extends AbstractConfigCategory<IdleConfig> {
         
-        public final EntityListField.Combined entityList;
+        public final EntityMapField<Double> entityList;
         
         public final BooleanField requiresTools;
         
@@ -87,24 +90,18 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final BooleanField targetLights;
         public final BooleanField targetBeds;
-        public final BlockListField targetWhitelist;
-        public final BlockListField targetWhitelistLootable;
-        public final BlockListField targetBlacklist;
+        public final BlockStateSetField targetWhitelist;
+        public final BlockStateSetField targetWhitelistLootable;
+        public final BlockStateSetField targetBlacklist;
+        
         
         Griefing( IdleConfig parent ) {
             super( parent, "idle_griefing",
                     "Options to customize monsters' idle block breaking behavior." );
             
-            entityList = new EntityListField.Combined(
-                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            null,
-                            new EntityEntry( EntityType.ZOMBIE, 1.0 ),
-                            new EntityEntry( EntityType.CREEPER, 1.0 )
-                    ).setSinglePercent(),
-                            "List of mobs that can gain passive griefing AI (note that the entity must have task-based AI enabled).",
-                            "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
-            );
+            entityList = SPEC.define( new EntityMapField<>( "entities", createDefaultEntityList(),
+                    "List of mobs that can gain passive griefing AI (note that the entity must have task-based AI enabled).",
+                    "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) );
             
             SPEC.newLine();
             
@@ -116,6 +113,7 @@ public class IdleConfig extends AbstractConfigFile {
             
             leaveDrops = SPEC.define( new BooleanField( "leaves_drops", true,
                     "If true, blocks griefed by mobs will leave item drops." ) );
+            
             breakSound = SPEC.define( new BooleanField( "break_sound", false,
                     "If true, a loud snapping sound (the vanilla door break sound) will be played when a " +
                             "block is broken, which is audible regardless of distance." ) );
@@ -124,8 +122,10 @@ public class IdleConfig extends AbstractConfigFile {
             
             breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.5, DoubleField.Range.NON_NEGATIVE,
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
+            
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", false,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
+            
             resistanceThreshold = SPEC.define( new DoubleField( "resistance_threshold", 6.0D, DoubleField.Range.NON_NEGATIVE,
                     "If 'mad_creepers' is enabled, creepers will not try to explode blocks with an explosion resistance value equal to or higher than this value.",
                     "Blocks with negative resistance such as bedrock are automatically omitted." ) );
@@ -135,119 +135,148 @@ public class IdleConfig extends AbstractConfigFile {
             targetLights = SPEC.define( new BooleanField( "targets.auto_target_lights", true,
                     "If true, idle griefing AI will automatically target all light sources (light value > 1). " +
                             "This will do its best to avoid natural sources such as fire and redstone ore." ) );
+            
             targetBeds = SPEC.define( new BooleanField( "targets.auto_target_beds", true,
                     "If true, idle griefing AI will automatically target all blocks that derive from the vanilla beds." ) );
-            targetWhitelist = SPEC.define( new BlockListField( "targets.whitelist", buildDefaultGriefTargets(),
+            
+            targetWhitelist = SPEC.define( new BlockStateSetField( "targets.whitelist", createDefaultGriefTargets(),
                     "List of blocks that can be broken by the idle griefing AI." ) );
-            targetWhitelistLootable = SPEC.define( new BlockListField( "targets.lootable_list", buildDefaultLootableGriefTargets(),
+            
+            targetWhitelistLootable = SPEC.define( new BlockStateSetField( "targets.lootable_list", createDefaultLootableGriefTargets(),
                     "Like \"grief_targets.whitelist\", but these blocks will not be targeted if they have a loot table tag.",
                     "For example, unopened dungeon chests will not be targeted." ) );
-            targetBlacklist = SPEC.define( new BlockListField( "targets.blacklist", new BlockList() ) );
+            
+            targetBlacklist = SPEC.define( new BlockStateSetField( "targets.blacklist", new BlockStateSet.Builder<>().build(),
+                    "" ) );
+        }
+        
+        private static EntityMap<Double> createDefaultEntityList() {
+            return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
+                    .put( EntityType.ZOMBIE, 1.0 )
+                    .put( EntityType.CREEPER, 1.0 )
+                    .build();
         }
         
         /** Build a list of special use blocks. */
-        private static BlockList buildDefaultGriefTargets() {
-            // Start with specific blocks
-            final List<BlockEntry> targets = new ArrayList<>( List.of(
-                    new BlockEntry( Blocks.FARMLAND ), new BlockEntry( Blocks.BEEHIVE )
-            ) );
+        private static BlockStateSet createDefaultGriefTargets() {
+            final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
+            
+            // Specific entries
+            builder.add( Blocks.FARMLAND, BlockStatePropertyMap.EMPTY )
+                    .add( Blocks.BEEHIVE, BlockStatePropertyMap.EMPTY );
+            
             // Add block groups, possibly including mod blocks
             for( Block block : ForgeRegistries.BLOCKS ) {
                 // Basic crafting blocks (note blast furnace & smoker are covered by abstract furnace)
                 if( block instanceof CraftingTableBlock || block instanceof AbstractFurnaceBlock || block instanceof BrewingStandBlock ||
-                        
                         // Advanced crafting blocks (note fletching & smithing tables are covered by crafting table)
                         block instanceof StonecutterBlock || block instanceof LoomBlock || block instanceof CartographyTableBlock ||
-                        
                         // Equipment reworking blocks
                         block instanceof EnchantmentTableBlock || block instanceof AnvilBlock || block instanceof GrindstoneBlock ||
-                        
                         // Access blocks
                         block instanceof LadderBlock || block instanceof ScaffoldingBlock
                 ) {
-                    targets.add( new BlockEntry( block ) );
+                    builder.add( block, BlockStatePropertyMap.EMPTY );
                 }
             }
-            return new BlockList( null, List.of( BlockTags.CROPS ), targets.toArray( new BlockEntry[0] ) );
+            // Tags
+            builder.addTag( BlockTags.CROPS, BlockStatePropertyMap.EMPTY );
+            
+            return builder.build();
         }
         
         /** Build a list of chest blocks. */
-        private static BlockList buildDefaultLootableGriefTargets() {
-            List<BlockEntry> targets = new ArrayList<>();
+        private static BlockStateSet createDefaultLootableGriefTargets() {
+            final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
+            
             for( Block block : ForgeRegistries.BLOCKS ) {
                 // Chest blocks
                 if( block instanceof AbstractChestBlock || block instanceof BarrelBlock ) {
-                    targets.add( new BlockEntry( block ) );
+                    builder.add( block, BlockStatePropertyMap.EMPTY );
                 }
             }
-            return new BlockList( targets.toArray( new BlockEntry[0] ) );
+            return builder.build();
         }
     }
     
     public static class Fiddling extends AbstractConfigCategory<IdleConfig> {
         
-        public final EntityListField.Combined entityList;
+        public final EntityMapField<Double> entityList;
         
         public final BooleanField targetSwitches;
         public final BooleanField targetDoors;
-        public final BlockListField.Combined targetList;
+        public final BlockStateSetField targetWhitelist;
+        public final BlockStateSetField targetBlacklist;
+        
         
         Fiddling( IdleConfig parent ) {
             super( parent, "idle_fiddling",
                     "Options to customize monsters' idle fiddling behavior (block interaction)." );
             
-            entityList = new EntityListField.Combined(
-                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            null,
-                            new EntityEntry( EntityType.SKELETON, 1.0 ), new EntityEntry( EntityType.STRAY, 1.0 ),
-                            new EntityEntry( EntityType.WITHER_SKELETON, 1.0 ),
-                            new EntityEntry( EntityType.ZOMBIFIED_PIGLIN, 1.0 ), new EntityEntry( EntityType.PIGLIN, 1.0 )
-                    ).setSinglePercent(),
-                            "List of mobs that can gain passive fiddling AI (note that the entity must have task-based AI enabled).",
-                            "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
-            );
+            entityList = SPEC.define( new EntityMapField<>( "entities", createDefaultEntityList(),
+                    "List of mobs that can gain passive fiddling AI (note that the entity must have task-based AI enabled).",
+                    "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) );
             
             SPEC.newLine();
             
             targetSwitches = SPEC.define( new BooleanField( "targets.auto_target_switches", true,
                     "If true, idle fiddling AI will automatically target all blocks that derive from",
                     "the vanilla levers and buttons." ) );
+            
             targetDoors = SPEC.define( new BooleanField( "targets.auto_target_doors", true,
                     "If true, idle fiddling AI will automatically target all non-metal blocks that derive",
                     "from the vanilla doors, fence gates, and trapdoors." ) );
-            targetList = new BlockListField.Combined(
-                    SPEC.define( new BlockListField( "targets.whitelist", new BlockList(
-                            new BlockEntry( Blocks.REPEATER ), new BlockEntry( Blocks.COMPARATOR ),
-                            new BlockEntry( Blocks.TNT ), new BlockEntry( Blocks.CAKE ) ),
-                            "List of blocks that can be interacted with by the idle fiddling AI." ) ),
-                    SPEC.define( new BlockListField( "targets.blacklist", new BlockList() ) )
-            );
+            
+            targetWhitelist = SPEC.define( new BlockStateSetField( "targets.whitelist", createDefaultTargetWhitelist(),
+                    "List of blocks that can be interacted with by the idle fiddling AI." ) );
+            
+            targetBlacklist = SPEC.define( new BlockStateSetField( "targets.blacklist", new BlockStateSet.Builder<>().build(),
+                    "List of blocks that specifically can NOT be interacted with by the idle fiddling AI." ) );
+        }
+        
+        private static EntityMap<Double> createDefaultEntityList() {
+            return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
+                    .put( EntityType.SKELETON, 1.0 ).put( EntityType.STRAY, 1.0 )
+                    .put( EntityType.WITHER_SKELETON, 1.0 ).put( EntityType.PIGLIN, 1.0 )
+                    .put( EntityType.ZOMBIFIED_PIGLIN, 1.0 )
+                    .build();
+        }
+        
+        private static BlockStateSet createDefaultTargetWhitelist() {
+            final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
+            
+            // Specific entries
+            builder.add( Blocks.REPEATER, BlockStatePropertyMap.EMPTY )
+                    .add( Blocks.COMPARATOR, BlockStatePropertyMap.EMPTY )
+                    .add( Blocks.TNT, BlockStatePropertyMap.EMPTY )
+                    .add( Blocks.CAKE, BlockStatePropertyMap.EMPTY );
+            
+            // All candle cakes
+            for( Block block : ForgeRegistries.BLOCKS ) {
+                if( block instanceof CandleCakeBlock )
+                    builder.add( block, BlockStatePropertyMap.EMPTY );
+            }
+            
+            return builder.build();
         }
     }
     
     public static class Hiding extends AbstractConfigCategory<IdleConfig> {
         
-        public final EntityListField.Combined entityList;
+        public final EntityMapField<Double> entityList;
         
         public final DoubleField.EnvironmentSensitive lootableChance;
-        public final BlockListField.Combined targetList;
+        public final BlockStateSetField targetList;
+        
         
         Hiding( IdleConfig parent ) {
             super( parent, "idle_hiding",
                     "Options to customize monsters' idle hiding behavior. This causes the mob to crawl " +
                             "inside a container block and pop out when the container is opened (or destroyed)." );
             
-            entityList = new EntityListField.Combined(
-                    SPEC.define( new EntityListField( "entities.whitelist", new EntityList(
-                            null,
-                            new EntityEntry( EntityType.CREEPER, 1.0 ),
-                            new EntityEntry( EntityType.SPIDER, 1.0 )
-                    ).setSinglePercent(),
-                            "List of mobs that can gain passive hiding AI (note that the entity must have task-based AI enabled).",
-                            "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) ),
-                    SPEC.define( new EntityListField( "entities.blacklist", new EntityList( null ).setNoValues() ) )
-            );
+            entityList = SPEC.define( new EntityMapField<>( "entities", createDefaultEntityList(),
+                    "List of mobs that can gain passive hiding AI (note that the entity must have task-based AI enabled).",
+                    "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) );
             
             SPEC.newLine();
             
@@ -260,24 +289,30 @@ public class IdleConfig extends AbstractConfigFile {
                             "The chance for blocks (0.0 to 1.0) that have a loot table tag to be targetable by the idle hiding " +
                                     "AI when specific environmental conditions are met." ) )
             );
-            targetList = new BlockListField.Combined(
-                    SPEC.define( new BlockListField( "targets.whitelist", buildDefaultHideTargets(),
-                            "List of blocks that can be hidden in by the idle hiding AI. " +
-                                    "Note that only blocks with tile entities are able to be hidden in." ) ),
-                    SPEC.define( new BlockListField( "targets.blacklist", new BlockList() ) )
-            );
+            
+            targetList = SPEC.define( new BlockStateSetField( "targets.list", createDefaultHideTargets(),
+                    "List of blocks that can be hidden in by the idle hiding AI. " +
+                            "Note that only blocks with block entities are able to be hidden in." ) );
         }
         
-        /** Build a list of chest blocks. */
-        private static BlockList buildDefaultHideTargets() {
-            List<BlockEntry> targets = new ArrayList<>();
+        private static EntityMap<Double> createDefaultEntityList() {
+            return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
+                    .put( EntityType.CREEPER, 1.0 )
+                    .put( EntityType.SPIDER, 1.0 )
+                    .build();
+        }
+        
+        /** Build a set of chest blocks. */
+        private static BlockStateSet createDefaultHideTargets() {
+            final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
+            
             for( Block block : ForgeRegistries.BLOCKS ) {
                 // Non-ender chest blocks
                 if( block instanceof AbstractChestBlock && !(block instanceof EnderChestBlock) || block instanceof BarrelBlock ) {
-                    targets.add( new BlockEntry( block ) );
+                    builder.add( block, BlockStatePropertyMap.EMPTY );
                 }
             }
-            return new BlockList( targets.toArray( new BlockEntry[0] ) );
+            return builder.build();
         }
     }
 }
