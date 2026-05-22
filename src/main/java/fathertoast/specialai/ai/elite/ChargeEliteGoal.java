@@ -4,6 +4,8 @@ import fathertoast.specialai.ai.AnimalMeleeAttackGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -161,18 +163,17 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
                     0.5,
                     attackVec.z * Config.ELITE_AI.CHARGE.knockbackSpeed.get()
             );
-            // TODO - is this handled automatically now?
-            /*
+            // Send motion update packet if target is a player
             if( target instanceof ServerPlayer serverPlayer ) {
                 try {
-                    serverPlayer.connection.send( new ClientboundMoveEntityPacket( target ) );
+                    serverPlayer.connection.send( new ClientboundSetEntityMotionPacket( target ) );
                 }
                 catch( Exception ex ) {
+                    // noinspection CallToPrintStackTrace
                     ex.printStackTrace();
                 }
             }
-
-             */
+            
             currentActivity = Activity.NONE;
         }
         else if( mob.horizontalCollision ) {
