@@ -2,6 +2,7 @@ package fathertoast.specialai.ai.griefing;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.util.BlockDestroyTracker;
 import fathertoast.specialai.util.BlockHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
@@ -200,6 +201,9 @@ public class SpecialBreakDoorGoal extends BreakDoorGoal {
         // Update block damage
         final int damage = (int) Math.ceil( blockDamage * 10.0F ) - 1;
         if( damage != lastBlockDamage ) {
+            if( lastBlockDamage == -1 ) {
+                BlockDestroyTracker.putEntry( mob, level, doorPos );
+            }
             level.destroyBlockProgress( mob.getId(), doorPos, damage );
             lastBlockDamage = damage;
         }
