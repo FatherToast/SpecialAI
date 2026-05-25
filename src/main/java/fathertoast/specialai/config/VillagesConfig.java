@@ -15,15 +15,22 @@ import fathertoast.crust.api.config.common.field.collection.RegistryMapField;
 import fathertoast.crust.api.config.common.value.collection.BlockStateMap;
 import fathertoast.crust.api.config.common.value.collection.EntityMap;
 import fathertoast.crust.api.config.common.value.collection.FuzzyList;
+import fathertoast.crust.api.config.common.value.collection.key.BlockStateKey;
 import fathertoast.crust.api.config.common.value.collection.key.NumberKey;
+import fathertoast.crust.api.config.common.value.collection.value.FuzzyEntry;
 import fathertoast.crust.api.config.common.value.collection.value.IntValueCodec;
 import fathertoast.crust.api.util.BlockStatePropertyMap;
 import fathertoast.specialai.util.VillagerNameHelper;
+import net.minecraft.core.Holder;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 
@@ -72,10 +79,10 @@ public class VillagesConfig extends AbstractConfigFile {
     
     public static class Reputation extends AbstractConfigCategory<VillagesConfig> {
         
-        public final BlockStateMapField<Integer> repChangingBlocks;
+        public final BlockStateMapField<Integer> blocksList;
         public final IntField breakThreshold;
         
-        public final EntityMapField<Integer> repChangingCreatures;
+        public final EntityMapField<Integer> entitiesList;
         public final IntField killThreshold;
         
         public final IntField trampleAnger;
@@ -84,7 +91,7 @@ public class VillagesConfig extends AbstractConfigFile {
             super( parent, "reputation",
                     "Options for reputation gain and reputation loss." );
             
-            repChangingBlocks = SPEC.define( new BlockStateMapField<>( "blocks.list", createDefaultRepBlocks(),
+            blocksList = SPEC.define( new BlockStateMapField<>( "blocks.list", createDefaultBlocksList(),
                     "A list of blocks that may either anger or please nearby villagers inside villages when destroyed by a player.",
                     "The numeric value in each entry determines the reputation change.",
                     "Negative values mean bad reputation, positive means good reputation.",
@@ -103,7 +110,7 @@ public class VillagesConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            repChangingCreatures = SPEC.define( new EntityMapField<>( "entities.list", createDefaultRepCreatures(),
+            entitiesList = SPEC.define( new EntityMapField<>( "entities.list", createDefaultEntitiesList(),
                     "A list of entities that may either anger or please nearby villagers inside villages when killed by a player.",
                     "The numeric value in each entry determines the reputation change.",
                     "Negative values mean bad reputation, positive means good reputation.",
@@ -116,23 +123,63 @@ public class VillagesConfig extends AbstractConfigFile {
                             "be bothered if the player kills a creature in the village that would otherwise give bad reputation." ) );
         }
         
-        // TODO - Check out common blocks in villages and make adjustments as needed
-        private static BlockStateMap<Integer> createDefaultRepBlocks() {
-            return new BlockStateMap.Builder<>( IntValueCodec.ANY )
-                    .put( Blocks.HAY_BLOCK, BlockStatePropertyMap.EMPTY, -2 )
-                    .put( Blocks.TALL_GRASS, BlockStatePropertyMap.EMPTY, 0 )
+        private static BlockStateMap<Integer> createDefaultBlocksList() {
+            BlockStateMap.Builder<Integer, ?> builder = new BlockStateMap.Builder<>( IntValueCodec.ANY );
+            
+            // Specific entries
+            builder.put( Blocks.TALL_GRASS, BlockStatePropertyMap.EMPTY, 0 )
                     .put( Blocks.GRASS, BlockStatePropertyMap.EMPTY, 0 )
                     .put( Blocks.FERN, BlockStatePropertyMap.EMPTY, 0 )
+                    .put( Blocks.DEAD_BUSH, BlockStatePropertyMap.EMPTY, 0 )
+                    .put( Blocks.CACTUS, BlockStatePropertyMap.EMPTY, 0 )
+                    .put( Blocks.TORCH, BlockStatePropertyMap.EMPTY, -2 )
+                    .put( Blocks.HAY_BLOCK, BlockStatePropertyMap.EMPTY, -2 )
+                    .put( Blocks.BOOKSHELF, BlockStatePropertyMap.EMPTY, -3 )
                     .put( Blocks.CHEST, BlockStatePropertyMap.EMPTY, -4 )
-                    .put( Blocks.BARREL, BlockStatePropertyMap.EMPTY, -4 )
                     .put( Blocks.FURNACE, BlockStatePropertyMap.EMPTY, -4 )
-                    .putTag( BlockTags.DOORS, BlockStatePropertyMap.EMPTY, -3 )
-                    .putTag( BlockTags.FLOWERS, BlockStatePropertyMap.EMPTY, 0 )
-                    .buildWithDefault( -1 );
+                    .put( Blocks.BELL, BlockStatePropertyMap.EMPTY, -5 );
+            
+            // Add all profession POI blocks
+            // noinspection OptionalGetWithoutIsPresent
+            final List<Holder<PoiType>> pois = ForgeRegistries.POI_TYPES.getEntries().stream()
+                    .map( ( entry ) -> ForgeRegistries.POI_TYPES.getHolder( entry.getValue() ).get() )
+                    .toList();
+            
+            for( VillagerProfession profession : ForgeRegistries.VILLAGER_PROFESSIONS ) {
+                // Skip "empty" profession
+                if( profession == VillagerProfession.NONE ) continue;
+                
+                poiLoop:
+                for( Holder<PoiType> poiType : pois ) {
+                    if( profession.heldJobSite().test( poiType ) ) {
+                        // Grab the block from the first state in the iterator
+                        final Block block = poiType.get().matchingStates().iterator().next().getBlock();
+                        
+                        // Check for duplicates before adding
+                        for( FuzzyEntry<BlockState, Integer> entry : builder.list ) {
+                            if( entry.wrappedKey().unwrap() instanceof BlockStateKey<?> key ) {
+                                if( key.matches( block.defaultBlockState() ) ) {
+                                    continue poiLoop;
+                                }
+                            }
+                        }
+                        builder.put( block, BlockStatePropertyMap.EMPTY, -4 );
+                    }
+                }
+            }
+            
+            // Tags
+            builder.putTag( BlockTags.FLOWERS, BlockStatePropertyMap.EMPTY, 0 )
+                    .putTag( BlockTags.CROPS, BlockStatePropertyMap.EMPTY, -2 )
+                    .putTag( BlockTags.FLOWER_POTS, BlockStatePropertyMap.EMPTY, -2 )
+                    .putTag( BlockTags.DOORS, BlockStatePropertyMap.EMPTY, -4 )
+                    .putTag( BlockTags.BEDS, BlockStatePropertyMap.EMPTY, -10 );
+            
+            return builder.buildWithDefault( -1 );
         }
         
         @SuppressWarnings( "UnstableApiUsage" )
-        private static EntityMap<Integer> createDefaultRepCreatures() {
+        private static EntityMap<Integer> createDefaultEntitiesList() {
             return new EntityMap.Builder<>( IntValueCodec.ANY )
                     .put( EntityType.CAT, -20 ).put( EntityType.COW, -5 )
                     .put( EntityType.SHEEP, -5 ).put( EntityType.PIG, -5 )

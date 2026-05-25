@@ -1,6 +1,8 @@
 1.20.1-4.0.8
     - Bumped minimum required Crust version to 4.15.23+.
     - Configs now utilize the new experimental fuzzy collections API from Crust.
+    - Updated some config keys (breaking change).
+    - Updated some default configs.
     - Fixed EatBreedingItemGoal's magnet effect on target item entities not syncing movement updates to client.
     - Fixed Charge Elite AI not properly applying the correct knockback clientside for player targets.
     - Fixed BlockDestroyTracker not tracking block destroy progress made by the door breaking AI.

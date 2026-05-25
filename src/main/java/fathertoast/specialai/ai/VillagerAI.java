@@ -96,7 +96,7 @@ public final class VillagerAI {
             
             if( nearbyVillagers.isEmpty() ) return;
             
-            int repChange = Config.VILLAGES.REPUTATION.repChangingBlocks.getOrElse( blockState, 0 );
+            int repChange = Config.VILLAGES.REPUTATION.blocksList.getOrElse( blockState, 0 );
             
             // Nothing would change, abort
             if( repChange == 0 ) return;
@@ -142,7 +142,7 @@ public final class VillagerAI {
         
         if( nearbyVillagers.isEmpty() ) return;
         
-        int repChange = Config.VILLAGES.REPUTATION.repChangingCreatures.getOrElse( event.getEntity(), 0 );
+        int repChange = Config.VILLAGES.REPUTATION.entitiesList.getOrElse( event.getEntity(), 0 );
         
         // Nothing would change, abort
         if( repChange == 0 ) return;
