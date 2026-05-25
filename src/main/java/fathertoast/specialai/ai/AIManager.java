@@ -13,7 +13,6 @@ import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
 import fathertoast.specialai.util.BlockHelper;
-import fathertoast.specialai.util.VillagerNameHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
@@ -25,7 +24,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
@@ -33,16 +32,14 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.function.Supplier;
 
 /**
@@ -214,6 +211,40 @@ public final class AIManager {
     }
     
     /**
+     * Overrides the goal flags of all goals in the specified mob's {@link Mob#goalSelector}
+     * whose class is the same as or a subclass of the specified goal class.
+     *
+     * @param mob       The mob to modify goal flags for.
+     * @param goalClass The goal class to check with.
+     * @param newFlags  A set of new flags to overwrite the existing ones with.
+     */
+    private static void overrideGoalFlags( Mob mob, Class<? extends Goal> goalClass, EnumSet<Goal.Flag> newFlags ) {
+        for( WrappedGoal task : new ArrayList<>( mob.goalSelector.getAvailableGoals() ) ) {
+            if( goalClass.isAssignableFrom( task.getGoal().getClass() ) ) {
+                task.setFlags( newFlags );
+            }
+        }
+    }
+    
+    /**
+     * Overrides the priority value of all goals in the specified mob's {@link Mob#goalSelector}
+     * whose class is the same as or a subclass of the specified goal class.
+     *
+     * @param mob       The mob to modify goal priorities for.
+     * @param goalClass The goal class to check with.
+     * @param priority  The new priority value to override the existing values with.
+     * @param shift     If true, instead of overwriting the old priority with the specified value,
+     *                  the existing priority will be shifted by {@code priority}.
+     */
+    private static void overrideGoalPriority( Mob mob, Class<? extends Goal> goalClass, int priority, boolean shift ) {
+        for( WrappedGoal task : new ArrayList<>( mob.goalSelector.getAvailableGoals() ) ) {
+            if( goalClass.isAssignableFrom( task.getGoal().getClass() ) ) {
+                task.priority = shift ? (task.getPriority() + priority) : priority;
+            }
+        }
+    }
+    
+    /**
      * Called for the server at the start and end of each tick.
      * <p>
      * It is usually wise to check the phase (start/end) before doing anything.
@@ -252,14 +283,6 @@ public final class AIManager {
         // Only initialize AI on mob entities, where the base AI system is implemented
         if( entity instanceof Mob mob ) {
             initializeSpecialAI( mob );
-        }
-    }
-    
-    @SubscribeEvent( priority = EventPriority.LOWEST )
-    public void onFinalizeSpawn( MobSpawnEvent.FinalizeSpawn event ) {
-        // Randomly name villagers
-        if( event.getEntity() instanceof Villager villager ) {
-            VillagerNameHelper.setVillagerName( event.getLevel().getRandom(), villager, villager.getVillagerData() );
         }
     }
     
@@ -320,6 +343,14 @@ public final class AIManager {
             
             if( needsAttackAI ) {
                 addMeleeAttackAI( pathfinderMob );
+            }
+            
+            // Manually fix squid movement
+            if( pathfinderMob instanceof Squid ) {
+                overrideGoalFlags( pathfinderMob, Squid.SquidRandomMovementGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
+                overrideGoalFlags( pathfinderMob, Squid.SquidFleeGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
+                overrideGoalPriority( pathfinderMob, Squid.SquidRandomMovementGoal.class, 1, false );
+                overrideGoalPriority( pathfinderMob, Squid.SquidFleeGoal.class, 2, false );
             }
         }
         
@@ -427,9 +458,7 @@ public final class AIManager {
     }
     
     /**
-     * Called by EntityLivingBase.onDeath().
-     * EntityLivingBase entityLiving = the entity dying.
-     * DamageSource source = the damage source that killed the entity.
+     * Fired when a living entity dies.
      *
      * @param event The event being triggered.
      */
