@@ -118,32 +118,55 @@ public final class AIManager {
     }
     
     /** @param entity Adds hurt by target AI to the entity, as well as attack AI if needed. */
-    private static void addHurtByTargetAI( PathfinderMob entity ) {
-        entity.targetSelector.addGoal( 0, new HurtByTargetGoal( entity ) );
+    private static void addHurtByTargetAI( Mob entity ) {
+        entity.targetSelector.addGoal( 0, new UniversalHurtByTargetGoal( entity ) );
     }
     
     /** @param entity Adds aggressive AI to the entity, as well as attack AI if needed. */
-    private static void addAggressiveTargetAI( PathfinderMob entity ) {
+    private static void addAggressiveTargetAI( Mob entity ) {
         entity.targetSelector.addGoal( 1, new NearestAttackableTargetGoal<>( entity, Player.class, true ) );
     }
     
-    /** @param entity Adds a melee attack AI to the entity, unless an attack AI is detected. */
-    private static void addMeleeAttackAI( PathfinderMob entity ) {
-        // Make sure the entity doesn't already have a recognized attack AI
-        for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
+    // TODO - Attempt to detect mobs that use the Brain AI system instead of goals
+    //        and give them a brain attack AI instead of the goal.
+    
+    /**
+     * @param mob Adds a melee attack AI to the entity, unless an attack AI is detected,
+     *            in which case we ensure high priority for the goal.
+     */
+    private static void addMeleeAttackAI( Mob mob ) {
+        Class<? extends Goal> existingAttackAI = null;
+        
+        // Scan for recognized attack AIs
+        for( WrappedGoal task : new ArrayList<>( mob.goalSelector.getAvailableGoals() ) ) {
             if( task.getGoal() instanceof MeleeAttackGoal || task.getGoal() instanceof OcelotAttackGoal ||
-                    task.getGoal() instanceof RangedAttackGoal || task.getGoal() instanceof RangedBowAttackGoal || task.getGoal() instanceof RangedCrossbowAttackGoal ) {
-                return;
+                    task.getGoal() instanceof RangedAttackGoal || task.getGoal() instanceof RangedBowAttackGoal ||
+                    task.getGoal() instanceof RangedCrossbowAttackGoal ) {
+                existingAttackAI = task.getGoal().getClass();
+                break;
             }
         }
-        entity.goalSelector.addGoal( 0, new AnimalMeleeAttackGoal( entity, false ) );
+        // If one exists, ensure it has high priority
+        if( existingAttackAI != null ) {
+            setHighPriority( mob.goalSelector, existingAttackAI );
+        }
+        // Otherwise we add our universal melee attack goal with high priority
+        else {
+            mob.goalSelector.addGoal( 0, new UniversalMeleeAttackGoal( mob, false ) );
+            // Just in case; some mobs have tasks with negative priority values
+            setHighPriority( mob.goalSelector, UniversalMeleeAttackGoal.class );
+        }
     }
     
     /** @param entity Sets the entity's "call for help" flag to true. */
     private static void setHelpAI( Mob entity ) {
         for( WrappedGoal task : new ArrayList<>( entity.targetSelector.getAvailableGoals() ) ) {
-            if( task.getGoal() instanceof HurtByTargetGoal ) {
-                ((HurtByTargetGoal) task.getGoal()).setAlertOthers();
+            if( task.getGoal() instanceof HurtByTargetGoal hurtByGoal ) {
+                hurtByGoal.setAlertOthers();
+                return;
+            }
+            else if( task.getGoal() instanceof UniversalHurtByTargetGoal hurtByGoal ) {
+                hurtByGoal.setAlertOthers();
                 return;
             }
         }
@@ -214,12 +237,12 @@ public final class AIManager {
      * Overrides the goal flags of all goals in the specified mob's {@link Mob#goalSelector}
      * whose class is the same as or a subclass of the specified goal class.
      *
-     * @param mob       The mob to modify goal flags for.
-     * @param goalClass The goal class to check with.
-     * @param newFlags  A set of new flags to overwrite the existing ones with.
+     * @param goalSelector The goal selector to modify goal flags for.
+     * @param goalClass    The goal class to check with.
+     * @param newFlags     A set of new flags to overwrite the existing ones with.
      */
-    private static void overrideGoalFlags( Mob mob, Class<? extends Goal> goalClass, EnumSet<Goal.Flag> newFlags ) {
-        for( WrappedGoal task : new ArrayList<>( mob.goalSelector.getAvailableGoals() ) ) {
+    private static void overrideGoalFlags( GoalSelector goalSelector, Class<? extends Goal> goalClass, EnumSet<Goal.Flag> newFlags ) {
+        for( WrappedGoal task : new ArrayList<>( goalSelector.getAvailableGoals() ) ) {
             if( goalClass.isAssignableFrom( task.getGoal().getClass() ) ) {
                 task.setFlags( newFlags );
             }
@@ -230,18 +253,39 @@ public final class AIManager {
      * Overrides the priority value of all goals in the specified mob's {@link Mob#goalSelector}
      * whose class is the same as or a subclass of the specified goal class.
      *
-     * @param mob       The mob to modify goal priorities for.
-     * @param goalClass The goal class to check with.
-     * @param priority  The new priority value to override the existing values with.
-     * @param shift     If true, instead of overwriting the old priority with the specified value,
-     *                  the existing priority will be shifted by {@code priority}.
+     * @param goalSelector The goal selector to modify goal priorities in.
+     * @param goalClass    The goal class to check with.
+     * @param priority     The new priority value to override the existing values with.
+     * @param shift        If true, instead of overwriting the old priority with the specified value,
+     *                     the existing priority will be shifted by {@code priority}.
      */
-    private static void overrideGoalPriority( Mob mob, Class<? extends Goal> goalClass, int priority, boolean shift ) {
-        for( WrappedGoal task : new ArrayList<>( mob.goalSelector.getAvailableGoals() ) ) {
+    private static void overrideGoalPriority( GoalSelector goalSelector, Class<? extends Goal> goalClass, int priority, boolean shift ) {
+        for( WrappedGoal task : new ArrayList<>( goalSelector.getAvailableGoals() ) ) {
             if( goalClass.isAssignableFrom( task.getGoal().getClass() ) ) {
                 task.priority = shift ? (task.getPriority() + priority) : priority;
             }
         }
+    }
+    
+    /**
+     * Ensures the specified goal is assigned the highest existing priority among available goals.
+     */
+    private static void setHighPriority( GoalSelector goalSelector, Class<? extends Goal> goalClass ) {
+        int highestPriority = Integer.MAX_VALUE;
+        
+        for( WrappedGoal task : new ArrayList<>( goalSelector.getAvailableGoals() ) ) {
+            if( task.getPriority() < highestPriority )
+                highestPriority = task.getPriority();
+        }
+        overrideGoalPriority( goalSelector, goalClass, highestPriority, false );
+    }
+    
+    /** @return True if the given goal selectors contain at least one goal of the specified type. */
+    private static boolean hasGoalOfType( GoalSelector goalSelector, Class<? extends Goal> goalClass ) {
+        for( WrappedGoal task : new ArrayList<>( goalSelector.getAvailableGoals() ) ) {
+            if( goalClass == task.getGoal().getClass() ) return true;
+        }
+        return false;
     }
     
     /**
@@ -306,10 +350,11 @@ public final class AIManager {
             addDodgeArrowsAI( entity, tag.getDouble( TAG_DODGE_ARROWS ) );
         }
         
+        // Set to true any time an attack target AI is added
+        boolean needsAttackAI = false;
+        
+        // Goals only useful for pathing mobs
         if( entity instanceof PathfinderMob pathfinderMob ) {
-            // Set to true any time an attack target AI is added
-            boolean needsAttackAI = false;
-            
             // Avoid explosions
             if( !NBTHelper.containsNumber( tag, TAG_AVOID_EXPLOSIONS ) ) {
                 tag.putDouble( TAG_AVOID_EXPLOSIONS, Config.GENERAL.REACTIONS.avoidExplosionsList.getOrElse( entity, 0.0 ) );
@@ -322,36 +367,28 @@ public final class AIManager {
             if( Config.GENERAL.ANIMALS.eatBreedingItems.get() && entity instanceof Animal animal && !Config.GENERAL.ANIMALS.eatingBlacklist.contains( animal ) ) {
                 addEatingAI( animal );
             }
-            
-            // Depacify
-            if( !NBTHelper.containsNumber( tag, TAG_DEPACIFY ) ) {
-                tag.putBoolean( TAG_DEPACIFY, Config.GENERAL.ANIMALS.depacifyList.rollChance( entity, rng ) );
-            }
-            if( tag.getBoolean( TAG_DEPACIFY ) ) {
-                addHurtByTargetAI( pathfinderMob );
-                needsAttackAI = true;
-            }
-            
-            // Aggressive
-            if( !NBTHelper.containsNumber( tag, TAG_AGGRESSIVE ) ) {
-                tag.putBoolean( TAG_AGGRESSIVE, Config.GENERAL.ANIMALS.aggressiveList.rollChance( entity, rng ) );
-            }
-            if( tag.getBoolean( TAG_AGGRESSIVE ) ) {
-                addAggressiveTargetAI( pathfinderMob );
-                needsAttackAI = true;
-            }
-            
-            if( needsAttackAI ) {
-                addMeleeAttackAI( pathfinderMob );
-            }
-            
-            // Manually fix squid movement
-            if( pathfinderMob instanceof Squid ) {
-                overrideGoalFlags( pathfinderMob, Squid.SquidRandomMovementGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
-                overrideGoalFlags( pathfinderMob, Squid.SquidFleeGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
-                overrideGoalPriority( pathfinderMob, Squid.SquidRandomMovementGoal.class, 1, false );
-                overrideGoalPriority( pathfinderMob, Squid.SquidFleeGoal.class, 2, false );
-            }
+        }
+        
+        // Depacify
+        if( !NBTHelper.containsNumber( tag, TAG_DEPACIFY ) ) {
+            tag.putBoolean( TAG_DEPACIFY, Config.GENERAL.ANIMALS.depacifyList.rollChance( entity, rng ) );
+        }
+        if( tag.getBoolean( TAG_DEPACIFY ) ) {
+            addHurtByTargetAI( entity );
+            needsAttackAI = true;
+        }
+        
+        // Aggressive
+        if( !NBTHelper.containsNumber( tag, TAG_AGGRESSIVE ) ) {
+            tag.putBoolean( TAG_AGGRESSIVE, Config.GENERAL.ANIMALS.aggressiveList.rollChance( entity, rng ) );
+        }
+        if( tag.getBoolean( TAG_AGGRESSIVE ) ) {
+            addAggressiveTargetAI( entity );
+            needsAttackAI = true;
+        }
+        
+        if( needsAttackAI ) {
+            addMeleeAttackAI( entity );
         }
         
         // Call for help
@@ -409,11 +446,22 @@ public final class AIManager {
             addDoorBreakAI( entity );
         }
         
+        // Tweak misc goal priorities and flags for certain entities
+        maybeReorderGoals( entity );
+        
         // Elite AI
         if( EnvironmentHelper.isLoaded( entity.level(), entity.blockPosition() ) )
             initializeEliteAI( tag, entity );
         else
             DeferredAction.queue( new DelayedInitializeEliteAI( tag, entity ) );
+    }
+    
+    /** Here we reorder misc priorities and flags for goals. */
+    private static void maybeReorderGoals( Mob mob ) {
+        if( mob instanceof Squid ) {
+            overrideGoalFlags( mob.goalSelector, Squid.SquidRandomMovementGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
+            overrideGoalFlags( mob.goalSelector, Squid.SquidFleeGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
+        }
     }
     
     /** Called when a mob is spawned in the world, including by chunk loading and dimension transition. */

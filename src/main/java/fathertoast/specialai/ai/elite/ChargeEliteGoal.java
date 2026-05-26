@@ -1,6 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
-import fathertoast.specialai.ai.AnimalMeleeAttackGoal;
+import fathertoast.specialai.ai.UniversalMeleeAttackGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
@@ -150,7 +150,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         
         if( hit ) {
             // Has hit the target
-            AnimalMeleeAttackGoal.doHurtTarget( mob, target );
+            UniversalMeleeAttackGoal.doHurtTarget( mob, target );
             mob.swing( InteractionHand.MAIN_HAND );
             
             mob.setDeltaMovement(
