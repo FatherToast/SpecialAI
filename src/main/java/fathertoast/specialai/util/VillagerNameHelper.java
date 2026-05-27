@@ -34,9 +34,6 @@ public final class VillagerNameHelper {
     /** Mod data tag key. */
     private static final String TAG_MOD_DATA = SpecialAI.MOD_ID + "Data";
     
-    
-    // TODO - Test that this still works after config update
-    
     /**
      * Generates a new, random name for the given villager and sets it as the entity's display name.<br>
      * If a first name already exists in the villager's NBT, we only generate a new job title and merge
