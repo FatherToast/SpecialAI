@@ -23,6 +23,8 @@ import java.util.function.Supplier;
  * Normal-sized riders and mounts count as small-sized if they are babies.
  */
 @SuppressWarnings( "UnstableApiUsage" )
+// TODO - Create high-priority brain behavior that we can add to mounts that use brain AI,
+//        such that they can be properly controlled by riders.
 public class RiderGoal extends Goal {
     /** The pathfinding speed multiplier to use when trying to mount. */
     private static final double SPEED_MULTIPLIER = 1.2;
@@ -170,22 +172,16 @@ public class RiderGoal extends Goal {
     /**
      * Used to connect a rider to its target mount, so it can start riding.
      * This strategy is used because mounting during the AI tick can potentially cause issues.
+     *
+     * @param rider The entity that wants to ride.
+     * @param mount The target entity to be ridden.
      */
-    private static class StartRiding implements Supplier<Boolean> {
-        /** The entity that wants to ride. */
-        private final Mob RIDER;
-        /** The target entity to be ridden. */
-        private final LivingEntity MOUNT;
-        
-        StartRiding( Mob rider, LivingEntity mount ) {
-            RIDER = rider;
-            MOUNT = mount;
-        }
+    private record StartRiding(Mob rider, LivingEntity mount) implements Supplier<Boolean> {
         
         /** Called to actually start riding. */
         @Override
         public Boolean get() {
-            RIDER.startRiding( MOUNT, true );
+            rider.startRiding( mount, true );
             return true;
         }
     }
