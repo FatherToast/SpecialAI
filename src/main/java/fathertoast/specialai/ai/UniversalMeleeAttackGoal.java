@@ -4,7 +4,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
@@ -22,7 +21,6 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeMod;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
@@ -100,7 +98,10 @@ public class UniversalMeleeAttackGoal extends Goal {
         setFlags( EnumSet.of( Goal.Flag.MOVE, Goal.Flag.LOOK ) );
     }
     
-    /** @return Returns the pathfinding speed multiplier for the entity while attacking. This is not used for swimming entities. */
+    /**
+     * @return Returns the pathfinding speed multiplier for the entity while attacking.
+     * This is not used for swimming entities or goal owners that are not considered pathfinders.
+     */
     public static double attackingMoveSpeed( Mob entity ) {
         if( entity instanceof AbstractVillager ) {
             return 0.7;
@@ -116,12 +117,6 @@ public class UniversalMeleeAttackGoal extends Goal {
         }
         if( entity instanceof Animal ) {
             return 1.3;
-        }
-        if( entity instanceof Squid ) {
-            return 0.4;
-        }
-        if( entity instanceof Bat ) {
-            return 0.3;
         }
         return 1.0;
     }
@@ -155,6 +150,8 @@ public class UniversalMeleeAttackGoal extends Goal {
         }
         return 0.0F;
     }
+    
+    // TODO Maybe allow override via config?
     
     /**
      * @return The (likely) appropriate {@link OwnerType} for the given mob
@@ -480,17 +477,17 @@ public class UniversalMeleeAttackGoal extends Goal {
             
             if( (goal.followingTargetEvenIfNotSeen || mob.getSensing().hasLineOfSight( target )) ) {
                 // Look at target
+                mob.lookAt( target, 30.0F, 30.0F );
                 mob.getLookControl().setLookAt( target, 30.0F, 30.0F );
                 
                 if( target.distanceToSqr( mob ) >= 1.0D ) {
-                    Vec3 moveVec = getTargetVec( mob, target ).scale( 0.1 );
+                    mob.getMoveControl().setWantedPosition( target.getX(), target.getY(), target.getZ(), 1.0 );
                     
-                    // Take swim speed attribute into account, if present
-                    if( mob.getAttributes().hasAttribute( ForgeMod.SWIM_SPEED.get() ) ) {
-                        moveVec = moveVec.scale( 0.4 * mob.getAttributeValue( ForgeMod.SWIM_SPEED.get() ) );
+                    // Jump if colliding with a wall outside water
+                    if( !mob.isInWater() && mob.horizontalCollision ) {
+                        mob.getJumpControl().jump();
+                        mob.setJumping( true );
                     }
-                    mob.setDeltaMovement( moveVec );
-                    mob.hasImpulse = true;
                 }
             }
         } ),
@@ -502,21 +499,42 @@ public class UniversalMeleeAttackGoal extends Goal {
             
             if( (goal.followingTargetEvenIfNotSeen || mob.getSensing().hasLineOfSight( target )) ) {
                 // Look at target
+                mob.lookAt( target, 30.0F, 30.0F );
                 mob.getLookControl().setLookAt( target, 30.0F, 30.0F );
                 
                 if( ctx.attackDist >= 1.0D ) {
-                    final MoveControl moveControl = mob.getMoveControl();
-                    
-                    if( moveControl.hasWanted() )
-                        
-                        moveControl.setWantedPosition( target.getX(), target.getY(), target.getZ(), goal.speedModifier );
+                    mob.getMoveControl().setWantedPosition( target.getX(), target.getY(), target.getZ(), 1.0 );
                 }
             }
         } ),
         // Ground mobs that does not use pathing. This is probably highly unusual.
         GENERIC_GROUND( ( ctx ) -> {
-            // TODO - Think of a strategy; maybe old-school mob behavior of walking
-            //        and just jumping insaneo-style when something is in the way?
+            final UniversalMeleeAttackGoal goal = ctx.goal;
+            final Mob mob = ctx.owner;
+            final LivingEntity target = ctx.target;
+            
+            if( (goal.followingTargetEvenIfNotSeen || mob.getSensing().hasLineOfSight( target )) ) {
+                // Look at target
+                mob.lookAt( target, 30.0F, 30.0F );
+                mob.getLookControl().setLookAt( target, 30.0F, 30.0F );
+                
+                if( ctx.attackDist >= 1.0D ) {
+                    Vec3 moveVec = getTargetVec( mob, target )
+                            .multiply( 1.0, 0.0, 1.0 )
+                            .scale( 0.1 );
+                    
+                    if( !mob.onGround() )
+                        moveVec = moveVec.scale( 0.1 );
+                    
+                    mob.setDeltaMovement( mob.getDeltaMovement().add( moveVec ) );
+                    
+                    // Jump if colliding with a wall
+                    if( mob.horizontalCollision ) {
+                        mob.getJumpControl().jump();
+                        mob.setJumping( true );
+                    }
+                }
+            }
         } ),
         // Squids need special treatment *large thumbs up emoji*
         SQUID( ( ctx ) -> {
@@ -529,7 +547,7 @@ public class UniversalMeleeAttackGoal extends Goal {
                 squid.getLookControl().setLookAt( target, 30.0F, 30.0F );
                 
                 if( ctx.attackDist >= 1.0D ) {
-                    final Vec3 moveVec = getTargetVec( squid, target ).scale( goal.speedModifier );
+                    final Vec3 moveVec = getTargetVec( squid, target ).scale( 0.4 );
                     squid.setMovementVector( (float) moveVec.x, (float) moveVec.y, (float) moveVec.z );
                 }
             }
@@ -550,7 +568,7 @@ public class UniversalMeleeAttackGoal extends Goal {
                     
                     // We don't really prevent the other movement the bat has,
                     // but it kinda works to make the movement sporadic, which is kinda nice
-                    final Vec3 moveVec = getTargetVec( bat, target ).scale( goal.speedModifier );
+                    final Vec3 moveVec = getTargetVec( bat, target ).scale( 0.5 );
                     bat.setDeltaMovement( moveVec );
                 }
             }
