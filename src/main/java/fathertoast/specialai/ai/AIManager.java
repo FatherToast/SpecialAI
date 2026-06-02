@@ -459,10 +459,12 @@ public final class AIManager {
     
     /** Here we reorder misc priorities and flags for goals. */
     private static void maybeReorderGoals( Mob mob ) {
+        // Flag the squid's movement related goals as movement related goals. Lol
         if( mob instanceof Squid ) {
             overrideGoalFlags( mob.goalSelector, Squid.SquidRandomMovementGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
             overrideGoalFlags( mob.goalSelector, Squid.SquidFleeGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
         }
+        // Remove the player-avoiding goal if the rabbit got the melee attack goal
         else if( mob instanceof Rabbit && hasGoalOfType( mob.goalSelector, UniversalMeleeAttackGoal.class ) ) {
             mob.goalSelector.removeAllGoals( ( goal ) ->
                     goal instanceof AvoidEntityGoal<?> avoidGoal && Player.class.isAssignableFrom( avoidGoal.avoidClass )
