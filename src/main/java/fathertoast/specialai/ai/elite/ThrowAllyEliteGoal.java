@@ -1,6 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
-import fathertoast.specialai.ai.IVehicleControlOverride;
+import fathertoast.specialai.ai.IPassengerControlOverride;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * This AI causes an entity to throw nearby allies at its target when at range.
  */
-public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IVehicleControlOverride {
+public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IPassengerControlOverride {
     /** The entity this mob is following. */
     private Mob throwTarget;
     /** Ticks until next attack. */
@@ -116,12 +116,12 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IVeh
             }
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called when this AI is deactivated. */
     @Override
     public void stop() {
@@ -144,7 +144,7 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IVeh
         final List<Entity> nearbyEntities = mob.level().getEntities( mob, mob.getBoundingBox().inflate( Math.sqrt( closestDistanceSqr ) + 2.0 ) );
         for( Entity entity : nearbyEntities ) {
             // Check if the entity is a valid throw target
-            if( !(entity instanceof Mob throwTarget  ) || !throwTarget.isAlive() || !throwTarget.onGround() || throwTarget.isPassenger() ||
+            if( !(entity instanceof Mob throwTarget) || !throwTarget.isAlive() || !throwTarget.onGround() || throwTarget.isPassenger() ||
                     target != throwTarget.getTarget() || throwTarget.distanceToSqr( target ) < Config.ELITE_AI.THROW_ALLY.allyRangeSqrMin.get() )
                 continue;
             
