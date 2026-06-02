@@ -24,6 +24,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -461,6 +462,11 @@ public final class AIManager {
         if( mob instanceof Squid ) {
             overrideGoalFlags( mob.goalSelector, Squid.SquidRandomMovementGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
             overrideGoalFlags( mob.goalSelector, Squid.SquidFleeGoal.class, EnumSet.of( Goal.Flag.MOVE ) );
+        }
+        else if( mob instanceof Rabbit && hasGoalOfType( mob.goalSelector, UniversalMeleeAttackGoal.class ) ) {
+            mob.goalSelector.removeAllGoals( ( goal ) ->
+                    goal instanceof AvoidEntityGoal<?> avoidGoal && Player.class.isAssignableFrom( avoidGoal.avoidClass )
+            );
         }
     }
     
