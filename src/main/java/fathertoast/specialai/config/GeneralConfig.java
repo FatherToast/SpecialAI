@@ -14,7 +14,11 @@ import fathertoast.crust.api.config.common.value.collection.EntityMap;
 import fathertoast.crust.api.config.common.value.collection.EntitySet;
 import fathertoast.crust.api.config.common.value.collection.value.ArrayValueCodec;
 import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
+import fathertoast.crust.api.config.common.value.collection.value.EnumValueCodec;
+import net.minecraft.ChatFormatting;
 import net.minecraft.world.entity.EntityType;
+
+import static fathertoast.specialai.ai.UniversalMeleeAttackGoal.MovementStrategy;
 
 @SuppressWarnings( "UnstableApiUsage" )
 public class GeneralConfig extends AbstractConfigFile {
@@ -35,6 +39,22 @@ public class GeneralConfig extends AbstractConfigFile {
         REACTIONS = new Reactions( this );
         JOCKEYS = new Jockeys( this );
         DOOR_BREAKING = new DoorBreaking( this );
+        
+        // Print description for each movement strategy
+        SPEC.decreaseIndent();
+        SPEC.newLine( 2 );
+        SPEC.titledComment( ChatFormatting.YELLOW + "Movement strategies",
+                "Below is a description of every available 'movement strategy' type.",
+                "Movement strategies are used by Special AI's melee attack goal to determine how to move the goal owner towards its target.",
+                "Mobs from both vanilla and other mods can vary a lot when it comes to how they are designed to move.",
+                "For this reason, Special AI's melee attack goal sometimes needs to treat different mobs differently," +
+                        " and that is what movement strategies are for."
+        );
+        SPEC.increaseIndent();
+        for( MovementStrategy strategy : MovementStrategy.values() ) {
+            SPEC.fileOnlyNewLine();
+            SPEC.titledComment( strategy.getSerializedName(), strategy.getDescription() );
+        }
     }
     
     public static class Animals extends AbstractConfigCategory<GeneralConfig> {
@@ -42,6 +62,8 @@ public class GeneralConfig extends AbstractConfigFile {
         public final EntityMapField<Double> depacifyList;
         
         public final EntityMapField<Double> aggressiveList;
+        
+        public final EntityMapField<MovementStrategy> movementStratList;
         
         public final BooleanField eatBreedingItems;
         public final DoubleField eatingReach;
@@ -63,6 +85,16 @@ public class GeneralConfig extends AbstractConfigFile {
             aggressiveList = SPEC.define( new EntityMapField<>( "aggressive_entities", createDefaultAggressiveList(),
                     "List of neutral (including depacified) mobs that are made 'aggressive' like monsters.",
                     "Additional value after the entity type is the chance (0.0 to 1.0) for entities of that type to spawn with the AI." ) );
+            
+            SPEC.newLine();
+            
+            movementStratList = SPEC.define( new EntityMapField<>( "movement_strategies", createDefaultMovementStrategyList(),
+                    "A list of entities that should use a custom movement strategy for their Special AI melee attack AI.",
+                    "Additional value after the entity type is the type of movement strategy the entity should use (see bottom of config " +
+                            "for more info on strategies).",
+                    "Note that this field ONLY applies to mobs that have been given Special AI's melee attack AI.",
+                    "The AI is only given to mobs that are listed in the 'depacify' list or the 'aggressive' list above, " +
+                            "if they don't already have a recognized attack goal." ) );
             
             SPEC.newLine();
             
@@ -90,7 +122,9 @@ public class GeneralConfig extends AbstractConfigFile {
                     // Farm animals
                     .put( EntityType.CHICKEN, 1.0 ).put( EntityType.COW, 1.0 )
                     .put( EntityType.PIG, 1.0 ).put( EntityType.SHEEP, 1.0 )
-                    .put( EntityType.RABBIT, 1.0 )
+                    // Wild animals
+                    .put( EntityType.RABBIT, 0.25 ).put( EntityType.FOX, 0.3 )
+                    .put( EntityType.BAT, 1.0 )
                     // Nether
                     .put( EntityType.STRIDER, 1.0 )
                     // Water
@@ -102,13 +136,23 @@ public class GeneralConfig extends AbstractConfigFile {
         private static EntityMap<Double> createDefaultAggressiveList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
                     // Farm animals
-                    .put( EntityType.COW, 0.04 ).put( EntityType.RABBIT, 0.02 )
+                    .put( EntityType.COW, 0.04 )
+                    // Wild animals
+                    .put( EntityType.RABBIT, 0.02 ).put( EntityType.FOX, 0.03 )
+                    .put( EntityType.BAT, 0.05 )
                     // Nether
                     .put( EntityType.STRIDER, 0.02 )
                     // Water
-                    .put( EntityType.SQUID, 1.0 ).put( EntityType.COD, 0.02 )
+                    .put( EntityType.SQUID, 0.05 ).put( EntityType.COD, 0.02 )
                     .put( EntityType.SALMON, 0.04 )
                     .build();
+        }
+        
+        private static EntityMap<MovementStrategy> createDefaultMovementStrategyList() {
+            final EntityMap.Builder<MovementStrategy, ?> builder = new EntityMap.Builder<>(
+                    EnumValueCodec.of( MovementStrategy.AUTO )
+            );
+            return builder.buildWithDefault( MovementStrategy.AUTO );
         }
     }
     
