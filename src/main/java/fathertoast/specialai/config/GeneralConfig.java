@@ -116,7 +116,6 @@ public class GeneralConfig extends AbstractConfigFile {
                     "List of animal entities that should not get the 'eat breeding items' AI." ) );
         }
         
-        //TODO Decide whether horses should be on this list, and verify that all current entries work (especially the squid)
         private static EntityMap<Double> createDefaultDepacifyList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
                     // Farm animals
