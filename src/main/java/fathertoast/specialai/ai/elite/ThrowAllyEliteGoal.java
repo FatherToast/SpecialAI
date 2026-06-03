@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.specialai.ai.IPassengerControlOverride;
 import fathertoast.specialai.ai.elite.base.AbstractPathingEliteGoal;
 import fathertoast.specialai.config.Config;
@@ -90,6 +91,12 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IPas
                         .normalize().scale( Config.ELITE_AI.THROW_ALLY.throwSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
                 throwEntity.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.THROW_ALLY.throwSpeedUpward.get(), jumpXZ.z );
                 
+                // Try and stop pathfinding thrown mobs from sometimes
+                // backtracking to a path node they didn't reach after being thrown.
+                if( throwEntity instanceof Mob throwMob && !throwMob.getNavigation().isDone() ) {
+                    DeferredAction.queue( new PostJumpCheck( throwMob, target, 30 ) );
+                }
+                
                 mob.getNavigation().stop();
                 mob.swing( InteractionHand.MAIN_HAND );
                 giveUpDelay = 666;
@@ -145,15 +152,15 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IPas
         final List<Entity> nearbyEntities = mob.level().getEntities( mob, mob.getBoundingBox().inflate( Math.sqrt( closestDistanceSqr ) + 2.0 ) );
         for( Entity entity : nearbyEntities ) {
             // Check if the entity is a valid throw target
-            if( !(entity instanceof Mob throwTarget) || !throwTarget.isAlive() || !throwTarget.onGround() || throwTarget.isPassenger() ||
-                    target != throwTarget.getTarget() || throwTarget.distanceToSqr( target ) < Config.ELITE_AI.THROW_ALLY.allyRangeSqrMin.get() )
+            if( !(entity instanceof Mob thrTarget) || !thrTarget.isAlive() || !thrTarget.onGround() || thrTarget.isPassenger() ||
+                    target != thrTarget.getTarget() || thrTarget.distanceToSqr( target ) < Config.ELITE_AI.THROW_ALLY.allyRangeSqrMin.get() )
                 continue;
             
             // Pick the closest target only
-            final double distanceSqr = mob.distanceToSqr( throwTarget );
+            final double distanceSqr = mob.distanceToSqr( thrTarget );
             if( distanceSqr < closestDistanceSqr ) {
                 closestDistanceSqr = distanceSqr;
-                this.throwTarget = throwTarget;
+                throwTarget = thrTarget;
             }
         }
         return throwTarget != null;

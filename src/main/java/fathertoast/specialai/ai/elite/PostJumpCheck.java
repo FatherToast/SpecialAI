@@ -1,6 +1,5 @@
 package fathertoast.specialai.ai.elite;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.pathfinder.Node;
@@ -24,9 +23,6 @@ public final class PostJumpCheck implements Supplier<Boolean> {
     private final LivingEntity target;
     /** When this timer runs out, the check yields. */
     private int giveUpCounter;
-    
-    /** The last */
-    private BlockPos.MutableBlockPos lastNodePos;
     
     
     public PostJumpCheck( Mob leaper, LivingEntity target, int giveUpCounter ) {

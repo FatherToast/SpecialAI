@@ -7,7 +7,10 @@
     - Fixed BlockDestroyTracker not tracking block destroy progress made by the door breaking AI.
     - SpecialBreakDoorGoal now assumes blocks with sound type METAL are metal blocks when determining break sound. How bold.
     - Depacify and aggressive AI are now compatible with more mob types.
-    - Fixed mobs using the Leap or Jump Elite AI sometimes backtracking to an earlier position after becoming airborne.
+    - Fixed mobs using the following Elite AIs sometimes backtracking or moving weirdly after being thrown or jumping:
+        - Leap
+        - Jump
+        - Throw Ally
     - Fixed Charge Elite AI not properly applying the correct knockback clientside for player targets.
 1.20.1-3.0.7
     - Fixed "reputation.reputation_changing_creatures" list not working with "minecraft:player" entity type.
