@@ -201,12 +201,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 20, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 40, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 20, 40, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -240,12 +237,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 60, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 100, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 60, 100, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -330,12 +324,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 60, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 100, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 60, 100, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -399,12 +390,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 100, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 160, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 100, 160, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after completion, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -458,12 +446,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 80, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 140, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 80, 140, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -630,11 +615,8 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             initialCooldown = SPEC.define( new IntField( "cooldown.initial", 20, IntField.Range.TOKEN_NEGATIVE,
                     "Time before the first spawn 'wave', in ticks. If set to -1, the initial cooldown is randomized between the min and max." ) );
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 200, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time between spawn 'waves', in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 800, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 200, 600, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time between spawn 'waves', in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -682,12 +664,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 60, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 100, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 60, 100, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -737,12 +716,9 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            cooldown = new IntField.RandomRange(
-                    SPEC.define( new IntField( "cooldown.min", 100, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
-                                    "in ticks (20 ticks = 1 second)." ) ),
-                    SPEC.define( new IntField( "cooldown.max", 160, IntField.Range.NON_NEGATIVE ) )
-            );
+            cooldown = new IntField.RandomRange( SPEC, "cooldown", 100, 160, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) time this AI is disabled for after activation, " +
+                            "in ticks (20 ticks = 1 second)." );
             
             SPEC.newLine();
             
@@ -753,13 +729,10 @@ public class EliteAIConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            reGrabs = new IntField.RandomRange(
-                    SPEC.define( new IntField( "re_grabs.min", 0, IntField.Range.NON_NEGATIVE,
-                            "The minimum and maximum (inclusive) number of times an entity will attempt to re-grab " +
-                                    "its target if it escapes the grab before being thrown. Re-rolls each time the AI activates.",
-                            "This AI goes into cooldown if the target escapes and the entity has no remaining re-grabs." ) ),
-                    SPEC.define( new IntField( "re_grabs.max", 3, IntField.Range.NON_NEGATIVE ) )
-            );
+            reGrabs = new IntField.RandomRange( SPEC, "re_grabs", 0, 3, IntField.Range.NON_NEGATIVE,
+                    "The minimum and maximum (inclusive) number of times an entity will attempt to re-grab " +
+                            "its target if it escapes the grab before being thrown. Re-rolls each time the AI activates.",
+                    "This AI goes into cooldown if the target escapes and the entity has no remaining re-grabs." );
             
             SPEC.newLine();
             
