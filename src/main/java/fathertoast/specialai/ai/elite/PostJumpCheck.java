@@ -31,6 +31,10 @@ public final class PostJumpCheck implements Supplier<Boolean> {
         this.giveUpCounter = giveUpCounter;
     }
     
+    /**
+     * @return True if the check completed successfully
+     * or ran out of time.
+     */
     @Override
     public Boolean get() {
         --giveUpCounter;
