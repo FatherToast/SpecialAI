@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
+import fathertoast.specialai.ai.elite.base.AbstractPathingEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -28,7 +29,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     /** Ticks until next aura pulse. */
     private int pulseTime;
     
-    ShamanEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public ShamanEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }

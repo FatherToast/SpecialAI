@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
+import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +29,7 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
     /** The direction of this mob's current attack. */
     private Vec3 attackVec;
     
-    BarrageEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public BarrageEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK, Flag.JUMP ) );
     }
@@ -83,12 +84,12 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
             default:
         }
     }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;
     }
-
+    
     /** Called each tick while this AI is active and in charge up mode. */
     private void tickChargeUp() {
         final LivingEntity target = mob.getTarget();

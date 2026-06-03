@@ -1,7 +1,8 @@
-package fathertoast.specialai.ai.elite;
+package fathertoast.specialai.ai.elite.base;
 
 import fathertoast.crust.api.config.common.value.weighted.WeightedList;
 import fathertoast.crust.api.lib.NBTHelper;
+import fathertoast.specialai.ai.elite.*;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
 import net.minecraft.ChatFormatting;

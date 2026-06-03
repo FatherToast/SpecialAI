@@ -4,11 +4,11 @@
     - Updated some config keys (breaking change).
     - Updated some default configs.
     - Fixed EatBreedingItemGoal's magnet effect on target item entities not syncing movement updates to client.
-    - Fixed Charge Elite AI not properly applying the correct knockback clientside for player targets.
     - Fixed BlockDestroyTracker not tracking block destroy progress made by the door breaking AI.
     - SpecialBreakDoorGoal now assumes blocks with sound type METAL are metal blocks when determining break sound. How bold.
     - Depacify and aggressive AI are now compatible with more mob types.
-    - Fixed mobs using the Leap Elite AI sometimes backtracking to an earlier position after leaping.
+    - Fixed mobs using the Leap or Jump Elite AI sometimes backtracking to an earlier position after becoming airborne.
+    - Fixed Charge Elite AI not properly applying the correct knockback clientside for player targets.
 1.20.1-3.0.7
     - Fixed "reputation.reputation_changing_creatures" list not working with "minecraft:player" entity type.
     - Bumped required Crust version to >= 4.12.20.

@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
@@ -16,7 +17,7 @@ public class SprintEliteGoal extends AbstractEliteGoal {
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     
-    SprintEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public SprintEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }

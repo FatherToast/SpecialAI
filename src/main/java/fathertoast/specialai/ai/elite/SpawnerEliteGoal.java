@@ -4,6 +4,8 @@ import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
+import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
+import fathertoast.specialai.ai.elite.base.EliteAIType;
 import fathertoast.specialai.config.Config;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.ResourceLocationException;
@@ -46,7 +48,7 @@ public class SpawnerEliteGoal extends AbstractEliteGoal {
     /** Time until the next save update. */
     private int saveTicks;
     
-    SpawnerEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public SpawnerEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         spawnerLogic = new SpawnerLogic( this );
         

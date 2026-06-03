@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.ai.elite.base.EliteAIType;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -25,10 +26,10 @@ public final class EliteAIHelper {
     private static final String LANG_KEY = SpecialAI.LANG_KEY + "elite.";
     
     /** The lang key for translating a specific line of text. */
-    static String getLangKey( EliteAIType ai, String subKey ) { return LANG_KEY + ai.getKey() + "." + subKey; }
+    public static String getLangKey( EliteAIType ai, String subKey ) { return LANG_KEY + ai.getKey() + "." + subKey; }
     
     /** The translation text component. */
-    static Component getText( EliteAIType ai, String subKey ) { return Component.translatable( getLangKey( ai, subKey ) ); }
+    public static Component getText( EliteAIType ai, String subKey ) { return Component.translatable( getLangKey( ai, subKey ) ); }
     
     /**
      * @param entity Applies a random elite AI to this mob.
@@ -89,7 +90,7 @@ public final class EliteAIHelper {
     }
     
     /** Replaces any held shooting item with a melee weapon, in hopes that the entity will use melee attacks. */
-    static void preferMelee( Mob entity ) {
+    public static void preferMelee( Mob entity ) {
         if( Config.ELITE_AI.GENERAL.enablePreferMelee.get() ) {
             for( InteractionHand hand : InteractionHand.values() ) {
                 ItemStack held = entity.getItemInHand( hand );
@@ -102,17 +103,17 @@ public final class EliteAIHelper {
     }
     
     /** Unequips the entity of any equipped item in the specified slot. */
-    static void unequip( Mob entity, @SuppressWarnings( "SameParameterValue" ) EquipmentSlot slot ) {
+    public static void unequip( Mob entity, @SuppressWarnings( "SameParameterValue" ) EquipmentSlot slot ) {
         equip( entity, ItemStack.EMPTY, 0.085, slot );
     }
     
     /** Equips the entity with an item in its natural slot, overwriting any currently equipped item. */
-    static void equip( Mob entity, ItemStack item, double dropChance ) {
+    public static void equip( Mob entity, ItemStack item, double dropChance ) {
         equip( entity, item, dropChance, Mob.getEquipmentSlotForItem( item ) );
     }
     
     /** Equips the entity with an item in the specified slot, optionally overwriting any currently equipped item. */
-    static void equip( Mob entity, ItemStack item, double dropChance, EquipmentSlot slot ) {
+    public static void equip( Mob entity, ItemStack item, double dropChance, EquipmentSlot slot ) {
         if( dropChance >= 0.0 && (Config.ELITE_AI.GENERAL.enableEquipmentReplace.get() || !entity.hasItemInSlot( slot )) ) {
             entity.setItemSlot( slot, item );
             entity.setDropChance( slot, (float) dropChance );
@@ -131,7 +132,7 @@ public final class EliteAIHelper {
     }
     
     /** Adds a custom attribute modifier to the item stack that only applies while in an appropriate equipment slot. */
-    static void addModifier( EliteAIType ai, ItemStack stack, Attribute attribute, double value, AttributeModifier.Operation operation ) {
+    public static void addModifier( EliteAIType ai, ItemStack stack, Attribute attribute, double value, AttributeModifier.Operation operation ) {
         if( value != 0.0 ) {
             stack.addAttributeModifier( attribute,
                     new AttributeModifier( SpecialAI.MOD_ID + ":" + ai.getKey() + " item bonus", value, operation ),

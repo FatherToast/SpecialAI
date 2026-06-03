@@ -1,4 +1,4 @@
-package fathertoast.specialai.ai.elite;
+package fathertoast.specialai.ai.elite.base;
 
 
 import net.minecraft.nbt.CompoundTag;
@@ -16,7 +16,7 @@ public abstract class AbstractPathingEliteGoal extends AbstractEliteGoal {
     /** Time until the entity can update its path. */
     private int ticksUntilNextPathRecalculation;
     
-    AbstractPathingEliteGoal( Mob entity, CompoundTag aiTag ) { super( entity, aiTag ); }
+    protected AbstractPathingEliteGoal( Mob entity, CompoundTag aiTag ) { super( entity, aiTag ); }
     
     /** Called to path to a target; should only be directly called when starting to path to a new target. */
     public void startPathing( Entity entity, double speed ) {

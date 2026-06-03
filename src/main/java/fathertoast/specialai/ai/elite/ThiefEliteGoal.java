@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.crust.api.lib.DeferredAction;
+import fathertoast.specialai.ai.elite.base.AbstractPathingEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
@@ -28,7 +29,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     /** The avoidance AI to be used after an item was stolen. */
     private final AvoidEntityGoal<Player> aiAvoid;
     
-    ThiefEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public ThiefEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         if( entity instanceof PathfinderMob pathfinderMob ) {
             aiAvoid = new AvoidEntityGoal<>( pathfinderMob, Player.class, (float) Config.ELITE_AI.THIEF.avoidRange.get(),

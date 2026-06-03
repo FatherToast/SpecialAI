@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.specialai.ai.elite.base.AbstractPathingEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
@@ -37,7 +38,7 @@ public class ThrowEnemyEliteGoal extends AbstractPathingEliteGoal {
     /** Number of times the entity will re-grab escaping players before giving up. */
     private int extraGrabAttempts;
     
-    ThrowEnemyEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public ThrowEnemyEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }

@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.ai.UniversalMeleeAttackGoal;
+import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
@@ -38,7 +39,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
     /** The mob's original step height. */
     private float stepHeight = Float.NaN;
     
-    ChargeEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public ChargeEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK, Flag.JUMP ) );
     }

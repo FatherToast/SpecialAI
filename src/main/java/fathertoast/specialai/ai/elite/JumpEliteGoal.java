@@ -1,5 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.crust.api.lib.DeferredAction;
+import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,7 +17,7 @@ public class JumpEliteGoal extends AbstractEliteGoal {
     /** Ticks until the AI can activate again. */
     private int cooldownTimer;
     
-    JumpEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public JumpEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.JUMP ) );
     }
@@ -47,6 +49,12 @@ public class JumpEliteGoal extends AbstractEliteGoal {
                 .normalize().scale( Config.ELITE_AI.JUMP.jumpSpeedForward.get() ).add( mob.getDeltaMovement().scale( 0.2 ) );
         mob.setDeltaMovement( jumpXZ.x, Config.ELITE_AI.JUMP.jumpSpeedUpward.get(), jumpXZ.z );
         
+        // Try and stop pathfinders from sometimes
+        // backtracking to a path node they didn't reach after jumping.
+        if( !mob.getNavigation().isDone() ) {
+            DeferredAction.queue( new PostJumpCheck( mob, target, 40 ) );
+        }
+        
         // Start the cooldown (this won't tick down until the entity has landed)
         cooldownTimer = Config.ELITE_AI.JUMP.cooldown.next( mob.getRandom() );
     }
@@ -65,7 +73,7 @@ public class JumpEliteGoal extends AbstractEliteGoal {
     /** Called each tick while this AI is active. */
     @Override
     public void tick() { mob.fallDistance = 0.0F; }
-
+    
     @Override
     public boolean requiresUpdateEveryTick() {
         return true;

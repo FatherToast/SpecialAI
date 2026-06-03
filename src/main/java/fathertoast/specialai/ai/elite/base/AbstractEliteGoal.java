@@ -1,4 +1,4 @@
-package fathertoast.specialai.ai.elite;
+package fathertoast.specialai.ai.elite.base;
 
 
 import net.minecraft.nbt.CompoundTag;
@@ -12,5 +12,5 @@ public abstract class AbstractEliteGoal extends Goal {
     /** The owner of this AI. */
     protected final Mob mob;
     
-    AbstractEliteGoal( Mob entity, @SuppressWarnings( "unused" ) CompoundTag aiTag ) { mob = entity; }
+    protected AbstractEliteGoal( Mob entity, @SuppressWarnings( "unused" ) CompoundTag aiTag ) { mob = entity; }
 }

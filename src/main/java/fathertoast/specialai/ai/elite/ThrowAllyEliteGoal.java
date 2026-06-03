@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
 import fathertoast.specialai.ai.IPassengerControlOverride;
+import fathertoast.specialai.ai.elite.base.AbstractPathingEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
@@ -23,7 +24,7 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IPas
     /** Ticks until the entity gives up. */
     private int giveUpDelay;
     
-    ThrowAllyEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public ThrowAllyEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }

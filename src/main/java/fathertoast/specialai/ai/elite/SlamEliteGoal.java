@@ -1,5 +1,6 @@
 package fathertoast.specialai.ai.elite;
 
+import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
@@ -27,7 +28,7 @@ public class SlamEliteGoal extends AbstractEliteGoal {
     /** Ticks until the next attack. */
     private int attackTime;
     
-    SlamEliteGoal( Mob entity, CompoundTag aiTag ) {
+    public SlamEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         setFlags( EnumSet.of( Flag.MOVE, Flag.LOOK ) );
     }
