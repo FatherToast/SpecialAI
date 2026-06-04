@@ -153,7 +153,6 @@ public class IdleConfig extends AbstractConfigFile {
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
                     .put( EntityType.ZOMBIE, 1.0 )
-                    .put( EntityType.CREEPER, 1.0 )
                     .build();
         }
         
