@@ -94,7 +94,7 @@ public class ThrowAllyEliteGoal extends AbstractPathingEliteGoal implements IPas
                 // Try and stop pathfinding thrown mobs from sometimes
                 // backtracking to a path node they didn't reach after being thrown.
                 if( throwEntity instanceof Mob throwMob && !throwMob.getNavigation().isDone() ) {
-                    DeferredAction.queue( new PostJumpCheck( throwMob, target, 30 ) );
+                    DeferredAction.queue( new PostJumpTargetTracker( throwMob, target, 30 ) );
                 }
                 
                 mob.getNavigation().stop();

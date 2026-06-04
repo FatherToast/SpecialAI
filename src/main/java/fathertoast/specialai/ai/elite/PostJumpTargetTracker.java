@@ -10,12 +10,13 @@ import java.util.function.Supplier;
 /**
  * This is a queued check intended to be used in conjunction with {@link fathertoast.crust.api.lib.DeferredAction}.
  * <p>
- * This check is intended to be queued for pathfinding mobs that have just been flung by
+ * This tracker is intended to be queued for pathfinding mobs that have just been flung by
  * directly setting their motion vector. Sometimes when that happens, the mob may end
- * up ahead of their current path's next node. This can make them backtrack to said
- * node for a second after landing (which looks really weird), and this check aims to mitigate that.
+ * up ahead of its current path's next node. This can make it backtrack to said
+ * node (which looks really weird), and this tracker aims to mitigate that by updating
+ * the current path's next node to the current position of the target when needed.
  */
-public final class PostJumpCheck implements Supplier<Boolean> {
+public final class PostJumpTargetTracker implements Supplier<Boolean> {
     
     /** The mob that performed a leap. */
     private final Mob leaper;
@@ -25,7 +26,7 @@ public final class PostJumpCheck implements Supplier<Boolean> {
     private int giveUpCounter;
     
     
-    public PostJumpCheck( Mob leaper, LivingEntity target, int giveUpCounter ) {
+    public PostJumpTargetTracker( Mob leaper, LivingEntity target, int giveUpCounter ) {
         this.leaper = leaper;
         this.target = target;
         this.giveUpCounter = giveUpCounter;

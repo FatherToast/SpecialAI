@@ -52,7 +52,7 @@ public class LeapEliteGoal extends AbstractEliteGoal {
         // Try and stop pathfinders from sometimes
         // backtracking to a path node they didn't reach after leaping.
         if( !mob.getNavigation().isDone() ) {
-            DeferredAction.queue( new PostJumpCheck( mob, target, 30 ) );
+            DeferredAction.queue( new PostJumpTargetTracker( mob, target, 30 ) );
         }
         
         // Start the cooldown

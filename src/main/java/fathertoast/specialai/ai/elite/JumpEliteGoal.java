@@ -52,7 +52,7 @@ public class JumpEliteGoal extends AbstractEliteGoal {
         // Try and stop pathfinders from sometimes
         // backtracking to a path node they didn't reach after jumping.
         if( !mob.getNavigation().isDone() ) {
-            DeferredAction.queue( new PostJumpCheck( mob, target, 40 ) );
+            DeferredAction.queue( new PostJumpTargetTracker( mob, target, 40 ) );
         }
         
         // Start the cooldown (this won't tick down until the entity has landed)
