@@ -14,6 +14,7 @@
         - Jump
         - Throw Ally
     - Fixed Charge Elite AI not properly applying the correct knockback clientside for player targets.
+    - Mobs that perform idle griefing will now invoke the BlockState.attack() method of the block they are destroying.
 1.20.1-3.0.7
     - Fixed "reputation.reputation_changing_creatures" list not working with "minecraft:player" entity type.
     - Bumped required Crust version to >= 4.12.20.

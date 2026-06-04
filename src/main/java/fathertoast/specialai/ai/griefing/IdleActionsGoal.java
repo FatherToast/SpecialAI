@@ -5,6 +5,7 @@ import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.config.dimension.EnvironmentConfig;
 import fathertoast.specialai.util.BlockDestroyTracker;
 import fathertoast.specialai.util.BlockHelper;
 import fathertoast.specialai.util.SpecialAIFakePlayer;
@@ -29,6 +30,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.EnumSet;
+import java.util.function.Consumer;
 
 /**
  * This AI causes the entity to seek out blocks to either destroy or interact with (usually right click),
@@ -292,7 +294,7 @@ public class IdleActionsGoal extends Goal {
         }
         Level level = mob.level();
         
-        // Play hit effects
+        // Play hit effects and invoke the block's "attack" function.
         if( hitCounter == 0 ) {
             SoundType sound = targetBlock.getBlock().getSoundType( targetBlock, level, targetPos, mob );
             if( !mob.isSilent() ) {
@@ -302,6 +304,7 @@ public class IdleActionsGoal extends Goal {
             if( !mob.swinging ) {
                 mob.swing( mob.getUsedItemHand() );
             }
+            executeFiddling( ( v ) -> targetBlock.attack( level, targetPos, fiddleWrapper ) );
         }
         if( ++hitCounter >= 5 ) {
             hitCounter = 0;
@@ -312,6 +315,7 @@ public class IdleActionsGoal extends Goal {
         if( blockDamage >= 1.0F ) {
             // Block is broken
             // Handle special cases
+            // TODO - Maybe handle "special cases" a bit more gracefully
             if( targetBlock.getBlock() == Blocks.FARMLAND ) {
                 level.setBlock( targetPos, Blocks.DIRT.defaultBlockState(), 3 );
                 
@@ -359,31 +363,7 @@ public class IdleActionsGoal extends Goal {
             }
             // Otherwise, interact like a player right-clicking the block
             else {
-                if( fiddleWrapper == null ) {
-                    // Surrounded with try/catch in case the fake player creation causes issues
-                    try {
-                        fiddleWrapper = new SpecialAIFakePlayer( mob );
-                    }
-                    catch( Exception ex ) {
-                        SpecialAI.LOG.error( "Failed to create fake player wrapper for entity '{}'",
-                                ForgeRegistries.ENTITY_TYPES.getKey( mob.getType() ), ex );
-                        // Forcibly disable fiddling for this entity until reload; also disables special cases, but oh well
-                        stopFiddling();
-                        fiddleDelay = Integer.MAX_VALUE;
-                        currentActivity = Activity.NONE;
-                    }
-                }
-                if( fiddleWrapper != null ) {
-                    // Surrounded with try/catch in case the fake player interaction causes issues
-                    try {
-                        fiddleWrapper.updateFakePlayerState();
-                        targetBlock.use( mob.level(), fiddleWrapper, InteractionHand.MAIN_HAND, targetHitResult );
-                        fiddleWrapper.updateWrappedEntityState();
-                    }
-                    catch( Exception ex ) {
-                        SpecialAI.LOG.warn( "Failed to fiddle with block '{}'", ForgeRegistries.BLOCKS.getKey( targetBlock.getBlock() ), ex );
-                    }
-                }
+                executeFiddling( ( v ) -> targetBlock.use( mob.level(), fiddleWrapper, InteractionHand.MAIN_HAND, targetHitResult ) );
             }
         }
         
@@ -509,7 +489,8 @@ public class IdleActionsGoal extends Goal {
         if( state.liquid() || Config.IDLE.GRIEFING.targetBlacklist.get().contains( state ) ) {
             return false;
         }
-        if( Config.IDLE.GRIEFING.targetLights.get() && state.getLightEmission( mob.level(), pos ) > 1 && !isNaturalLightBlock( state.getBlock() ) ) {
+        if( Config.IDLE.GRIEFING.targetLights.get() && state.getLightEmission( mob.level(), pos ) > 1
+                && !isNaturalLightBlock( mob.level(), state ) ) {
             return true;
         }
         if( Config.IDLE.GRIEFING.targetBeds.get() && state.getBlock() instanceof BedBlock ) {
@@ -537,17 +518,10 @@ public class IdleActionsGoal extends Goal {
         return Config.IDLE.FIDDLING.targetWhitelist.contains( state );
     }
     
-    // TODO - Consider making dimension based configs for this. What can be considered natural
-    //        and not highly depends on what other mods might add to worldgen
-    
     /** @return Returns true if the block is a natural light source. */
-    private boolean isNaturalLightBlock( Block block ) {
-        return block instanceof BaseFireBlock || block instanceof RedStoneOreBlock ||
-                block == Blocks.SEA_PICKLE || block == Blocks.MAGMA_BLOCK || block == Blocks.SHROOMLIGHT ||
-                block == Blocks.GLOW_LICHEN || block == Blocks.CAVE_VINES || block == Blocks.CAVE_VINES_PLANT ||
-                block instanceof AmethystClusterBlock ||
-                // Unnatural when outside the Nether
-                Level.NETHER.equals( mob.level().dimension() ) && block == Blocks.GLOWSTONE;
+    private boolean isNaturalLightBlock( Level level, BlockState blockState ) {
+        final EnvironmentConfig cfg = Config.getDimensionConfigs( level ).ENVIRONMENT;
+        return cfg.NATURAL_BLOCKS.lightSourceList.get().contains( blockState );
     }
     
     /**
@@ -573,5 +547,50 @@ public class IdleActionsGoal extends Goal {
         //noinspection deprecation
         final float blockResistance = block.getExplosionResistance();
         return blockResistance < (float) Config.IDLE.GRIEFING.resistanceThreshold.get();
+    }
+    
+    /**
+     * Ensures this goal's fiddle wrapper is not null by creating a new instance if it is.
+     * Exceptions are handled gracefully, stopping any ongoing fiddling behavior.
+     *
+     * @return True if no exceptions were thrown.
+     */
+    private boolean assertFiddleWrapperExists() {
+        if( fiddleWrapper == null ) {
+            // Surrounded with try/catch in case the fake player creation causes issues
+            try {
+                fiddleWrapper = new SpecialAIFakePlayer( mob );
+            }
+            catch( Exception ex ) {
+                SpecialAI.LOG.error( "Failed to create fake player wrapper for entity '{}'",
+                        ForgeRegistries.ENTITY_TYPES.getKey( mob.getType() ), ex );
+                // Forcibly disable fiddling for this entity until reload; also disables special cases, but oh well
+                stopFiddling();
+                fiddleDelay = Integer.MAX_VALUE;
+                currentActivity = Activity.NONE;
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Convenience method for performing an action
+     * involving this goal's {@link IdleActionsGoal#fiddleWrapper}
+     * and catching any exceptions that may the thrown.
+     */
+    private void executeFiddling( Consumer<Void> action ) {
+        if( assertFiddleWrapperExists() ) {
+            // Surrounded with try/catch in case the fake player interaction causes issues
+            try {
+                action.accept( null );
+                fiddleWrapper.updateFakePlayerState();
+                action.accept( null );
+                fiddleWrapper.updateWrappedEntityState();
+            }
+            catch( Exception ex ) {
+                SpecialAI.LOG.warn( "Failed to execute idle fiddling action for entity '{}'", mob.toString(), ex );
+            }
+        }
     }
 }
