@@ -3,9 +3,7 @@ package fathertoast.specialai.config;
 import fathertoast.crust.api.config.common.AbstractConfigCategory;
 import fathertoast.crust.api.config.common.AbstractConfigFile;
 import fathertoast.crust.api.config.common.ConfigManager;
-import fathertoast.crust.api.config.common.field.BooleanField;
-import fathertoast.crust.api.config.common.field.DoubleField;
-import fathertoast.crust.api.config.common.field.IntField;
+import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.field.collection.BlockStateSetField;
 import fathertoast.crust.api.config.common.field.collection.EntityMapField;
 import fathertoast.crust.api.config.common.field.collection.EntitySetField;
@@ -16,13 +14,18 @@ import fathertoast.crust.api.config.common.value.collection.value.ArrayValueCode
 import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
 import fathertoast.crust.api.config.common.value.collection.value.EnumValueCodec;
 import net.minecraft.ChatFormatting;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+
+import java.util.List;
 
 import static fathertoast.specialai.ai.UniversalMeleeAttackGoal.MovementStrategy;
 
 @SuppressWarnings( "UnstableApiUsage" )
 public class GeneralConfig extends AbstractConfigFile {
     
+    public final Main MAIN;
     public final Animals ANIMALS;
     public final Reactions REACTIONS;
     public final Jockeys JOCKEYS;
@@ -35,6 +38,7 @@ public class GeneralConfig extends AbstractConfigFile {
                         "animals, reactions, jockeys, and door breaking."
         );
         
+        MAIN = new Main( this );
         ANIMALS = new Animals( this );
         REACTIONS = new Reactions( this );
         JOCKEYS = new Jockeys( this );
@@ -54,6 +58,24 @@ public class GeneralConfig extends AbstractConfigFile {
         for( MovementStrategy strategy : MovementStrategy.values() ) {
             SPEC.fileOnlyNewLine();
             SPEC.titledComment( strategy.getSerializedName(), strategy.getDescription() );
+        }
+    }
+    
+    public static class Main extends AbstractConfigCategory<GeneralConfig> {
+        
+        public final PredicateStringListField extraDimensions;
+        
+        
+        public Main( GeneralConfig parent ) {
+            super( parent, "main",
+                    "Settings that apply to the mod as a whole." );
+            
+            extraDimensions = SPEC.define( new PredicateStringListField( "extra_dimensions", "Dimension Type",
+                            List.of( Level.NETHER.location().toString(), Level.END.location().toString() ),
+                            ResourceLocation::isValidResourceLocation,
+                            "A list of extra dimension types for this mod to generate configs for." +
+                                    " All dimensions NOT in this list will default to the '" + Level.OVERWORLD.location() + "' configs." ),
+                    RestartNote.GAME );
         }
     }
     

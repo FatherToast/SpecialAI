@@ -114,7 +114,7 @@ public class SpecialAI {
         //VillagerAI.ACTIVITY_REGISTER.register( modBus );
         
         
-        Config.init();
+        Config.init( context.getContainer() );
         
         // Tell Forge to open the config editor when our mod's "Config" button is clicked in the Mods screen
         DistExecutor.unsafeRunWhenOn( Dist.CLIENT, () ->

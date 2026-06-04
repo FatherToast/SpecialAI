@@ -3,6 +3,8 @@
     - Configs now utilize the new experimental fuzzy collections API from Crust.
     - Updated some config keys (breaking change).
     - Updated some default configs.
+    - Added dimension-bound configs:
+        - The idle griefing AI now properly considers light sources as natural or unnatural based on what dimension they are in.
     - Fixed EatBreedingItemGoal's magnet effect on target item entities not syncing movement updates to client.
     - Fixed BlockDestroyTracker not tracking block destroy progress made by the door breaking AI.
     - SpecialBreakDoorGoal now assumes blocks with sound type METAL are metal blocks when determining break sound. How bold.
