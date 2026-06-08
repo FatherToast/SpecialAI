@@ -21,10 +21,9 @@ public abstract class DimensionConfig extends AbstractConfigFile {
         if( Level.OVERWORLD.equals( dimConfigs.DIMENSION ) ) {
             SPEC.decreaseIndent();
             SPEC.newLine();
-            SPEC.comment( "This config also functions as the default settings for " + name + " features in any extra " +
-                    "dimensions that do not have world gen configs (all dimensions not included in the \"" +
-                    Config.GENERAL.MAIN.extraDimensions.getKey() + "\" list within the mod's main config file, \"" +
-                    Config.GENERAL.SPEC.NAME + "\")." );
+            SPEC.comment( "This config also functions as the default config for dimensions that doesn't have their own configs"
+                    + " (all dimensions not included in the \"" + Config.GENERAL.MAIN.extraDimensions.getKey()
+                    + "\" list within the mod's general config file, \"" + Config.GENERAL.SPEC.NAME + "\")." );
             SPEC.increaseIndent();
         }
     }

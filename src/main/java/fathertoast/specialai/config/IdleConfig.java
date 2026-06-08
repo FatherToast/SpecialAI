@@ -15,6 +15,7 @@ import fathertoast.crust.api.config.common.value.collection.EntityMap;
 import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
 import fathertoast.crust.api.util.BlockStatePropertyMap;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -152,7 +153,7 @@ public class IdleConfig extends AbstractConfigFile {
         
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
-                    .put( EntityType.ZOMBIE, 1.0 )
+                    .putExtends( EntityType.ZOMBIE, 1.0 )
                     .build();
         }
         
@@ -235,12 +236,17 @@ public class IdleConfig extends AbstractConfigFile {
         
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
-                    .put( EntityType.SKELETON, 1.0 ).put( EntityType.STRAY, 1.0 )
-                    .put( EntityType.WITHER_SKELETON, 1.0 ).put( EntityType.PIGLIN, 1.0 )
-                    .put( EntityType.ZOMBIFIED_PIGLIN, 1.0 )
+                    // TODO change back after Crust update with enhanced `extends` key functionality
+                    .putTag( EntityTypeTags.SKELETONS, 1.0 )
+                    //.putExtends( EntityType.SKELETON, 1.0 )
+                    //.put( EntityType.STRAY, 1.0 )
+                    //.putExtends( EntityType.WITHER_SKELETON, 1.0 )
+                    .put( EntityType.PIGLIN, 1.0 )
+                    .putExtends( EntityType.ZOMBIFIED_PIGLIN, 1.0 )
                     .build();
         }
         
+        // TODO - Maybe think of some new default entries to add
         private static BlockStateSet createDefaultTargetWhitelist() {
             final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
             
@@ -255,7 +261,6 @@ public class IdleConfig extends AbstractConfigFile {
                 if( block instanceof CandleCakeBlock )
                     builder.add( block, BlockStatePropertyMap.EMPTY );
             }
-            
             return builder.build();
         }
     }
@@ -296,8 +301,8 @@ public class IdleConfig extends AbstractConfigFile {
         
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
-                    .put( EntityType.CREEPER, 1.0 )
-                    .put( EntityType.SPIDER, 1.0 )
+                    .putExtends( EntityType.CREEPER, 1.0 )
+                    .putExtends( EntityType.SPIDER, 1.0 )
                     .build();
         }
         

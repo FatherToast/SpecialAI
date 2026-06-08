@@ -14,6 +14,7 @@ import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCod
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import fathertoast.specialai.ai.elite.base.EliteAIType;
 import net.minecraft.ChatFormatting;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -169,14 +170,16 @@ public class EliteAIConfig extends AbstractConfigFile {
         
         private static EntityMap<Double[]> createDefaultEntityList() {
             return new EntityMap.Builder<>( ArrayValueCodec.of( 0, Double.class, DoubleValueCodec.PERCENT ) )
-                    .put( EntityType.ZOMBIE, new Double[] { 0.04 } )
+                    .putExtends( EntityType.ZOMBIE, new Double[] { 0.04 } )
                     // Skeletons
-                    .put( EntityType.SKELETON, new Double[] { 0.1, 0.02 } )
+                    // TODO change back after Crust update with enhanced `extends` key functionality
+                    .putTag( EntityTypeTags.SKELETONS, new Double[] { 0.1, 0.02 } )
+                    //.putExtends( EntityType.SKELETON, new Double[] { 0.1, 0.02 } )
                     .put( EntityType.STRAY, new Double[] { 0.1, 0.02 } )
-                    .put( EntityType.WITHER_SKELETON, new Double[] { 0.1, 0.02 } )
+                    //.putExtends( EntityType.WITHER_SKELETON, new Double[] { 0.1, 0.02 } )
                     // Nether
                     .put( EntityType.PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )
-                    .put( EntityType.ZOMBIFIED_PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )
+                    .putExtends( EntityType.ZOMBIFIED_PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )
                     .put( EntityType.PIGLIN_BRUTE, new Double[] { 0.5, 0.01, 0.01 } )
                     .build();
         }

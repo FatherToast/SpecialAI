@@ -15,6 +15,7 @@ import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCod
 import fathertoast.crust.api.config.common.value.collection.value.EnumValueCodec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 
@@ -149,8 +150,8 @@ public class GeneralConfig extends AbstractConfigFile {
                     // Nether
                     .put( EntityType.STRIDER, 1.0 )
                     // Water
-                    .put( EntityType.SQUID, 1.0 ).put( EntityType.COD, 1.0 )
-                    .put( EntityType.SALMON, 1.0 ).put( EntityType.TROPICAL_FISH, 1.0 )
+                    .put( EntityType.COD, 1.0 ).put( EntityType.SALMON, 1.0 )
+                    .put( EntityType.TROPICAL_FISH, 1.0 ).putExtends( EntityType.SQUID, 1.0 )
                     .build();
         }
         
@@ -164,8 +165,8 @@ public class GeneralConfig extends AbstractConfigFile {
                     // Nether
                     .put( EntityType.STRIDER, 0.02 )
                     // Water
-                    .put( EntityType.SQUID, 0.05 ).put( EntityType.COD, 0.02 )
-                    .put( EntityType.SALMON, 0.04 )
+                    .put( EntityType.COD, 0.02 ).put( EntityType.SALMON, 0.04 )
+                    .putExtends( EntityType.SQUID, 0.05 )
                     .build();
         }
         
@@ -219,9 +220,11 @@ public class GeneralConfig extends AbstractConfigFile {
         
         private static EntityMap<Double[]> createDefaultDodgeArrowsList() {
             return new EntityMap.Builder<>( ArrayValueCodec.of( 2, Double.class, DoubleValueCodec.PERCENT ) )
-                    .put( EntityType.SKELETON, new Double[] { 1.0, 0.5 } )
+                    // TODO change back after Crust update with enhanced `extends` key functionality
+                    .putTag( EntityTypeTags.SKELETONS, new Double[] { 1.0, 0.5 } )
+                    //.putExtends( EntityType.SKELETON, new Double[] { 1.0, 0.5 } )
+                    //.putExtends( EntityType.WITHER_SKELETON, new Double[] { 1.0, 0.5 } )
                     .put( EntityType.STRAY, new Double[] { 1.0, 0.5 } )
-                    .put( EntityType.WITHER_SKELETON, new Double[] { 1.0, 0.5 } )
                     .buildWithDefault( new Double[] { 0.2, 0.5 } );
         }
     }
@@ -269,7 +272,7 @@ public class GeneralConfig extends AbstractConfigFile {
         private static EntitySet createDefaultMountWhitelist() {
             return new EntitySet.Builder<>()
                     // Monsters
-                    .add( EntityType.SPIDER )
+                    .addExtends( EntityType.SPIDER )
                     // Passive & neutral mobs
                     .add( EntityType.SHEEP ).add( EntityType.COW ).add( EntityType.POLAR_BEAR )
                     // Horse-type mobs
@@ -285,18 +288,21 @@ public class GeneralConfig extends AbstractConfigFile {
         private static EntitySet createDefaultMountWhitelistSmall() {
             return new EntitySet.Builder<>()
                     .add( EntityType.CHICKEN ).add( EntityType.RABBIT )
-                    .add( EntityType.CAVE_SPIDER )
+                    .addExtends( EntityType.CAVE_SPIDER )
                     .build();
         }
         
         private static EntityMap<Double> createDefaultRiderWhitelist() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
-                    .put( EntityType.SKELETON, 0.1 ).put( EntityType.STRAY, 0.1 )
-                    .put( EntityType.ZOMBIE, 0.05 ).put( EntityType.WITCH, 0.05 )
-                    .put( EntityType.CREEPER, 0.05 )
+                    // TODO change back after Crust update with enhanced `extends` key functionality
+                    .putTag( EntityTypeTags.SKELETONS, 0.1 )
+                    //.putExtends( EntityType.SKELETON, 0.1 )
+                    .put( EntityType.STRAY, 0.1 )
+                    .putExtends( EntityType.ZOMBIE, 0.05 ).putExtends( EntityType.WITCH, 0.05 )
+                    .putExtends( EntityType.CREEPER, 0.05 )
                     // Nether
                     .put( EntityType.PIGLIN, 0.1 ).put( EntityType.PIGLIN_BRUTE, 0.1 )
-                    .put( EntityType.WITHER_SKELETON, 0.1 )
+                    //.putExtends( EntityType.WITHER_SKELETON, 0.1 )
                     .build();
         }
         
@@ -365,8 +371,8 @@ public class GeneralConfig extends AbstractConfigFile {
         
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
-                    .put( EntityType.ZOMBIE, 1.0 )
-                    .put( EntityType.CREEPER, 1.0 )
+                    .putExtends( EntityType.ZOMBIE, 1.0 )
+                    .putExtends( EntityType.CREEPER, 1.0 )
                     .build();
         }
     }
