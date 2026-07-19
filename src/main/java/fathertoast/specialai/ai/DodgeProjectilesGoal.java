@@ -21,7 +21,7 @@ public class DodgeProjectilesGoal extends Goal {
     public static void doDodgeCheckForProjectile( Entity projectile ) {
         // Get the world instance
         if( !(projectile.level() instanceof ServerLevel level) ) return;
-
+        
         // Calculate the projectile's width and direction
         float width = projectile.getBbWidth() + 0.3F;
         final Vec3 projectileMotion = projectile.getDeltaMovement();
@@ -78,7 +78,7 @@ public class DodgeProjectilesGoal extends Goal {
      * @param entity The owner of this AI.
      * @param chance The chance for the entity to dodge projectile fired.
      */
-    public DodgeProjectilesGoal(Mob entity, double chance ) {
+    public DodgeProjectilesGoal( Mob entity, double chance ) {
         mob = entity;
         dodgeChance = chance;
         setFlags( EnumSet.of( Flag.JUMP ) );
