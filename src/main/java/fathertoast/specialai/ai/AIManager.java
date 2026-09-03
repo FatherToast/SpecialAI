@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai;
 
 
+import com.mojang.datafixers.util.Pair;
 import fathertoast.crust.api.config.common.ConfigUtil;
 import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.crust.api.lib.EnvironmentHelper;
@@ -41,6 +42,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -232,6 +234,22 @@ public final class AIManager {
             SpecialAI.LOG.warn( "Attempted to add door-breaking ai to entity '{}' with incompatible navigator '{}'",
                     SpecialAI.toString( ForgeRegistries.ENTITY_TYPES.getKey( entity.getType() ) ), nav.getClass().getSimpleName() );
         }
+    }
+    
+    /**
+     * Replaces all goals for the given entity that are instances of {@link NearestAttackableTargetGoal}
+     * with modified versions that ensures mobs that are considered allies are not targeted.
+     */
+    private static void makeConsiderAllies( Mob entity ) {
+        final List<Pair<Integer, Goal>> newGoals = new ArrayList<>();
+        
+        for( WrappedGoal task : new ArrayList<>( entity.goalSelector.getAvailableGoals() ) ) {
+            if( task.getGoal() instanceof NearestAttackableTargetGoal<?> goal ) {
+                newGoals.add( Pair.of( task.getPriority(), NearestUnlessAllyTargetGoal.convertFrom( goal ) ) );
+                entity.goalSelector.removeGoal( task.getGoal() );
+            }
+        }
+        newGoals.forEach( ( pair ) -> entity.goalSelector.addGoal( pair.getFirst(), pair.getSecond() ) );
     }
     
     /**
@@ -445,6 +463,11 @@ public final class AIManager {
         }
         if( tag.getBoolean( TAG_DOOR_BREAK ) ) {
             addDoorBreakAI( entity );
+        }
+        
+        // Make all 'nearest attackable' goals consider allies
+        if( Config.GENERAL.MAIN.considerAlliesList.contains( entity ) ) {
+            makeConsiderAllies( entity );
         }
         
         // Tweak misc goal priorities and flags for certain entities

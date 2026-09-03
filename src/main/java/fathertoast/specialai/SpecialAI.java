@@ -42,6 +42,9 @@ public class SpecialAI {
      * REACTIONS
      *  - avoid explosions
      *  - call for help (on death)
+     *  + call for reinforcements
+     *      + bees
+     *      ? more types
      *  - dodge arrows
      *      ? dodge fireballs (including reflected ghast ones)
      *  + aggro when sniped (enable revenge targeting beyond follow range)

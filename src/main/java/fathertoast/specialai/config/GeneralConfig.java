@@ -66,6 +66,8 @@ public class GeneralConfig extends AbstractConfigFile {
         
         public final PredicateStringListField extraDimensions;
         
+        public final EntitySetField considerAlliesList;
+        
         
         public Main( GeneralConfig parent ) {
             super( parent, "main",
@@ -77,6 +79,21 @@ public class GeneralConfig extends AbstractConfigFile {
                             "A list of extra dimension types for this mod to generate configs for." +
                                     " All dimensions NOT in this list will default to the '" + Level.OVERWORLD.location() + "' configs." ),
                     RestartNote.GAME );
+            
+            SPEC.newLine();
+            
+            considerAlliesList = SPEC.define( new EntitySetField( "consider_allies.entities", createDefaultConsiderAlliesList(),
+                    "A list of entities that should have their 'nearest attackable target' behavior modified to not target allies.",
+                    "A potential target will be considered an ally under either of the following conditions:",
+                    "A: The target is on the same team as the entity.",
+                    "B: The target is recognized as a ' player ownable' entity (wolves, cats etc.), and currently has an owner." ) );
+        }
+        
+        private static EntitySet createDefaultConsiderAlliesList() {
+            return new EntitySet.Builder<>()
+                    .add( EntityType.IRON_GOLEM )
+                    .add( EntityType.SNOW_GOLEM )
+                    .build();
         }
     }
     
