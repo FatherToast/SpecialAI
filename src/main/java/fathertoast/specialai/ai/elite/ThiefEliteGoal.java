@@ -32,7 +32,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
     public ThiefEliteGoal( Mob entity, CompoundTag aiTag ) {
         super( entity, aiTag );
         if( entity instanceof PathfinderMob pathfinderMob ) {
-            aiAvoid = new AvoidEntityGoal<>( pathfinderMob, Player.class, (float) Config.ELITE_AI.THIEF.avoidRange.get(),
+            aiAvoid = new AvoidEntityGoal<>( pathfinderMob, Player.class, Config.ELITE_AI.THIEF.avoidRange.getFloat(),
                     Config.ELITE_AI.THIEF.avoidWalkSpeed.get(), Config.ELITE_AI.THIEF.avoidRunSpeed.get() );
         }
         else {
@@ -104,7 +104,7 @@ public class ThiefEliteGoal extends AbstractPathingEliteGoal {
             
             if( mob.distanceToSqr( target ) <= mob.getBbWidth() * mob.getBbWidth() * 4.0F + target.getBbWidth() && mob.hasLineOfSight( target ) ) {
                 // The target is in range; deal a tiny hit of damage, steal the item, and turn invisible
-                target.hurt( mob.level().damageSources().mobAttack( mob ), (float) Config.ELITE_AI.THIEF.stealDamage.get() );
+                target.hurt( mob.level().damageSources().mobAttack( mob ), Config.ELITE_AI.THIEF.stealDamage.getFloat() );
                 mob.swing( InteractionHand.MAIN_HAND );
                 if( target instanceof Player player ) {
                     final ItemStack stolen = removeRandomItem( player );

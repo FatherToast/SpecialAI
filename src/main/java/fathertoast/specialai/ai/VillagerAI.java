@@ -1,9 +1,10 @@
 package fathertoast.specialai.ai;
 
 import com.mojang.datafixers.util.Pair;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.ai.sensors.NearestHooliganSensor;
 import fathertoast.specialai.config.Config;
+import fathertoast.specialai.core.GameEventHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
@@ -77,7 +78,7 @@ public final class VillagerAI {
     
     
     /**
-     * Called from {@link fathertoast.specialai.GameEventHandler#onBlockBreak(BlockEvent.BreakEvent)}.<br><br>
+     * Called from {@link GameEventHandler#onBlockBreak(BlockEvent.BreakEvent)}.<br><br>
      * <p>
      * Slander or praise the reputation of players when they break certain
      * blocks in a village.
@@ -128,7 +129,7 @@ public final class VillagerAI {
     }
     
     /**
-     * Called from {@link fathertoast.specialai.GameEventHandler#onLivingDeath(LivingDeathEvent)}.<br><br>
+     * Called from {@link GameEventHandler#onLivingDeath(LivingDeathEvent)}.<br><br>
      * <p>
      * Slander or praise the reputation of players when they kill certain
      * creatures in a village.
@@ -173,7 +174,7 @@ public final class VillagerAI {
     }
     
     /**
-     * Called from {@link fathertoast.specialai.GameEventHandler#onTrampleFarmland(BlockEvent.FarmlandTrampleEvent)}.<br><br>
+     * Called from {@link GameEventHandler#onTrampleFarmland(BlockEvent.FarmlandTrampleEvent)}.<br><br>
      * <p>
      * Slander the reputation of players when they trample farmland
      * near farmer villagers.
@@ -203,7 +204,7 @@ public final class VillagerAI {
     }
     
     /**
-     * Called from {@link fathertoast.specialai.GameEventHandler#onOpenContainer(PlayerContainerEvent.Open)}
+     * Called from {@link GameEventHandler#onOpenContainer(PlayerContainerEvent.Open)}
      * if the event's container is an instance of {@link MerchantMenu}.<br><br>
      * <p>
      * Checks if the container's merchant is a villager, and if so, check if
@@ -234,7 +235,7 @@ public final class VillagerAI {
     // TODO - Make this stuff work; understanding the brain AI system is like trying to read IKEA assembly manuals
     
     /**
-     * Called from {@link fathertoast.specialai.GameEventHandler#onLivingMakeBrain(LivingMakeBrainEvent)}.<br><br>
+     * Called from {@link GameEventHandler#onLivingMakeBrain(LivingMakeBrainEvent)}.<br><br>
      * <p>
      * Villager activities, sensors and memory types can be modified here.
      */
@@ -264,5 +265,5 @@ public final class VillagerAI {
     }
     
     // Utility class, no instantiation
-    private VillagerAI() { }
+    private VillagerAI() {}
 }

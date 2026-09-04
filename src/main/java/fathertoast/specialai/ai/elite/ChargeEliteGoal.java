@@ -179,7 +179,7 @@ public class ChargeEliteGoal extends AbstractEliteGoal {
         }
         else if( mob.horizontalCollision ) {
             // Has hit a wall
-            mob.hurt( mob.level().damageSources().flyIntoWall(), (float) Config.ELITE_AI.CHARGE.selfDamage.get() );
+            mob.hurt( mob.level().damageSources().flyIntoWall(), Config.ELITE_AI.CHARGE.selfDamage.getFloat() );
             mob.setDeltaMovement(
                     attackVec.x * -0.5,
                     0.5,

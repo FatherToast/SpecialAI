@@ -1,6 +1,6 @@
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package fathertoast.specialai;
+package fathertoast.specialai.core;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

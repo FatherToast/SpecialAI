@@ -1,4 +1,4 @@
-package fathertoast.specialai;
+package fathertoast.specialai.core;
 
 
 import fathertoast.specialai.ai.AIManager;
@@ -11,8 +11,6 @@ import net.minecraft.world.item.Items;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingMakeBrainEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
@@ -25,7 +23,6 @@ import net.minecraftforge.fml.common.Mod;
  * Contains and automatically registers all needed forge events.
  * Each event passes itself off to interested sub-mods.
  */
-@SuppressWarnings( "unused" )
 @Mod.EventBusSubscriber( modid = SpecialAI.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE )
 public final class GameEventHandler {
     /**
@@ -60,21 +57,18 @@ public final class GameEventHandler {
         }
     }
     
-    /**
-     * Called when a living entity is constructing its Brain AI.
-     *
-     * @param event The event data.
-     */
-    @SubscribeEvent
-    public static void onLivingMakeBrain( LivingMakeBrainEvent event ) {
-        // TODO - yeah
-        /*
-        if ( event.getEntity() instanceof Villager villager ) {
-            VillagerAI.initSpecialAI( event, villager );
-        }
-
-         */
-    }
+    //    /**
+    //     * Called when a living entity is constructing its Brain AI.
+    //     *
+    //     * @param event The event data.
+    //     */
+    //    @SubscribeEvent
+    //    public static void onLivingMakeBrain( LivingMakeBrainEvent event ) {
+    //        // TODO - yeah
+    //        if ( event.getEntity() instanceof Villager villager ) {
+    //            VillagerAI.initSpecialAI( event, villager );
+    //        }
+    //    }
     
     /**
      * Called when a player right-clicks while targeting a block.
@@ -94,9 +88,6 @@ public final class GameEventHandler {
             VillagerNameHelper.handleNameTagUse( event, villager, event.getItemStack() );
         }
     }
-    
-    @SubscribeEvent
-    public static void onLivingTick( LivingEvent.LivingTickEvent event ) { }
     
     /**
      * Called right before a block is broken by a player.

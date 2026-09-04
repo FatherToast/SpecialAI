@@ -14,7 +14,7 @@ public abstract class DimensionConfig extends AbstractConfigFile {
     public final DimensionConfigGroup DIMENSION_CONFIGS;
     
     DimensionConfig( ConfigManager manager, String dir, DimensionConfigGroup dimConfigs, String name ) {
-        super( manager, dir + ConfigUtil.noSpaces( name ),
+        super( manager, dir + ConfigUtil.noSpaces( name ), false,
                 "This config contains various " + name + "-related options." );
         DIMENSION_CONFIGS = dimConfigs;
         

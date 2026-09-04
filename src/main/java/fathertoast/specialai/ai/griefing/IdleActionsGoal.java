@@ -2,12 +2,12 @@ package fathertoast.specialai.ai.griefing;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.crust.api.lib.NBTHelper;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.dimension.EnvironmentConfig;
-import fathertoast.specialai.util.BlockDestroyTracker;
-import fathertoast.specialai.util.BlockHelper;
+import fathertoast.specialai.level.BlockDestroyTracker;
+import fathertoast.specialai.level.BlockHelper;
 import fathertoast.specialai.util.SpecialAIFakePlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -36,7 +36,6 @@ import java.util.function.Consumer;
  * This AI causes the entity to seek out blocks to either destroy or interact with (usually right click),
  * depending on which actions are enabled.
  */
-@SuppressWarnings( "UnstableApiUsage" )
 public class IdleActionsGoal extends Goal {
     /** Differentiates between the different actions that can be taken by this AI. */
     private enum Activity { NONE, HIDING, GRIEFING, FIDDLING }
@@ -197,7 +196,7 @@ public class IdleActionsGoal extends Goal {
     }
     
     /** Called when this AI is deactivated while in hiding mode. */
-    private void stopHiding() { }
+    private void stopHiding() {}
     
     /** Called when this AI is deactivated while in griefing mode. */
     private void stopGriefing() {
@@ -546,7 +545,7 @@ public class IdleActionsGoal extends Goal {
     private boolean canExplodeBlock( Block block ) {
         //noinspection deprecation
         final float blockResistance = block.getExplosionResistance();
-        return blockResistance < (float) Config.IDLE.GRIEFING.resistanceThreshold.get();
+        return blockResistance < Config.IDLE.GRIEFING.resistanceThreshold.getFloat();
     }
     
     /**

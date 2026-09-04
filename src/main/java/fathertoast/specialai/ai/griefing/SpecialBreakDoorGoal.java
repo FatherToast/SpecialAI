@@ -2,8 +2,8 @@ package fathertoast.specialai.ai.griefing;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.specialai.config.Config;
-import fathertoast.specialai.util.BlockDestroyTracker;
-import fathertoast.specialai.util.BlockHelper;
+import fathertoast.specialai.level.BlockDestroyTracker;
+import fathertoast.specialai.level.BlockHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Difficulty;

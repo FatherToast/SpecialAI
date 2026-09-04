@@ -106,7 +106,7 @@ public class ShamanEliteGoal extends AbstractPathingEliteGoal {
     private static void auraPulse( Mob ally ) {
         // Heal and extinguish burning
         if( Config.ELITE_AI.SHAMAN.healAmount.get() > 0.0 ) {
-            ally.heal( (float) Config.ELITE_AI.SHAMAN.healAmount.get() );
+            ally.heal( Config.ELITE_AI.SHAMAN.healAmount.getFloat() );
         }
         if( Config.ELITE_AI.SHAMAN.extinguish.get() ) {
             ally.clearFire();

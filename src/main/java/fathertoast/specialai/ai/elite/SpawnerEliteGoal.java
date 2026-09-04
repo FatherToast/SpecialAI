@@ -2,7 +2,7 @@ package fathertoast.specialai.ai.elite;
 
 import fathertoast.crust.api.lib.LevelEventHelper;
 import fathertoast.crust.api.lib.NBTHelper;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.ai.AIManager;
 import fathertoast.specialai.ai.elite.base.AbstractEliteGoal;
 import fathertoast.specialai.ai.elite.base.EliteAIType;

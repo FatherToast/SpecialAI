@@ -1,6 +1,5 @@
 package fathertoast.specialai.ai.elite.base;
 
-import fathertoast.crust.api.config.common.value.weighted.WeightedList;
 import fathertoast.crust.api.lib.NBTHelper;
 import fathertoast.specialai.ai.elite.*;
 import fathertoast.specialai.config.Config;
@@ -22,7 +21,7 @@ import java.util.List;
 /**
  * This represents an elite AI. Any number of these additional AIs may be saved/loaded to entities.
  */
-public enum EliteAIType implements WeightedList.Value {
+public enum EliteAIType {
     
     LEAP( "Leap", 200, LeapEliteGoal::new ) {
         /** @return Returns this AI type's config category. */
@@ -338,11 +337,9 @@ public enum EliteAIType implements WeightedList.Value {
     public final String getDisplayName() { return NAME; }
     
     /** @return Returns the unique key for this object. */
-    @Override
     public final String getKey() { return KEY; }
     
     /** @return Returns the default weight for this object. */
-    @Override
     public final int getDefaultWeight() { return DEFAULT_WEIGHT; }
     
     /** Saves this AI to the entity tag. */
@@ -361,7 +358,7 @@ public enum EliteAIType implements WeightedList.Value {
     public final CompoundTag getTag( CompoundTag aiTag ) { return NBTHelper.getOrCreateCompound( aiTag, KEY + TAG_SUFFIX ); }
     
     /** Initializes one-time effects on the entity specific to this AI type, such as unique equipment. Called before the first load. */
-    public void initialize( Mob entity, CompoundTag aiTag ) { }
+    public void initialize( Mob entity, CompoundTag aiTag ) {}
     
     /** Adds the AI goal corresponding to this type to the given entity, with any additional values loaded from the entity tag as needed. */
     public void loadTo( Mob entity, CompoundTag aiTag ) {

@@ -1,7 +1,7 @@
 package fathertoast.specialai.config;
 
 import fathertoast.crust.api.config.common.ConfigManager;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.config.dimension.DimensionConfigGroup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;

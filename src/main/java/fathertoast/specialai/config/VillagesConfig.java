@@ -34,17 +34,15 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 
-@SuppressWarnings( "UnstableApiUsage" )
 public class VillagesConfig extends AbstractConfigFile {
     
     public final BehaviorTweaks AI_TWEAKS;
     public final Reputation REPUTATION;
     public final VillagerNames VILLAGER_NAMES;
     
-    
     /** Builds the config spec that should be used for this config. */
     VillagesConfig( ConfigManager cfgManager, String cfgName ) {
-        super( cfgManager, cfgName,
+        super( cfgManager, cfgName, false,
                 "This config contains various options to control village tweaks, villager behavior, and reputation." );
         
         AI_TWEAKS = new BehaviorTweaks( this );
@@ -97,16 +95,9 @@ public class VillagesConfig extends AbstractConfigFile {
                     "Negative values mean bad reputation, positive means good reputation.",
                     "Note that breaking blocks will only affect 'minor negative' or 'minor positive' reputation, " +
                             "which both have an upper limit of 200." ) );
-            
             breakThreshold = SPEC.define( new IntField( "blocks.break_threshold", 100, IntField.Range.ANY,
                     "If a player's reputation is greater than or equal to this value with a villager, the observing villager will not " +
                             "be bothered if the player breaks a block in the village that would otherwise give bad reputation." ) );
-            
-            SPEC.newLine();
-            
-            trampleAnger = SPEC.define( new IntField( "trample_anger", -4, -200, 0,
-                    "If greater than 0, players will anger nearby farmer villagers if they trample farmland, losing the specified amount of reputation.",
-                    "Note that farmer villagers take trampling personally, and will be displeased even if it happens outside a village." ) );
             
             SPEC.newLine();
             
@@ -117,10 +108,15 @@ public class VillagesConfig extends AbstractConfigFile {
                     "Killing villagers already gives major bad reputation in vanilla, and cannot be overridden here.",
                     "Note that killing creatures will only affect 'minor negative' or 'minor positive' reputation, " +
                             "which both have an upper limit of 200." ) );
-            
             killThreshold = SPEC.define( new IntField( "entities.kill_threshold", 190, IntField.Range.ANY,
                     "If a player's reputation is greater than or equal to this value with a villager, the observing villager will not " +
                             "be bothered if the player kills a creature in the village that would otherwise give bad reputation." ) );
+            
+            SPEC.newLine();
+            
+            trampleAnger = SPEC.define( new IntField( "trample_anger", -4, -200, 0,
+                    "If greater than 0, players will anger nearby farmer villagers if they trample farmland, losing the specified amount of reputation.",
+                    "Note that farmer villagers take trampling personally, and will be displeased even if it happens outside a village." ) );
         }
         
         private static BlockStateMap<Integer> createDefaultBlocksList() {
@@ -178,7 +174,6 @@ public class VillagesConfig extends AbstractConfigFile {
             return builder.buildWithDefault( -1 );
         }
         
-        @SuppressWarnings( "UnstableApiUsage" )
         private static EntityMap<Integer> createDefaultEntitiesList() {
             return new EntityMap.Builder<>( IntValueCodec.ANY )
                     .put( EntityType.CAT, -20 ).put( EntityType.COW, -5 )
@@ -220,7 +215,6 @@ public class VillagesConfig extends AbstractConfigFile {
             
             componentList = SPEC.define( new StringListField( "components.list", createDefaultNameParts(),
                     "A list of name components to pick from when generating a random name for a villager." ) );
-            
             componentRolls = SPEC.define( new FuzzyListField<>( "components.rolls", createDefaultComponentRolls(),
                     "A list of weights to roll when picking components for a randomly generated villager name.",
                     "For example, if the list contains 5 weight entries, a villager name may generate with at most 5 components.",
@@ -231,7 +225,6 @@ public class VillagesConfig extends AbstractConfigFile {
             
             namePrefixes = SPEC.define( new StringListField( "prefixes.list", createDefaultNamePrefixes(),
                     "A list of prefixes that may be added to a villager's first name." ) );
-            
             namePrefixChance = SPEC.define( new DoubleField( "prefixes.chance", 0.01, DoubleField.Range.PERCENT,
                     "The chance for a prefix from the above list to be added to the name of a villager." ) );
             
@@ -258,11 +251,11 @@ public class VillagesConfig extends AbstractConfigFile {
         
         private static FuzzyList<Integer> createDefaultComponentRolls() {
             return new FuzzyList.Builder<>( NumberKey.intParser( IntValueCodec.POSITIVE ) )
-                    .add( NumberKey.of( 1 ) )
-                    .add( NumberKey.of( 1 ) )
-                    .add( NumberKey.of( 4 ) )
-                    .add( NumberKey.of( 16 ) )
-                    .add( NumberKey.of( 64 ) )
+                    .add( NumberKey.exactly( 1, false ) )
+                    .add( NumberKey.exactly( 1, false ) )
+                    .add( NumberKey.exactly( 4, false ) )
+                    .add( NumberKey.exactly( 16, false ) )
+                    .add( NumberKey.exactly( 64, false ) )
                     .build();
         }
         

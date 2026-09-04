@@ -1,7 +1,8 @@
-package fathertoast.specialai.util;
+package fathertoast.specialai.level;
 
+import fathertoast.crust.api.config.common.value.environment.EnvironmentContext;
 import fathertoast.crust.api.lib.NBTHelper;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.config.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -39,6 +40,7 @@ public final class BlockHelper {
     
     /** @return Returns true if the entity can target the block. */
     public static boolean shouldDamage( BlockState block, Mob entity, boolean needsTool, Level level, BlockPos pos ) {
+        //noinspection deprecation
         return block.getDestroySpeed( level, pos ) >= 0.0F && !block.liquid() &&
                 (!needsTool || BlockHelper.hasCorrectTool( entity.getMainHandItem(), block )) &&
                 ForgeHooks.canEntityDestroy( entity.level(), pos, entity );
@@ -95,7 +97,9 @@ public final class BlockHelper {
         }
         
         // Apply environment effects
-        if( entity.isEyeInFluidType( ForgeMod.WATER_TYPE.get() ) && !EnchantmentHelper.hasAquaAffinity( entity ) ) {
+        //noinspection deprecation
+        if( !entity.canBreatheUnderwater() && entity.isEyeInFluidType( ForgeMod.WATER_TYPE.get() ) &&
+                !EnchantmentHelper.hasAquaAffinity( entity ) ) {
             digSpeed /= 5.0F;
         }
         if( !entity.onGround() ) {
@@ -137,7 +141,7 @@ public final class BlockHelper {
             if( tag.getBoolean( TAG_HIDE_DISABLED ) ) return false;
         }
         else if( blockEntity instanceof RandomizableContainerBlockEntity ) {
-            tag.putBoolean( TAG_HIDE_DISABLED, !Config.IDLE.HIDING.lootableChance.rollChance( level.getRandom(), level, pos )
+            tag.putBoolean( TAG_HIDE_DISABLED, !Config.IDLE.HIDING.lootableChance.rollChance( level.getRandom(), EnvironmentContext.withTarget( level, pos ) )
                     && NBTHelper.containsString( blockEntity.saveWithoutMetadata(), "LootTable" ) );
         }
         return !NBTHelper.containsCompound( tag, TAG_HIDDEN_MOB );
@@ -192,13 +196,13 @@ public final class BlockHelper {
         Entity mob = optional.get();
         ;
         BlockPos spawnPos = pos.above();
-        mob.setPos( spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D );
+        mob.setPos( spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5 );
         
         // If we are not forcefully spawning the mob, check if it
         // has space to be placed above where it is hiding
         if( !forceUnhide ) {
             // Check if the mob has space to unhide
-            if( !level.noCollision( mob.getType().getAABB( spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D ) ) ) {
+            if( !level.noCollision( mob.getType().getAABB( spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5 ) ) ) {
                 mob.discard();
                 return;
             }

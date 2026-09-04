@@ -23,7 +23,6 @@ import java.util.List;
 
 import static fathertoast.specialai.ai.UniversalMeleeAttackGoal.MovementStrategy;
 
-@SuppressWarnings( "UnstableApiUsage" )
 public class GeneralConfig extends AbstractConfigFile {
     
     public final Main MAIN;
@@ -34,7 +33,7 @@ public class GeneralConfig extends AbstractConfigFile {
     
     /** Builds the config spec that should be used for this config. */
     GeneralConfig( ConfigManager cfgManager, String cfgName ) {
-        super( cfgManager, cfgName,
+        super( cfgManager, cfgName, false,
                 "This config contains options for several miscellaneous features in the mod, such as: " +
                         "animals, reactions, jockeys, and door breaking."
         );
@@ -64,7 +63,7 @@ public class GeneralConfig extends AbstractConfigFile {
     
     public static class Main extends AbstractConfigCategory<GeneralConfig> {
         
-        public final PredicateStringListField extraDimensions;
+        public final StringListField extraDimensions;
         
         public final EntitySetField considerAlliesList;
         
@@ -73,7 +72,7 @@ public class GeneralConfig extends AbstractConfigFile {
             super( parent, "main",
                     "Settings that apply to the mod as a whole." );
             
-            extraDimensions = SPEC.define( new PredicateStringListField( "extra_dimensions", "Dimension Type",
+            extraDimensions = SPEC.define( new StringListField( "extra_dimensions", "Dimension Type",
                             List.of( Level.NETHER.location().toString(), Level.END.location().toString() ),
                             ResourceLocation::isValidResourceLocation,
                             "A list of extra dimension types for this mod to generate configs for." +

@@ -94,9 +94,9 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:jade-324717:${jade_version}")
 
     // Misc other toast mods for testing
-    runtimeOnly fg.deobf("curse.maven:apocalypse-229199:${apocalypse_version}")
-    compileOnly fg.deobf("curse.maven:apocalypse_api-229199:${apocalypse_version}")
-    runtimeOnly fg.deobf("curse.maven:specialmobs-59968:${specialmobs_version}")
+    //runtimeOnly fg.deobf("curse.maven:apocalypse-229199:${apocalypse_version}")
+    //compileOnly fg.deobf("curse.maven:apocalypse_api-229199:${apocalypse_version}")
+    //runtimeOnly fg.deobf("curse.maven:specialmobs-59968:${specialmobs_version}")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }

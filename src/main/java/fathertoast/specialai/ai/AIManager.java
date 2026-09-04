@@ -6,14 +6,14 @@ import fathertoast.crust.api.config.common.ConfigUtil;
 import fathertoast.crust.api.lib.DeferredAction;
 import fathertoast.crust.api.lib.EnvironmentHelper;
 import fathertoast.crust.api.lib.NBTHelper;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.ai.elite.EliteAIHelper;
 import fathertoast.specialai.ai.griefing.EatBreedingItemGoal;
 import fathertoast.specialai.ai.griefing.IdleActionsGoal;
 import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
-import fathertoast.specialai.util.BlockHelper;
+import fathertoast.specialai.level.BlockHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
@@ -53,7 +53,6 @@ import java.util.function.Supplier;
  * <p>
  * Additionally, it also uses the server tick to run actions that can't be done during the AI tick.
  */
-@SuppressWarnings( "UnstableApiUsage" )
 public final class AIManager {
     
     // NBT tags used to store info about this mod's AI.
@@ -331,11 +330,6 @@ public final class AIManager {
         if( event.getLevel().isClientSide() || !event.getEntity().isAlive() ) return;
         
         Entity entity = event.getEntity();
-        BlockPos entityPos = BlockPos.containing( entity.position() );
-        
-        // Avoid messing with entities that spawn in not fully loaded chunks.
-        // Will more likely than not cause a world deadlock!
-        if( !EnvironmentHelper.isLoaded( event.getLevel(), entityPos ) ) return;
         
         // Check if this is an arrow that can be dodged
         if( entity instanceof Projectile && !entity.getPersistentData().getBoolean( TAG_ARROW_DODGE_CHECKED ) ) {
@@ -345,7 +339,7 @@ public final class AIManager {
         
         // Only initialize AI on mob entities, where the base AI system is implemented
         if( entity instanceof Mob mob ) {
-            initializeSpecialAI( mob );
+            DeferredAction.queue( new DelayedInitializeAI( mob ) );
         }
     }
     
@@ -354,7 +348,7 @@ public final class AIManager {
      *
      * @param entity The entity to initialize.
      */
-    public static void initializeSpecialAI( Mob entity ) {
+    private static void initializeSpecialAI( Mob entity ) {
         // The rng of the entity
         final RandomSource rng = entity.getRandom();
         // The tag all info for this mod is stored on for the entity
@@ -474,10 +468,7 @@ public final class AIManager {
         maybeReorderGoals( entity );
         
         // Elite AI
-        if( EnvironmentHelper.isLoaded( entity.level(), entity.blockPosition() ) )
-            initializeEliteAI( tag, entity );
-        else
-            DeferredAction.queue( new DelayedInitializeEliteAI( tag, entity ) );
+        initializeEliteAI( tag, entity );
     }
     
     /** Here we reorder misc priorities and flags for goals. */
@@ -512,13 +503,9 @@ public final class AIManager {
         
         // Apply random-weighted AI selection
         final Double[] chances = Config.ELITE_AI.GENERAL.entityList.get( entity );
-        
-        if( chances != null ) {
-            // noinspection ConstantConditions
-            for( double chance : chances ) {
-                if( chance > 0.0 && entity.getRandom().nextDouble() < chance ) {
-                    EliteAIHelper.saveEliteAI( eliteTag, entity );
-                }
+        if( chances != null ) for( double chance : chances ) {
+            if( chance > 0.0 && entity.getRandom().nextDouble() < chance ) {
+                EliteAIHelper.saveEliteAI( eliteTag, entity );
             }
         }
         
@@ -613,30 +600,35 @@ public final class AIManager {
         }
     }
     
-    /** All info needed for a mob waiting for elite AI initialization. */
-    private static final class DelayedInitializeEliteAI implements Supplier<Boolean> {
-        private final CompoundTag tag;
-        private final Mob entity;
+    
+    /** All info needed for a mob waiting for Special AI initialization. */
+    private static final class DelayedInitializeAI implements Supplier<Boolean> {
+        final Mob entity;
         
-        private int ticksRemaining = 20; // Wait 1 sec max
+        int ticksRemaining;
         
-        private DelayedInitializeEliteAI( CompoundTag otag, Mob oentity ) {
-            tag = otag;
-            entity = oentity;
+        private DelayedInitializeAI( Mob mob ) {
+            entity = mob;
+            ticksRemaining = EnvironmentHelper.isLoaded( entity.level(), entity.blockPosition() ) ? 0 : 3;
         }
         
         /** Called each server tick to see if the mob is ready to be initialized. Return true when done. */
         @Override
         public Boolean get() {
-            if( !entity.isAlive() ) {
-                return true; // Entity was killed or unloaded before getting initialized
+            if( ticksRemaining > 0 ) {
+                ticksRemaining--;
+            }
+            else if( !entity.isAlive() || entity.isRemoved() ) {
+                return true; // Mob was killed or unloaded before getting replaced
             }
             else if( EnvironmentHelper.isLoaded( entity.level(), entity.blockPosition() ) ) {
-                initializeEliteAI( tag, entity );
+                initializeSpecialAI( entity );
                 return true; // Initialized!
             }
-            ticksRemaining--;
-            return ticksRemaining < 0; // Times out if it takes too long
+            else {
+                ticksRemaining = 4;
+            }
+            return false;
         }
     }
 }

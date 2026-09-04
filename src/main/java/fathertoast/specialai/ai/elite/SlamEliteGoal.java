@@ -138,7 +138,7 @@ public class SlamEliteGoal extends AbstractEliteGoal {
                     .multiply( 1.0 + mob.getBbWidth(), 0.0, 1.0 + mob.getBbWidth() );
             mob.level().explode( mob,
                     mob.getX() + offset.x, mob.getY() + offset.y, mob.getZ() + offset.z,
-                    (float) Config.ELITE_AI.SLAM.power.get(), false, Level.ExplosionInteraction.NONE );
+                    Config.ELITE_AI.SLAM.power.getFloat(), false, Level.ExplosionInteraction.NONE );
             
             currentActivity = Activity.NONE;
         }

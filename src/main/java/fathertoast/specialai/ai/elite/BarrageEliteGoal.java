@@ -129,7 +129,7 @@ public class BarrageEliteGoal extends AbstractEliteGoal {
             if( mob.isOnFire() ) {
                 arrow.setSecondsOnFire( 100 );
             }
-            arrow.shoot( attackVec.x, attackVec.y, attackVec.z, 1.8F, (float) Config.ELITE_AI.BARRAGE.arrowVariance.get() );
+            arrow.shoot( attackVec.x, attackVec.y, attackVec.z, 1.8F, Config.ELITE_AI.BARRAGE.arrowVariance.getFloat() );
             
             LevelEventHelper.DISPENSER_LAUNCH.play( mob );
             mob.level().addFreshEntity( arrow );

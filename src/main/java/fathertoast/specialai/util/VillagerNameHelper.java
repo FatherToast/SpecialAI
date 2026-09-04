@@ -4,7 +4,8 @@ import fathertoast.crust.api.config.common.value.collection.RegistryMap;
 import fathertoast.crust.api.config.common.value.collection.value.ArrayValueCodec;
 import fathertoast.crust.api.config.common.value.collection.value.StringValueCodec;
 import fathertoast.crust.api.lib.NBTHelper;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.GameEventHandler;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.config.VillagesConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -139,7 +140,7 @@ public final class VillagerNameHelper {
     }
     
     /**
-     * Called from {@link fathertoast.specialai.GameEventHandler#onRightClickEntity(PlayerInteractEvent.EntityInteract)} when
+     * Called from {@link GameEventHandler#onRightClickEntity(PlayerInteractEvent.EntityInteract)} when
      * a player right-clicks a villager with a name tag.<br><br>
      * Sets the target villager's first name to the display name of the name tag
      * and then refreshes the villager's full name.
@@ -254,5 +255,5 @@ public final class VillagerNameHelper {
     }
     
     // This is a static-only helper class.
-    private VillagerNameHelper() { }
+    private VillagerNameHelper() {}
 }

@@ -1,4 +1,4 @@
-package fathertoast.specialai;
+package fathertoast.specialai.core;
 
 import net.minecraftforge.fml.common.Mod;
 

@@ -7,10 +7,11 @@ import fathertoast.crust.api.config.common.ConfigUtil;
 import fathertoast.crust.api.config.common.field.*;
 import fathertoast.crust.api.config.common.field.collection.EntityMapField;
 import fathertoast.crust.api.config.common.file.TomlHelper;
-import fathertoast.crust.api.config.common.value.EnvironmentList;
 import fathertoast.crust.api.config.common.value.collection.EntityMap;
 import fathertoast.crust.api.config.common.value.collection.value.ArrayValueCodec;
 import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
+import fathertoast.crust.api.config.common.value.collection.value.IntValueCodec;
+import fathertoast.crust.api.config.common.value.environment.EnvironmentList;
 import fathertoast.specialai.ai.elite.ThiefEliteGoal;
 import fathertoast.specialai.ai.elite.base.EliteAIType;
 import net.minecraft.ChatFormatting;
@@ -24,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings( "UnstableApiUsage" )
 public class EliteAIConfig extends AbstractConfigFile {
     
     public final EliteGeneral GENERAL;
@@ -45,7 +45,7 @@ public class EliteAIConfig extends AbstractConfigFile {
     
     /** Builds the config spec that should be used for this config. */
     EliteAIConfig( ConfigManager cfgManager, String cfgName ) {
-        super( cfgManager, cfgName,
+        super( cfgManager, cfgName, false,
                 "This config contains options for elite AI patterns. Elite AI patterns bestow stat boosts, " +
                         "specific equipment, and allow these 'elite' mobs to perform actions in combat that can pose a great threat.",
                 "In general; changing options for elite AIs granted, attributes, and equipment only affects new entities. " +
@@ -56,7 +56,7 @@ public class EliteAIConfig extends AbstractConfigFile {
         SPEC.comment( "See the appendix at the bottom of this file for more information on the elite AI patterns available." );
         
         SPEC.fileOnlyNewLine();
-        SPEC.describeEnvironmentListPart1of2();
+        EnvironmentListField.describe1of2( SPEC );
         
         GENERAL = new EliteGeneral( this );
         
@@ -91,7 +91,7 @@ public class EliteAIConfig extends AbstractConfigFile {
         }
         
         SPEC.fileOnlyNewLine( 2 );
-        SPEC.describeEnvironmentListPart2of2();
+        EnvironmentListField.describe2of2( SPEC );
     }
     
     /** @return A list of all elite AI categories. */
@@ -101,7 +101,7 @@ public class EliteAIConfig extends AbstractConfigFile {
         
         public final EntityMapField<Double[]> entityList;
         
-        public final DoubleField.EnvironmentSensitiveWeightedList<EliteAIType> eliteAIWeights;
+        public final EnvironmentSensitiveWeightedList<EliteAIType> eliteAIWeights;
         
         public final BooleanField enablePreferMelee;
         public final BooleanField enableAttributeMods;
@@ -120,37 +120,29 @@ public class EliteAIConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             final EliteAIType[] aiTypes = EliteAIType.values();
-            final DoubleField[] baseWeights = new DoubleField[aiTypes.length];
-            final EnvironmentListField[] weightExceptions = new EnvironmentListField[aiTypes.length];
+            List<IntField> baseWeights = new ArrayList<>( aiTypes.length );
+            List<EnvironmentListField<Integer>> weightExceptions = new ArrayList<>( aiTypes.length );
             
             SPEC.titledComment( "Weights",
                     "The following options are the weights for each elite AI pattern to be chosen when assigning " +
-                            "a random elite AI to entities in the above list. Higher weight is more common.",
+                            "a random elite AI to entities in the above list, along with exceptions which modify that weight " +
+                            "when specific environmental conditions are met. Higher weight is more common.",
                     "Elite AIs given a weight of 0 will never be selected, though they can still be applied directly " +
                             "by the entity list in their specific category below and can still be NBT-edited onto mobs.",
-                    ChatFormatting.GRAY + TomlHelper.multiFieldInfo( DoubleField.Range.NON_NEGATIVE ) );
-            for( int i = 0; i < aiTypes.length; i++ ) {
-                baseWeights[i] = SPEC.define( new DoubleField(
-                        "weight." + aiTypes[i].getKey() + ".base", aiTypes[i].getDefaultWeight(),
-                        DoubleField.Range.NON_NEGATIVE, (String[]) null ) );
-            }
-            
-            SPEC.newLine();
-            
+                    ChatFormatting.GRAY + TomlHelper.multiFieldInfo( IntField.Range.NON_NEGATIVE ) );
             SPEC.titledComment( "Weight Exceptions",
-                    "The following options are the weights for each elite AI pattern to be chosen when assigning " +
-                            "a random elite AI to entities in the above list when specific environmental conditions are met. " +
-                            "See above for the weights used when none of the conditions are met.",
-                    ChatFormatting.GRAY + TomlHelper.fieldInfoFormat( "Environment List", new ArrayList<>(),
-                            "[ \"value condition1 state1 & condition2 state2 & ...\", ... ]" ),
-                    ChatFormatting.GRAY + "   Range for Values: " + TomlHelper.fieldRange( DoubleField.Range.NON_NEGATIVE.MIN, DoubleField.Range.NON_NEGATIVE.MAX ) );
-            for( int i = 0; i < aiTypes.length; i++ ) {
-                weightExceptions[i] = SPEC.define( new EnvironmentListField(
-                        "weight." + aiTypes[i].getKey() + ".exceptions", new EnvironmentList()
-                        .setRange( DoubleField.Range.NON_NEGATIVE ), (String[]) null ) );
+                    ChatFormatting.GRAY + TomlHelper.fieldInfoFormat( "Environment List",
+                            EnvironmentList.builder( IntValueCodec.NON_NEGATIVE ).build(),
+                            "[ \"value condition1 state1 | condition2 state2 & ...\", ... ]" ) );
+            for( EliteAIType aiType : aiTypes ) {
+                baseWeights.add( SPEC.define( new IntField(
+                        "weight." + aiType.getKey() + ".base", aiType.getDefaultWeight(),
+                        IntField.Range.NON_NEGATIVE, (String[]) null ) ) );
+                weightExceptions.add( SPEC.define( new EnvironmentListField<>(
+                        "weight." + aiType.getKey() + ".exceptions",
+                        EnvironmentList.builder( IntValueCodec.NON_NEGATIVE ).build(), (String[]) null ) ) );
             }
-            
-            eliteAIWeights = new DoubleField.EnvironmentSensitiveWeightedList<>( aiTypes, baseWeights, weightExceptions );
+            eliteAIWeights = new EnvironmentSensitiveWeightedList<>( aiTypes, tempOof( baseWeights ), tempOof( weightExceptions ) );
             
             SPEC.newLine();
             
@@ -168,15 +160,17 @@ public class EliteAIConfig extends AbstractConfigFile {
                     "Note that each equipment item can be disabled individually and some can be modified (see categories below)." ) );
         }
         
+        //TODO remove with next Crust update
+        private static <T> T[] tempOof( List<T> list, T... bonk ) {
+            return list.toArray( list.toArray( bonk ) );
+        }
+        
         private static EntityMap<Double[]> createDefaultEntityList() {
             return new EntityMap.Builder<>( ArrayValueCodec.of( 0, Double.class, DoubleValueCodec.PERCENT ) )
                     .putExtends( EntityType.ZOMBIE, new Double[] { 0.04 } )
                     // Skeletons
-                    // TODO change back after Crust update with enhanced `extends` key functionality
                     .putTag( EntityTypeTags.SKELETONS, new Double[] { 0.1, 0.02 } )
-                    //.putExtends( EntityType.SKELETON, new Double[] { 0.1, 0.02 } )
-                    .put( EntityType.STRAY, new Double[] { 0.1, 0.02 } )
-                    //.putExtends( EntityType.WITHER_SKELETON, new Double[] { 0.1, 0.02 } )
+                    .putExtends( EntityType.SKELETON, 1, new Double[] { 0.1, 0.02 } )
                     // Nether
                     .put( EntityType.PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )
                     .putExtends( EntityType.ZOMBIFIED_PIGLIN, new Double[] { 0.04, 0.04, 0.02 } )

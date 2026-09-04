@@ -1,6 +1,7 @@
 package fathertoast.specialai.ai.elite;
 
-import fathertoast.specialai.SpecialAI;
+import fathertoast.crust.api.config.common.value.environment.EnvironmentContext;
+import fathertoast.specialai.core.SpecialAI;
 import fathertoast.specialai.ai.elite.base.EliteAIType;
 import fathertoast.specialai.config.Config;
 import net.minecraft.nbt.CompoundTag;
@@ -36,7 +37,8 @@ public final class EliteAIHelper {
      * @param aiTag  The mob's save data.
      */
     public static void saveEliteAI( CompoundTag aiTag, Mob entity ) {
-        saveEliteAI( aiTag, Config.ELITE_AI.GENERAL.eliteAIWeights.next( entity.getRandom(), entity.level(), entity.blockPosition() ) );
+        saveEliteAI( aiTag, Config.ELITE_AI.GENERAL.eliteAIWeights.next( entity.getRandom(),
+                EnvironmentContext.withTarget( entity.level(), entity.blockPosition() ) ) );
     }
     
     /**

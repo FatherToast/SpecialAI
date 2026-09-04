@@ -1,4 +1,4 @@
-package fathertoast.specialai;
+package fathertoast.specialai.core;
 
 import fathertoast.crust.api.config.client.ClientConfigUtil;
 import fathertoast.specialai.config.Config;

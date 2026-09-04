@@ -1,7 +1,7 @@
-package fathertoast.specialai.util;
+package fathertoast.specialai.level;
 
 import fathertoast.crust.api.lib.EnvironmentHelper;
-import fathertoast.specialai.SpecialAI;
+import fathertoast.specialai.core.SpecialAI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.resources.ResourceKey;
@@ -24,7 +24,7 @@ import java.util.Queue;
  * to reset the destroy progress.
  */
 @Mod.EventBusSubscriber( bus = Mod.EventBusSubscriber.Bus.FORGE, modid = SpecialAI.MOD_ID )
-public class BlockDestroyTracker {
+public final class BlockDestroyTracker {
     
     private static final Map<ResourceKey<Level>, Queue<Entry>> ENTRIES_PER_LEVEL = new HashMap<>( 8 );
     private static int timeNextUpdate = 0;
@@ -100,7 +100,7 @@ public class BlockDestroyTracker {
     }
     
     /** Contains info such as what entity is breaking a block, in what world, and where. */
-    record Entry(LivingEntity blockBreaker, GlobalPos pos) {
+    record Entry( LivingEntity blockBreaker, GlobalPos pos ) {
         
         /**
          * @return True if the entity belonging to this entry

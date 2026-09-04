@@ -9,10 +9,10 @@ import fathertoast.crust.api.config.common.field.EnvironmentListField;
 import fathertoast.crust.api.config.common.field.IntField;
 import fathertoast.crust.api.config.common.field.collection.BlockStateSetField;
 import fathertoast.crust.api.config.common.field.collection.EntityMapField;
-import fathertoast.crust.api.config.common.value.EnvironmentList;
 import fathertoast.crust.api.config.common.value.collection.BlockStateSet;
 import fathertoast.crust.api.config.common.value.collection.EntityMap;
 import fathertoast.crust.api.config.common.value.collection.value.DoubleValueCodec;
+import fathertoast.crust.api.config.common.value.environment.EnvironmentList;
 import fathertoast.crust.api.util.BlockStatePropertyMap;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
@@ -20,7 +20,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
 import net.minecraftforge.registries.ForgeRegistries;
 
-@SuppressWarnings( "UnstableApiUsage" )
 public class IdleConfig extends AbstractConfigFile {
     
     public final IdleGeneral GENERAL;
@@ -30,7 +29,7 @@ public class IdleConfig extends AbstractConfigFile {
     
     /** Builds the config spec that should be used for this config. */
     IdleConfig( ConfigManager cfgManager, String cfgName ) {
-        super( cfgManager, cfgName,
+        super( cfgManager, cfgName, false,
                 "This config contains options for idle behaviors; actions taken by mobs when they are bored."
         );
         
@@ -50,7 +49,6 @@ public class IdleConfig extends AbstractConfigFile {
         public final IntField scanDelay;
         public final IntField scanCount;
         public final IntField scanCountGlobal;
-        
         
         IdleGeneral( IdleConfig parent ) {
             super( parent, "idle_general",
@@ -95,7 +93,6 @@ public class IdleConfig extends AbstractConfigFile {
         public final BlockStateSetField targetWhitelistLootable;
         public final BlockStateSetField targetBlacklist;
         
-        
         Griefing( IdleConfig parent ) {
             super( parent, "idle_griefing",
                     "Options to customize monsters' idle block breaking behavior." );
@@ -114,7 +111,6 @@ public class IdleConfig extends AbstractConfigFile {
             
             leaveDrops = SPEC.define( new BooleanField( "leaves_drops", true,
                     "If true, blocks griefed by mobs will leave item drops." ) );
-            
             breakSound = SPEC.define( new BooleanField( "break_sound", false,
                     "If true, a loud snapping sound (the vanilla door break sound) will be played when a " +
                             "block is broken, which is audible regardless of distance." ) );
@@ -123,10 +119,8 @@ public class IdleConfig extends AbstractConfigFile {
             
             breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.5, DoubleField.Range.NON_NEGATIVE,
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
-            
             madCreepers = SPEC.define( new BooleanField( "mad_creepers", false,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
-            
             resistanceThreshold = SPEC.define( new DoubleField( "resistance_threshold", 6.0D, DoubleField.Range.NON_NEGATIVE,
                     "If 'mad_creepers' is enabled, creepers will not try to explode blocks with an explosion resistance value equal to or higher than this value.",
                     "Blocks with negative resistance such as bedrock are automatically omitted." ) );
@@ -136,17 +130,13 @@ public class IdleConfig extends AbstractConfigFile {
             targetLights = SPEC.define( new BooleanField( "targets.auto_target_lights", true,
                     "If true, idle griefing AI will automatically target all light sources (light value > 1). " +
                             "This will do its best to avoid natural sources such as fire and redstone ore." ) );
-            
             targetBeds = SPEC.define( new BooleanField( "targets.auto_target_beds", true,
                     "If true, idle griefing AI will automatically target all blocks that derive from the vanilla beds." ) );
-            
             targetWhitelist = SPEC.define( new BlockStateSetField( "targets.whitelist", createDefaultGriefTargets(),
                     "List of blocks that can be broken by the idle griefing AI." ) );
-            
             targetWhitelistLootable = SPEC.define( new BlockStateSetField( "targets.lootable_list", createDefaultLootableGriefTargets(),
                     "Like \"grief_targets.whitelist\", but these blocks will not be targeted if they have a loot table tag.",
                     "For example, unopened dungeon chests will not be targeted." ) );
-            
             targetBlacklist = SPEC.define( new BlockStateSetField( "targets.blacklist", new BlockStateSet.Builder<>().build(),
                     "" ) );
         }
@@ -208,7 +198,6 @@ public class IdleConfig extends AbstractConfigFile {
         public final BlockStateSetField targetWhitelist;
         public final BlockStateSetField targetBlacklist;
         
-        
         Fiddling( IdleConfig parent ) {
             super( parent, "idle_fiddling",
                     "Options to customize monsters' idle fiddling behavior (block interaction)." );
@@ -222,25 +211,19 @@ public class IdleConfig extends AbstractConfigFile {
             targetSwitches = SPEC.define( new BooleanField( "targets.auto_target_switches", true,
                     "If true, idle fiddling AI will automatically target all blocks that derive from",
                     "the vanilla levers and buttons." ) );
-            
             targetDoors = SPEC.define( new BooleanField( "targets.auto_target_doors", true,
                     "If true, idle fiddling AI will automatically target all non-metal blocks that derive",
                     "from the vanilla doors, fence gates, and trapdoors." ) );
-            
             targetWhitelist = SPEC.define( new BlockStateSetField( "targets.whitelist", createDefaultTargetWhitelist(),
                     "List of blocks that can be interacted with by the idle fiddling AI." ) );
-            
             targetBlacklist = SPEC.define( new BlockStateSetField( "targets.blacklist", new BlockStateSet.Builder<>().build(),
                     "List of blocks that specifically can NOT be interacted with by the idle fiddling AI." ) );
         }
         
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
-                    // TODO change back after Crust update with enhanced `extends` key functionality
                     .putTag( EntityTypeTags.SKELETONS, 1.0 )
-                    //.putExtends( EntityType.SKELETON, 1.0 )
-                    //.put( EntityType.STRAY, 1.0 )
-                    //.putExtends( EntityType.WITHER_SKELETON, 1.0 )
+                    .putExtends( EntityType.SKELETON, 1, 1.0 )
                     .put( EntityType.PIGLIN, 1.0 )
                     .putExtends( EntityType.ZOMBIFIED_PIGLIN, 1.0 )
                     .build();
@@ -272,7 +255,6 @@ public class IdleConfig extends AbstractConfigFile {
         public final DoubleField.EnvironmentSensitive lootableChance;
         public final BlockStateSetField targetList;
         
-        
         Hiding( IdleConfig parent ) {
             super( parent, "idle_hiding",
                     "Options to customize monsters' idle hiding behavior. This causes the mob to crawl " +
@@ -285,15 +267,14 @@ public class IdleConfig extends AbstractConfigFile {
             SPEC.newLine();
             
             lootableChance = new DoubleField.EnvironmentSensitive(
-                    SPEC.define( new DoubleField( "targets.lootable_chance.base", 0.25, DoubleField.Range.PERCENT,
+                    SPEC.define( new DoubleField( "targets.lootable_chance.base", 0.05, DoubleField.Range.PERCENT,
                             "The chance for blocks (0.0 to 1.0) that have a loot table tag to be targetable by the idle hiding AI.",
-                            "For example, only 25% of unopened dungeon chests will be targetable at the default setting." ) ),
-                    SPEC.define( new EnvironmentListField( "targets.lootable_chance.exceptions",
-                            new EnvironmentList().setRange( DoubleField.Range.PERCENT ),
+                            "For example, only 5% of unopened dungeon chests will be targetable at the default setting." ) ),
+                    SPEC.define( new EnvironmentListField<>( "targets.lootable_chance.exceptions",
+                            EnvironmentList.builder( DoubleValueCodec.PERCENT ).build(),
                             "The chance for blocks (0.0 to 1.0) that have a loot table tag to be targetable by the idle hiding " +
                                     "AI when specific environmental conditions are met." ) )
             );
-            
             targetList = SPEC.define( new BlockStateSetField( "targets.list", createDefaultHideTargets(),
                     "List of blocks that can be hidden in by the idle hiding AI. " +
                             "Note that only blocks with block entities are able to be hidden in." ) );
