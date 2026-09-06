@@ -1,6 +1,9 @@
 1.20.1-4.1.0
     - Minimum required Crust version is now 5. As such, server configs can now be viewed
      and/or edited in-game if you have the required permission level.
+    - Now tracks and saves blocks placed by players.
+    - Idle griefing now only targets player-placed blocks by default.
+    - Mad creepers are once again enabled by default.
     - Mobs that breathe underwater no longer receive a penalty to mining speed for being underwater.
 1.20.1-4.0.8
     - Bumped minimum required Crust version to 4.15.23+.

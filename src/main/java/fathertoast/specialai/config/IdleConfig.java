@@ -18,6 +18,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.*;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class IdleConfig extends AbstractConfigFile {
@@ -41,6 +42,8 @@ public class IdleConfig extends AbstractConfigFile {
     
     public static class IdleGeneral extends AbstractConfigCategory<IdleConfig> {
         
+        public final BooleanField trackPlayerPlacedBlocks;
+        
         public final DoubleField reach;
         
         public final IntField rangeHorizontal;
@@ -54,6 +57,12 @@ public class IdleConfig extends AbstractConfigFile {
             super( parent, "idle_general",
                     "Options that affect all idle behaviors for monsters (griefing and fiddling)." );
             
+            trackPlayerPlacedBlocks = SPEC.define( new BooleanField( "track_placed_blocks", true,
+                    "If true, tracks which blocks are placed by players and saves it to level data. This " +
+                            "is required if you want to limit any idle behaviors to only target player-placed blocks." ) );
+            
+            SPEC.newLine();
+            
             reach = SPEC.define( new DoubleField( "reach", 3.5, DoubleField.Range.NON_NEGATIVE,
                     "Mobs' reach (from eye height) when targeting blocks. Player reach is about 4.5." ) );
             
@@ -65,11 +74,11 @@ public class IdleConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
-            scanDelay = SPEC.define( new IntField( "scan_delay", 2, IntField.Range.POSITIVE,
+            scanDelay = SPEC.define( new IntField( "scan_delay", 3, IntField.Range.POSITIVE,
                     "The number of ticks between each block scan." ) );
             scanCount = SPEC.define( new IntField( "scan_count", 32, IntField.Range.POSITIVE,
                     "The number of blocks each mob randomly searches to grief/fiddle with every \"scan_delay\" ticks." ) );
-            scanCountGlobal = SPEC.define( new IntField( "global_scan_count", 3000, IntField.Range.NON_NEGATIVE,
+            scanCountGlobal = SPEC.define( new IntField( "global_scan_count", 2880, IntField.Range.NON_NEGATIVE,
                     "The maximum number of blocks that can be searched in any given tick by all mobs. 0 is no limit." ) );
         }
     }
@@ -87,6 +96,7 @@ public class IdleConfig extends AbstractConfigFile {
         public final BooleanField madCreepers;
         public final DoubleField resistanceThreshold;
         
+        public final BooleanField onlyTargetPlayerPlaced;
         public final BooleanField targetLights;
         public final BooleanField targetBeds;
         public final BlockStateSetField targetWhitelist;
@@ -119,14 +129,17 @@ public class IdleConfig extends AbstractConfigFile {
             
             breakSpeed = SPEC.define( new DoubleField( "break_speed", 0.5, DoubleField.Range.NON_NEGATIVE,
                     "The block breaking speed multiplier for mobs griefing blocks, relative to the player's block breaking speed." ) );
-            madCreepers = SPEC.define( new BooleanField( "mad_creepers", false,
+            madCreepers = SPEC.define( new BooleanField( "mad_creepers", true,
                     "If true, creepers will be upset about not having arms to grief blocks with and resort to what they know best." ) );
-            resistanceThreshold = SPEC.define( new DoubleField( "resistance_threshold", 6.0D, DoubleField.Range.NON_NEGATIVE,
-                    "If 'mad_creepers' is enabled, creepers will not try to explode blocks with an explosion resistance value equal to or higher than this value.",
+            resistanceThreshold = SPEC.define( new DoubleField( "resistance_threshold", 6.0, DoubleField.Range.NON_NEGATIVE,
+                    "If 'mad_creepers' is enabled, creepers will not try to explode blocks with an explosion resistance higher than this value.",
                     "Blocks with negative resistance such as bedrock are automatically omitted." ) );
             
             SPEC.newLine();
             
+            onlyTargetPlayerPlaced = SPEC.define( new BooleanField( "targets.only_player_placed", true,
+                    "If true, idle griefing AI will only target blocks that were placed by a player. " +
+                            "Must have \"idle_general.track_placed_blocks\" enabled to function." ) );
             targetLights = SPEC.define( new BooleanField( "targets.auto_target_lights", true,
                     "If true, idle griefing AI will automatically target all light sources (light value > 1). " +
                             "This will do its best to avoid natural sources such as fire and redstone ore." ) );
@@ -144,6 +157,7 @@ public class IdleConfig extends AbstractConfigFile {
         private static EntityMap<Double> createDefaultEntityList() {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
                     .putExtends( EntityType.ZOMBIE, 1.0 )
+                    .putExtends( EntityType.CREEPER, 1.0 )
                     .build();
         }
         
@@ -153,7 +167,7 @@ public class IdleConfig extends AbstractConfigFile {
             
             // Specific entries
             builder.add( Blocks.FARMLAND, BlockStatePropertyMap.EMPTY )
-                    .add( Blocks.BEEHIVE, BlockStatePropertyMap.EMPTY );
+                    .addTag( BlockTags.CROPS, BlockStatePropertyMap.EMPTY );
             
             // Add block groups, possibly including mod blocks
             for( Block block : ForgeRegistries.BLOCKS ) {
@@ -169,8 +183,6 @@ public class IdleConfig extends AbstractConfigFile {
                     builder.add( block, BlockStatePropertyMap.EMPTY );
                 }
             }
-            // Tags
-            builder.addTag( BlockTags.CROPS, BlockStatePropertyMap.EMPTY );
             
             return builder.build();
         }
@@ -179,12 +191,11 @@ public class IdleConfig extends AbstractConfigFile {
         private static BlockStateSet createDefaultLootableGriefTargets() {
             final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
             
-            for( Block block : ForgeRegistries.BLOCKS ) {
-                // Chest blocks
-                if( block instanceof AbstractChestBlock || block instanceof BarrelBlock ) {
-                    builder.add( block, BlockStatePropertyMap.EMPTY );
-                }
-            }
+            // Specific entries
+            builder.addTagBlacklist( Tags.Blocks.CHESTS_ENDER, BlockStatePropertyMap.EMPTY )
+                    .addTag( Tags.Blocks.CHESTS, BlockStatePropertyMap.EMPTY )
+                    .addTag( Tags.Blocks.BARRELS, BlockStatePropertyMap.EMPTY );
+            
             return builder.build();
         }
     }
@@ -193,6 +204,7 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final EntityMapField<Double> entityList;
         
+        public final BooleanField onlyTargetPlayerPlaced;
         public final BooleanField targetSwitches;
         public final BooleanField targetDoors;
         public final BlockStateSetField targetWhitelist;
@@ -208,6 +220,9 @@ public class IdleConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
+            onlyTargetPlayerPlaced = SPEC.define( new BooleanField( "targets.only_player_placed", false,
+                    "If true, idle fiddling AI will only target blocks that were placed by a player. " +
+                            "Must have \"idle_general.track_placed_blocks\" enabled to function." ) );
             targetSwitches = SPEC.define( new BooleanField( "targets.auto_target_switches", true,
                     "If true, idle fiddling AI will automatically target all blocks that derive from",
                     "the vanilla levers and buttons." ) );
@@ -224,7 +239,7 @@ public class IdleConfig extends AbstractConfigFile {
             return new EntityMap.Builder<>( DoubleValueCodec.PERCENT )
                     .putTag( EntityTypeTags.SKELETONS, 1.0 )
                     .putExtends( EntityType.SKELETON, 1, 1.0 )
-                    .put( EntityType.PIGLIN, 1.0 )
+                    .putExtends( EntityType.PIGLIN, 1, 1.0 )
                     .putExtends( EntityType.ZOMBIFIED_PIGLIN, 1.0 )
                     .build();
         }
@@ -237,13 +252,9 @@ public class IdleConfig extends AbstractConfigFile {
             builder.add( Blocks.REPEATER, BlockStatePropertyMap.EMPTY )
                     .add( Blocks.COMPARATOR, BlockStatePropertyMap.EMPTY )
                     .add( Blocks.TNT, BlockStatePropertyMap.EMPTY )
-                    .add( Blocks.CAKE, BlockStatePropertyMap.EMPTY );
+                    .add( Blocks.CAKE, BlockStatePropertyMap.EMPTY )
+                    .addTag( BlockTags.CANDLE_CAKES, BlockStatePropertyMap.EMPTY );
             
-            // All candle cakes
-            for( Block block : ForgeRegistries.BLOCKS ) {
-                if( block instanceof CandleCakeBlock )
-                    builder.add( block, BlockStatePropertyMap.EMPTY );
-            }
             return builder.build();
         }
     }
@@ -252,6 +263,7 @@ public class IdleConfig extends AbstractConfigFile {
         
         public final EntityMapField<Double> entityList;
         
+        public final BooleanField onlyTargetPlayerPlaced;
         public final DoubleField.EnvironmentSensitive lootableChance;
         public final BlockStateSetField targetList;
         
@@ -266,6 +278,9 @@ public class IdleConfig extends AbstractConfigFile {
             
             SPEC.newLine();
             
+            onlyTargetPlayerPlaced = SPEC.define( new BooleanField( "targets.only_player_placed", false,
+                    "If true, idle hiding AI will only target blocks that were placed by a player. " +
+                            "Must have \"idle_general.track_placed_blocks\" enabled to function." ) );
             lootableChance = new DoubleField.EnvironmentSensitive(
                     SPEC.define( new DoubleField( "targets.lootable_chance.base", 0.05, DoubleField.Range.PERCENT,
                             "The chance for blocks (0.0 to 1.0) that have a loot table tag to be targetable by the idle hiding AI.",
@@ -291,12 +306,10 @@ public class IdleConfig extends AbstractConfigFile {
         private static BlockStateSet createDefaultHideTargets() {
             final BlockStateSet.Builder<?> builder = new BlockStateSet.Builder<>();
             
-            for( Block block : ForgeRegistries.BLOCKS ) {
-                // Non-ender chest blocks
-                if( block instanceof AbstractChestBlock && !(block instanceof EnderChestBlock) || block instanceof BarrelBlock ) {
-                    builder.add( block, BlockStatePropertyMap.EMPTY );
-                }
-            }
+            builder.addTagBlacklist( Tags.Blocks.CHESTS_ENDER, BlockStatePropertyMap.EMPTY )
+                    .addTag( Tags.Blocks.CHESTS, BlockStatePropertyMap.EMPTY )
+                    .addTag( Tags.Blocks.BARRELS, BlockStatePropertyMap.EMPTY );
+            
             return builder.build();
         }
     }

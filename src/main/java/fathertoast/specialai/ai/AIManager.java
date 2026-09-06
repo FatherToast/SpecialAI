@@ -14,6 +14,7 @@ import fathertoast.specialai.ai.griefing.SpecialBreakDoorGoal;
 import fathertoast.specialai.config.Config;
 import fathertoast.specialai.config.EliteAIConfig;
 import fathertoast.specialai.level.BlockHelper;
+import fathertoast.specialai.level.PlayerPlacedBlockTracker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
@@ -581,6 +582,7 @@ public final class AIManager {
     public static void onBlockBreak( BlockEvent.BreakEvent event ) {
         if( !event.getLevel().isClientSide() ) {
             BlockHelper.spawnHiddenMob( event.getLevel(), event.getPos(), event.getPlayer(), true );
+            PlayerPlacedBlockTracker.setPlacedByPlayer( event.getLevel(), event.getPos(), false );
         }
     }
     
@@ -596,6 +598,7 @@ public final class AIManager {
             Player player = source instanceof Player ? (Player) source : null;
             for( BlockPos pos : event.getAffectedBlocks() ) {
                 BlockHelper.spawnHiddenMob( level, pos, player, true );
+                PlayerPlacedBlockTracker.setPlacedByPlayer( level, pos, false );
             }
         }
     }
